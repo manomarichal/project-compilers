@@ -11,5 +11,6 @@ def main(argv):
     parser = MathParser(stream)
     tree = parser.startRule()
 
+
 if __name__ == '__main__':
     main(sys.argv)
