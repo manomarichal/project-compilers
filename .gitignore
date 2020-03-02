@@ -1,5 +1,9 @@
 
+# manually create your own venv based on requirements.txt
 venv/*
+
+# use generate.py to auto-generate all antlr's contents based on Math.g4
+antlr/*
 
 # Created by https://www.gitignore.io/api/python,pycharm
 # Edit at https://www.gitignore.io/?templates=python,pycharm
