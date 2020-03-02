@@ -9,7 +9,7 @@ def main(argv):
     lexer = MathLexer(input_stream)
     stream = CommonTokenStream(lexer)
     parser = MathParser(stream)
-    tree = parser.startRule()
+    tree = parser.doc()
 
 
 if __name__ == '__main__':
