@@ -2,6 +2,7 @@ import sys
 from antlr4 import *
 from antlr.MathLexer import MathLexer
 from antlr.MathParser import MathParser
+from CustomVisitor import CustomVisitor
 
 
 def main(argv):
@@ -10,6 +11,9 @@ def main(argv):
     stream = CommonTokenStream(lexer)
     parser = MathParser(stream)
     tree = parser.doc()
+
+    visitor = CustomVisitor()
+    visitor.visit(tree)
 
 
 if __name__ == '__main__':
