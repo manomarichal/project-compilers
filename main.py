@@ -13,7 +13,8 @@ def main(argv):
     tree = parser.doc()
 
     visitor = CustomVisitor()
-    visitor.visit(tree)
+    AST = visitor.visit(tree)
+    pass
 
 
 if __name__ == '__main__':

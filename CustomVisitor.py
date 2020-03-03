@@ -12,9 +12,12 @@ import AST
 
 class CustomVisitor (MathVisitor):
     def aggregateResult(self, aggregate, nextResult):
+        if nextResult is None:
+            return aggregate
         if aggregate is None:
             return [nextResult]
-        return aggregate.append(nextResult)
+        aggregate.append(nextResult)
+        return aggregate
 
     def visitDoc(self, ctx):
         return AST.Doc(self.visitChildren(ctx))
@@ -63,6 +66,8 @@ class CustomVisitor (MathVisitor):
 
         my_ast.children.append(self.visit(ctx.getChild(0)))
         my_ast.children.append(self.visit(ctx.getChild(2)))
+
+        return my_ast
 
     def visitMath_expr(self, ctx):
         if ctx.LEFT_PAREN() and ctx.RIGHT_PAREN():
