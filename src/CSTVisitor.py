@@ -15,8 +15,8 @@ class CSTVisitor (MathVisitor):
         if nextResult is None:
             return aggregate
         if aggregate is None:
-            return [nextResult]
-        aggregate.append(nextResult)
+            return AST.DummyNode(nextResult)
+        aggregate.addChild(nextResult)
         return aggregate
 
     def visitDoc(self, ctx):
@@ -35,7 +35,7 @@ class CSTVisitor (MathVisitor):
             if ctx.NOT_OP():
                 my_ast = AST.Not()
 
-            my_ast.children.append(self.visit(ctx.getChild(1)))
+            my_ast.addChild(self.visit(ctx.getChild(1)))
 
         elif ctx.getChildCount() == 3:
             if ctx.AND_OP():
@@ -43,8 +43,8 @@ class CSTVisitor (MathVisitor):
             elif ctx.OR_OP():
                 my_ast = AST.Or()
 
-            my_ast.children.append(self.visit(ctx.getChild(0)))
-            my_ast.children.append(self.visit(ctx.getChild(2)))
+            my_ast.addChild(self.visit(ctx.getChild(0)))
+            my_ast.addChild(self.visit(ctx.getChild(2)))
 
         return my_ast
 
@@ -64,8 +64,8 @@ class CSTVisitor (MathVisitor):
         elif ctx.NOT_EQUAL_OP():
             my_ast = AST.NotEqual()
 
-        my_ast.children.append(self.visit(ctx.getChild(0)))
-        my_ast.children.append(self.visit(ctx.getChild(2)))
+        my_ast.addChild(self.visit(ctx.getChild(0)))
+        my_ast.addChild(self.visit(ctx.getChild(2)))
 
         return my_ast
 
@@ -85,7 +85,7 @@ class CSTVisitor (MathVisitor):
             elif ctx.MINUS():
                 my_ast = AST.Neg()
 
-            my_ast.children.append(self.visit(ctx.getChild(1)))
+            my_ast.addChild(self.visit(ctx.getChild(1)))
 
         elif ctx.getChildCount() == 3:
             if ctx.STAR():
@@ -99,7 +99,7 @@ class CSTVisitor (MathVisitor):
             elif ctx.MINUS():
                 my_ast = AST.Sub()
 
-            my_ast.children.append(self.visit(ctx.getChild(0)))
-            my_ast.children.append(self.visit(ctx.getChild(2)))
+            my_ast.addChild(self.visit(ctx.getChild(0)))
+            my_ast.addChild(self.visit(ctx.getChild(2)))
 
         return my_ast
