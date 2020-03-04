@@ -2,7 +2,8 @@ import sys
 from antlr4 import *
 from src.antlr.MathLexer import MathLexer
 from src.antlr.MathParser import MathParser
-from src.CSTVisitor import CustomVisitor
+from src.CSTVisitor import CSTVisitor
+from src.ASTDotVisitor import ASTDotVisitor
 
 def main(argv):
     input_stream = FileStream(argv[1])
@@ -11,8 +12,10 @@ def main(argv):
     parser = MathParser(stream)
     tree = parser.doc()
 
-    visitor = CustomVisitor()
+    visitor = CSTVisitor()
     AST = visitor.visit(tree)
+    dot = ASTDotVisitor.visit(AST)
+
     pass
 
 
