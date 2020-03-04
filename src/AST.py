@@ -7,6 +7,9 @@ class Component:
     __parent: None
     __name: None
 
+    def __init__(self, name=None):
+        self.__name = name
+
     def accept(self, visitor):
         visitName = "visit" + type(self).__name__
         if hasattr(visitor, visitName):
@@ -17,6 +20,9 @@ class Component:
     def getName(self):
         return self.__name
 
+    def setName(self, name):
+        self.__name = name
+
     def getParent(self):
         return self.__parent
 
@@ -25,7 +31,9 @@ class Component:
 class Composite(Component):
     __children: list
 
-    def __init__(self, dummy=None):
+    def __init__(self, name=None, dummy=None):
+        Component.__init__(self, name)
+
         if dummy is None:
             self.children = []
         else:
