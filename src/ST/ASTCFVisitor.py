@@ -24,7 +24,12 @@ class ASTCFVisitor:
                     value = ast.getChild(0).getValue() * ast.getChild(1).getValue()
                 elif (isinstance(ast, AST.Div)):
                     value = ast.getChild(0).getValue() / ast.getChild(1).getValue()
+                elif (isinstance(ast, AST.Mod)):
+                    value = ast.getChild(0).getValue() % ast.getChild(1).getValue()
 
                 ast.getParent().replaceChild(ast, AST.IntLit(value))
+
+        # TODO UNARY OPERATORS & LOGIC OPERATORS
+
 
 
