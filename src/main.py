@@ -18,9 +18,8 @@ def main(argv):
 
     astVisualiser = ASTDotVisitor()
     astVisualiser.visit(ast)
-    dot = astVisualiser.graph
+    astVisualiser.graph.write("test_IO/result.dot")
 
-    print(dot)
 
 if __name__ == '__main__':
     main(sys.argv)
