@@ -4,7 +4,7 @@
 
 # Component
 class Component:
-    children = None
+    pass
 
 
 # Composites

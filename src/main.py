@@ -1,9 +1,8 @@
 import sys
 from antlr4 import *
-from antlr.MathLexer import MathLexer
-from antlr.MathParser import MathParser
-from CustomVisitor import CustomVisitor
-
+from src.antlr.MathLexer import MathLexer
+from src.antlr.MathParser import MathParser
+from src.MathCSTVisitor import CustomVisitor
 
 def main(argv):
     input_stream = FileStream(argv[1])
