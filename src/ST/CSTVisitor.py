@@ -1,5 +1,5 @@
-from src.antlr.MathVisitor import MathVisitor
-from src import AST
+from antlr.MathVisitor import MathVisitor
+from ST import AST
 
 
 # to check a token's "type" (hopefully):

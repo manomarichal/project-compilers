@@ -1,9 +1,9 @@
 import sys
 from antlr4 import *
-from src.antlr.MathLexer import MathLexer
-from src.antlr.MathParser import MathParser
-from src.CSTVisitor import CSTVisitor
-from src.ASTDotVisitor import ASTDotVisitor
+from antlr.MathLexer import MathLexer
+from antlr.MathParser import MathParser
+from ST.CSTVisitor import CSTVisitor
+from ST.ASTDotVisitor import ASTDotVisitor
 
 
 def main(argv):
