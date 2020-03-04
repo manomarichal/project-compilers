@@ -29,22 +29,22 @@ class Component:
 
 # Composites
 class Composite(Component):
-    __children: list
+    __children = []
 
     def __init__(self, name=None, dummy=None):
         Component.__init__(self, name)
 
         if dummy is None:
-            self.children = []
+            self.__children = []
         else:
             assert isinstance(dummy, Composite)
             self.swapChildren(dummy)
 
     def getChild(self, i: int):
-        return self.children[i]
+        return self.__children[i]
 
     def getChildCount(self):
-        return len(self.children)
+        return len(self.__children)
 
     def addChild(self, newChild: Component, i: int = None):
         if i is None:
@@ -58,9 +58,10 @@ class Composite(Component):
         assert isinstance(other, Composite)
 
         tmp = self.__children
-        self.children = other.__children = tmp
+        self.__children = other.__children
+        other.__children = tmp
     
-        other.children = tmp
+        other.__children = tmp
     
         for child in self.__children:
             child.__parent = self
@@ -70,7 +71,16 @@ class Composite(Component):
 
 
 class DummyNode(Composite):
-    pass
+    def __init__(self, children):
+        Composite.__init__(self)
+
+        if isinstance(children, list):
+            for child in children:
+                self.addChild(child)
+
+        else:
+            assert isinstance(children, Component)
+            self.addChild(children)
 
 
 class Doc(Composite):

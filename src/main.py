@@ -5,6 +5,7 @@ from src.antlr.MathParser import MathParser
 from src.CSTVisitor import CSTVisitor
 from src.ASTDotVisitor import ASTDotVisitor
 
+
 def main(argv):
     input_stream = FileStream(argv[1])
     lexer = MathLexer(input_stream)
@@ -13,10 +14,8 @@ def main(argv):
     tree = parser.doc()
 
     visitor = CSTVisitor()
-    AST = visitor.visit(tree)
-    dot = ASTDotVisitor.visit(AST)
-
-    pass
+    ast = visitor.visit(tree)
+    dot = ASTDotVisitor.visit(ast)
 
 
 if __name__ == '__main__':

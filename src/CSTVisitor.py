@@ -11,7 +11,7 @@ from src import AST
 
 
 class CSTVisitor (MathVisitor):
-    uuidCounter = -1
+    uuidCounter = 0
 
     def aggregateResult(self, aggregate, nextResult):
         if nextResult is None:
@@ -22,9 +22,10 @@ class CSTVisitor (MathVisitor):
         return aggregate
 
     def visitDoc(self, ctx):
+        name = self.uuidCounter
         self.uuidCounter += 1
 
-        return AST.Doc(self.uuidCounter, self.visitChildren(ctx))
+        return AST.Doc(name, self.visitChildren(ctx))
 
     def visitBool_expr(self, ctx):
         if ctx.LEFT_PAREN() and ctx.RIGHT_PAREN():
@@ -33,6 +34,7 @@ class CSTVisitor (MathVisitor):
         if ctx.getChildCount() == 1:
             return self.visit(ctx.getChild(0))
 
+        name = self.uuidCounter
         self.uuidCounter += 1
         my_ast = AST.Operator()
 
@@ -51,10 +53,11 @@ class CSTVisitor (MathVisitor):
             my_ast.addChild(self.visit(ctx.getChild(0)))
             my_ast.addChild(self.visit(ctx.getChild(2)))
 
-        my_ast.setName(self.uuidCounter)
+        my_ast.setName(name)
         return my_ast
 
     def visitComp_expr(self, ctx):
+        name = self.uuidCounter
         self.uuidCounter += 1
         my_ast = AST.Operator()
 
@@ -74,13 +77,14 @@ class CSTVisitor (MathVisitor):
         my_ast.addChild(self.visit(ctx.getChild(0)))
         my_ast.addChild(self.visit(ctx.getChild(2)))
 
-        my_ast.setName(self.uuidCounter)
+        my_ast.setName(name)
         return my_ast
 
     def visitMath_expr(self, ctx):
         if ctx.LEFT_PAREN() and ctx.RIGHT_PAREN():
             return self.visit(ctx.getChild(1))
 
+        name = self.uuidCounter
         self.uuidCounter += 1
         my_ast = AST.Operator()
 
@@ -111,5 +115,5 @@ class CSTVisitor (MathVisitor):
             my_ast.addChild(self.visit(ctx.getChild(0)))
             my_ast.addChild(self.visit(ctx.getChild(2)))
 
-        my_ast.setName(self.uuidCounter)
+        my_ast.setName(name)
         return my_ast
