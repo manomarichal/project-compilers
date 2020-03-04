@@ -25,11 +25,12 @@ class Component:
 class Composite(Component):
     __children: list
 
-    def __init__(self, children: list = None):
-        if children is None:
+    def __init__(self, dummy=None):
+        if dummy is None:
             self.children = []
         else:
-            self.children = children
+            assert isinstance(dummy, Composite)
+            self.swapChildren(dummy)
 
     def getChild(self, i: int):
         return self.children[i]
@@ -47,9 +48,9 @@ class Composite(Component):
 
     def swapChildren(self, other):
         assert isinstance(other, Composite)
-    
+
         tmp = self.__children
-        self.children = other.__childrenn = tmp
+        self.children = other.__children = tmp
     
         other.children = tmp
     
