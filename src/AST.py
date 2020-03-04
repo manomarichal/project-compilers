@@ -1,30 +1,30 @@
 # Implemented according to the composite design pattern
 # some of these classes are mostly just interfaces / use for type-checking if needed
 
-# genericAccept() not for external use!
+# _genericAccept() not for external use!
 
 
 # Component
 class Component:
-    __parent = None
-    __name = None
+    _parent = None
+    _name = None
 
     def __init__(self, name=None):
-        self.__name = name
+        self._name = name
 
     def getName(self):
-        return self.__name
+        return self._name
 
     def setName(self, name):
-        self.__name = name
+        self._name = name
 
     def getParent(self):
-        return self.__parent
+        return self._parent
 
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Component", lambda x: None)
+        return self._genericAccept(visitor, "Component", lambda x: None)
 
-    def genericAccept(self, visitor, name, nextAttempt):
+    def _genericAccept(self, visitor, name, nextAttempt):
         if hasattr(visitor, "visit" + name):
             return getattr(visitor, "visit" + name)(self)
         else:
@@ -33,48 +33,48 @@ class Component:
 
 # Composites
 class Composite(Component):
-    __children = []
+    _children = []
 
     def __init__(self, name=None, dummy=None):
         Component.__init__(self, name)
 
         if dummy is None:
-            self.__children = []
+            self._children = []
         else:
             assert isinstance(dummy, Composite)
             self.swapChildren(dummy)
 
     def getChild(self, i: int):
-        return self.__children[i]
+        return self._children[i]
 
     def getChildCount(self):
-        return len(self.__children)
+        return len(self._children)
 
     def addChild(self, newChild: Component, i: int = None):
         if i is None:
-            self.__children.append(newChild)
+            self._children.append(newChild)
         else:
-            self.__children.insert(i, newChild)
+            self._children.insert(i, newChild)
 
-        newChild.__parent = self
+        newChild._parent = self
 
     def swapChildren(self, other):
         assert isinstance(other, Composite)
 
-        tmp = self.__children
-        self.__children = other.__children
-        other.__children = tmp
+        tmp = self._children
+        self._children = other._children
+        other._children = tmp
 
-        other.__children = tmp
+        other._children = tmp
 
-        for child in self.__children:
-            child.__parent = self
+        for child in self._children:
+            child._parent = self
 
-            for child in other.__children:
-                child.__parent = other
+            for child in other._children:
+                child._parent = other
 
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Composite", super().accept)
+        return self._genericAccept(visitor, "Composite", super().accept)
 
 
 class DummyNode(Composite):
@@ -90,110 +90,110 @@ class DummyNode(Composite):
             self.addChild(children)
 
     def accept(self, visitor):
-        return self.genericAccept(visitor, "DummyNode", super().accept)
+        return self._genericAccept(visitor, "DummyNode", super().accept)
 
 
 class Doc(Composite):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Doc", super().accept)
+        return self._genericAccept(visitor, "Doc", super().accept)
 
 
 class Operator(Composite):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Operator", super().accept)
+        return self._genericAccept(visitor, "Operator", super().accept)
 
 
 class Neg(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Neg", super().accept)
+        return self._genericAccept(visitor, "Neg", super().accept)
 
 
 class Pos(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Pos", super().accept)
+        return self._genericAccept(visitor, "Pos", super().accept)
 
 
 class Prod(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Prod", super().accept)
+        return self._genericAccept(visitor, "Prod", super().accept)
 
 
 class Div(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Div", super().accept)
+        return self._genericAccept(visitor, "Div", super().accept)
 
 
 class Mod(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Mod", super().accept)
+        return self._genericAccept(visitor, "Mod", super().accept)
 
 
 class Sum(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Sum", super().accept)
+        return self._genericAccept(visitor, "Sum", super().accept)
 
 
 class Sub(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Sub", super().accept)
+        return self._genericAccept(visitor, "Sub", super().accept)
 
 
 class Not(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Not", super().accept)
+        return self._genericAccept(visitor, "Not", super().accept)
 
 
 class And(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "And", super().accept)
+        return self._genericAccept(visitor, "And", super().accept)
 
 
 class Or(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Or", super().accept)
+        return self._genericAccept(visitor, "Or", super().accept)
 
 
 class Equal(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Equal", super().accept)
+        return self._genericAccept(visitor, "Equal", super().accept)
 
 
 class NotEqual(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "NotEqual", super().accept)
+        return self._genericAccept(visitor, "NotEqual", super().accept)
 
 
 class Less(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Less", super().accept)
+        return self._genericAccept(visitor, "Less", super().accept)
 
 
 class LessE(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "LessE", super().accept)
+        return self._genericAccept(visitor, "LessE", super().accept)
 
 
 class More(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "More", super().accept)
+        return self._genericAccept(visitor, "More", super().accept)
 
 
 class MoreE(Operator):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "MoreE", super().accept)
+        return self._genericAccept(visitor, "MoreE", super().accept)
 
 
 # Leaves
 class Leaf(Component):
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Leaf", super().accept)
+        return self._genericAccept(visitor, "Leaf", super().accept)
 
 
 class Literal(Leaf):
     val = None
 
     def accept(self, visitor):
-        return self.genericAccept(visitor, "Literal", super().accept)
+        return self._genericAccept(visitor, "Literal", super().accept)
 
 
 class IntLit(Literal):
@@ -201,4 +201,4 @@ class IntLit(Literal):
         self.val = val
 
     def accept(self, visitor):
-        return self.genericAccept(visitor, "IntLit", super().accept)
+        return self._genericAccept(visitor, "IntLit", super().accept)

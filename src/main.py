@@ -15,8 +15,12 @@ def main(argv):
 
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
-    dot = ASTDotVisitor.visit(ast)
 
+    astVisualiser = ASTDotVisitor()
+    astVisualiser.visit(ast)
+    dot = astVisualiser.graph
+
+    print(dot)
 
 if __name__ == '__main__':
     main(sys.argv)
