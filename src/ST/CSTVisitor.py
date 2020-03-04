@@ -36,7 +36,7 @@ class CSTVisitor (MathVisitor):
 
         name = self.uuidCounter
         self.uuidCounter += 1
-        my_ast = AST.Operator()
+        my_ast = AST.LogicOp()
 
         if ctx.getChildCount() == 2:
             if ctx.NOT_OP():
@@ -59,7 +59,7 @@ class CSTVisitor (MathVisitor):
     def visitComp_expr(self, ctx):
         name = self.uuidCounter
         self.uuidCounter += 1
-        my_ast = AST.Operator()
+        my_ast = AST.CompOp()
 
         if ctx.SMALLER_OP():
             my_ast = AST.Less()
@@ -86,7 +86,7 @@ class CSTVisitor (MathVisitor):
 
         name = self.uuidCounter
         self.uuidCounter += 1
-        my_ast = AST.Operator()
+        my_ast = AST.MathOp()
 
         if ctx.getChildCount() == 1:
             if ctx.INT():

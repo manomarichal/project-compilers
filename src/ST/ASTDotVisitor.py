@@ -4,9 +4,6 @@ import pydot
 
 class ASTDotVisitor():
     graph = pydot.Dot(graph_type='graph')
-    operatorCounter = 0
-    literalCounter = 0
-    docCounter = 0
 
     def visit(self, ast: AST.Component):
         return ast.accept(self)
@@ -17,8 +14,7 @@ class ASTDotVisitor():
         if ast.getParent() is not None:
             self.graph.add_edge(pydot.Edge(ast.getParent().getName(), ast.getName()))
 
-        index = 0
-        for index in range(ast.getChildCount()):
+        for index in range(0, ast.getChildCount()):
             self.visit(ast.getChild(index))
 
     def visitLiteral(self, ast: AST.Literal):

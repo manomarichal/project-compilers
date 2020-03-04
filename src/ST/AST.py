@@ -47,6 +47,9 @@ class Composite(Component):
     def getChild(self, i: int):
         return self._children[i]
 
+    def replaceChild(self, oldChild: Component, newChild: Component):
+        self._children[self._children.index(oldChild)] = newChild
+
     def getChildCount(self):
         return len(self._children)
 
@@ -97,91 +100,89 @@ class Doc(Composite):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Doc", super().accept)
 
-
-class Operator(Composite):
+class BinaryOp(Composite):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Operator", super().accept)
 
+class UnaryOp(Composite):
+    def accept(self, visitor):
+        return self._genericAccept(visitor, "Operator", super().accept)
 
-class Neg(Operator):
+class MathOp(BinaryOp):
+    def accept(self, visitor):
+        return self._genericAccept(visitor, "Operator", super().accept)
+
+class LogicOp(BinaryOp):
+    def accept(self, visitor):
+        return self._genericAccept(visitor, "Operator", super().accept)
+
+class CompOp(BinaryOp):
+    def accept(self, visitor):
+        return self._genericAccept(visitor, "Operator", super().accept)
+
+class Neg(UnaryOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Neg", super().accept)
 
-
-class Pos(Operator):
+class Pos(UnaryOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Pos", super().accept)
 
-
-class Prod(Operator):
+class Prod(MathOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Prod", super().accept)
 
-
-class Div(Operator):
+class Div(MathOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Div", super().accept)
 
-
-class Mod(Operator):
+class Mod(MathOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Mod", super().accept)
 
-
-class Sum(Operator):
+class Sum(MathOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Sum", super().accept)
 
-
-class Sub(Operator):
+class Sub(MathOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Sub", super().accept)
 
-
-class Not(Operator):
+class Not(LogicOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Not", super().accept)
 
-
-class And(Operator):
+class And(LogicOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "And", super().accept)
 
-
-class Or(Operator):
+class Or(LogicOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Or", super().accept)
 
-
-class Equal(Operator):
+class Equal(CompOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Equal", super().accept)
 
-
-class NotEqual(Operator):
+class NotEqual(CompOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "NotEqual", super().accept)
 
-
-class Less(Operator):
+class Less(CompOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Less", super().accept)
 
-
-class LessE(Operator):
+class LessE(CompOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "LessE", super().accept)
 
-
-class More(Operator):
+class More(CompOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "More", super().accept)
 
-
-class MoreE(Operator):
+class MoreE(CompOp):
     def accept(self, visitor):
         return self._genericAccept(visitor, "MoreE", super().accept)
-
 
 # Leaves
 class Leaf(Component):
@@ -191,6 +192,9 @@ class Leaf(Component):
 
 class Literal(Leaf):
     val = None
+
+    def getValue(self):
+        return self.val
 
     def accept(self, visitor):
         return self._genericAccept(visitor, "Literal", super().accept)
