@@ -2,7 +2,7 @@ import sys
 from antlr4 import *
 from src.antlr.MathLexer import MathLexer
 from src.antlr.MathParser import MathParser
-from src.MathCSTVisitor import CustomVisitor
+from src.CSTVisitor import CustomVisitor
 
 def main(argv):
     input_stream = FileStream(argv[1])

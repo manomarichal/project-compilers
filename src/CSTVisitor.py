@@ -10,7 +10,7 @@ from src import AST
 # <context>.getChild(<index>)
 
 
-class CustomVisitor (MathVisitor):
+class CSTVisitor (MathVisitor):
     def aggregateResult(self, aggregate, nextResult):
         if nextResult is None:
             return aggregate
