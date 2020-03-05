@@ -222,6 +222,14 @@ class Literal(Leaf):
         return self._genericAccept(visitor, "Literal", super().accept)
 
 
+class BoolLit(Literal):
+    def __init__(self, val: int = 0):
+        self.val = val
+
+    def accept(self, visitor):
+        return self._genericAccept(visitor, "IntLit", super().accept)
+
+
 class IntLit(Literal):
     def __init__(self, val: int = 0):
         self.val = val

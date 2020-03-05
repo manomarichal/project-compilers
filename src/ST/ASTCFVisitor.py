@@ -51,14 +51,14 @@ class ASTCFVisitor:
                 else:
                     print("invalid comparison operator found while constant folding")
 
-                ast.getParent().replaceChild(ast, AST.Literal(value))
+                ast.getParent().replaceChild(ast, AST.BoolLit(value))
 
         elif isinstance(ast, AST.LogicOp):
-            if isinstance(ast.getChild(0), AST.IntLit):
+            if isinstance(ast.getChild(0), AST.BoolLit):
                 if isinstance(ast, AST.Not):
                     value = not (ast.getChild(0).getValue() != 0)
 
-                elif isinstance(ast.getChild(1), AST.IntLit):
+                elif isinstance(ast.getChild(1), AST.BoolLit):
                     if isinstance(ast, AST.Or):
                         value = (ast.getChild(0).getValue() != 0) or (ast.getChild(1).getValue() != 0)
                     elif isinstance(ast, AST.And):
@@ -70,6 +70,6 @@ class ASTCFVisitor:
                     print("something went wrong when constant folding with a logic operator")
                     exit(1)
 
-                ast.getParent().replaceChild(ast, AST.IntLit(value))
+                ast.getParent().replaceChild(ast, AST.BoolLit(value))
 
         # TODO Unary Operators
