@@ -72,4 +72,12 @@ class ASTCFVisitor:
 
                 ast.getParent().replaceChild(ast, AST.BoolLit(value))
 
-        # TODO Unary Operators
+        elif isinstance(ast, AST.UnaryOp):
+            if isinstance(ast.getChild(0), AST.IntLit):
+                if isinstance(ast, AST.Pos):
+                    ast.getParent().replaceChild(ast, AST.IntLit(ast.getChild(0).getValue()))
+                elif isinstance(ast, AST.Neg):
+                    ast.getParent().replaceChild(ast, AST.IntLit(-ast.getChild(0).getValue()))
+                else:
+                    print("something went wrong when constant folding with an unary operator")
+                    exit(1)
