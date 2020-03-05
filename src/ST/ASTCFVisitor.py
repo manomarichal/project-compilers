@@ -1,10 +1,11 @@
 from ST import AST
 
+
 class ASTCFVisitor:
     def visit(self, tree):
         return tree.accept(self)
 
-    def visitComponent(self, ast:AST.Component):
+    def visitComponent(self, ast: AST.Component):
 
         if isinstance(ast, AST.Leaf):
             return
@@ -52,22 +53,23 @@ class ASTCFVisitor:
 
                 ast.getParent().replaceChild(ast, AST.Literal(value))
 
-        #TODO NOT Operator
         elif isinstance(ast, AST.LogicOp):
-            if isinstance(ast.getChild(0), AST.Literal):
-                value = False
+            if isinstance(ast.getChild(0), AST.IntLit):
+                if isinstance(ast, AST.Not):
+                    value = not (ast.getChild(0).getValue() != 0)
 
-                if isinstance(ast.getChild(1), AST.Literal):
+                elif isinstance(ast.getChild(1), AST.IntLit):
                     if isinstance(ast, AST.Or):
-                        value = ast.getChild(0).getValue() or ast.getChild(1).getValue()
+                        value = (ast.getChild(0).getValue() != 0) or (ast.getChild(1).getValue() != 0)
                     elif isinstance(ast, AST.And):
-                        value = not ast.getChild(0).getValue()
+                        value = (ast.getChild(0).getValue() != 0) and (ast.getChild(1).getValue() != 0)
                     else:
                         print("invalid logic operator found while constant folding")
+                        exit(1)
+                else:
+                    print("something went wrong when constant folding with a logic operator")
+                    exit(1)
 
-                ast.getParent().replaceChild(ast, AST.IntLiteralLit(value))
+                ast.getParent().replaceChild(ast, AST.IntLit(value))
 
         # TODO Unary Operators
-
-
-

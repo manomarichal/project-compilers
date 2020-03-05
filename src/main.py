@@ -19,7 +19,7 @@ def main(argv):
     ast = visitor.visit(tree)
 
     astCF = ASTCFVisitor()
-    astCF.visit(copy.deepcopy(ast))
+    astCF.visit(ast)
 
     astVisualiser = ASTDotVisitor()
     astVisualiser.visit(ast)
