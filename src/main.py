@@ -3,8 +3,8 @@ import copy
 from antlr4 import *
 from src.antlr.GrammarLexer import GrammarLexer
 from src.antlr.GrammarParser import GrammarParser
-from src.CSTVisitor import CSTVisitor
-from src.ASTDotVisitor import ASTDotVisitor
+from src.ST.CSTVisitor import CSTVisitor
+from src.ST.ASTDotVisitor import ASTDotVisitor
 
 
 def main(argv):

@@ -1,4 +1,4 @@
-from ST import AST
+from src.ST import AST
 import pydot
 
 
