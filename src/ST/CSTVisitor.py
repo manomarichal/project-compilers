@@ -171,3 +171,9 @@ class CSTVisitor (GrammarVisitor):
         my_ast.set_name(name)
         return my_ast
 
+    def visitIdentifier(self, ctx):
+        name = self.uuidCounter
+        self.uuidCounter += 1
+        my_ast = AST.Variable(name)
+        return my_ast
+

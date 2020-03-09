@@ -36,7 +36,9 @@ doc : ((decl) SEMICOLON)* EOF;
 
 typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
-decl:  typeObj ID ASSIGN_OP expr;
+identifier: ID;
+
+decl:  typeObj identifier ASSIGN_OP expr;
 
 literal: INT | FLOAT | CHAR;
 
@@ -49,5 +51,5 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     expr (EQUAL_OP | NOT_EQUAL_OP) expr |
     expr AND_OP expr |
     expr OR_OP expr |
-    ID |
+    identifier |
     literal;
