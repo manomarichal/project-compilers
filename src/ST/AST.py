@@ -1,11 +1,14 @@
 # Implemented according to the composite design pattern
 # some of these classes are mostly just interfaces / use for type-checking if needed
 
+from src.TypeClass import TypeClass
+
 
 # Component
 class Component:
     _parent = None
     _name = None
+    typeObj = None
 
     def __init__(self, name=None):
         self._name = name
@@ -99,6 +102,16 @@ class Doc(Composite):
         return self._genericAccept(visitor, "Doc", super().accept)
 
 
+class Expression(Composite):
+
+    def getType(self):
+        return self.TypeObj
+
+    def accept(self, visitor):
+        return self._genericAccept(visitor, "Literal", super().accept)
+
+
+# OPERATORS
 class BinaryOp(Composite):
     def accept(self, visitor):
         return self._genericAccept(visitor, "Operator", super().accept)
@@ -204,6 +217,11 @@ class MoreE(CompOp):
         return self._genericAccept(visitor, "MoreE", super().accept)
 
 
+class AssignOp(BinaryOp):
+    def accept(self, visitor):
+        return self._genericAccept(visitor, "AssignOp", super().accept)
+
+
 # Leaves
 class Leaf(Component):
     def accept(self, visitor):
@@ -220,17 +238,9 @@ class Literal(Leaf):
         return self._genericAccept(visitor, "Literal", super().accept)
 
 
-class BoolLit(Literal):
-    def __init__(self, val: int = 0):
-        self.val = val
+class Variable(Leaf):
+    def getType(self):
+        return self.TypeObj
 
     def accept(self, visitor):
-        return self._genericAccept(visitor, "IntLit", super().accept)
-
-
-class IntLit(Literal):
-    def __init__(self, val: int = 0):
-        self.val = val
-
-    def accept(self, visitor):
-        return self._genericAccept(visitor, "IntLit", super().accept)
+        return self._genericAccept(visitor, "Literal", super().accept)

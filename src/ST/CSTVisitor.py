@@ -1,5 +1,5 @@
 from src.antlr.GrammarVisitor import  GrammarVisitor
-from src import AST
+from src.ST import AST
 
 
 # to check a token's "type" (hopefully):
@@ -27,22 +27,46 @@ class CSTVisitor (GrammarVisitor):
 
         return AST.Doc(name, self.visitChildren(ctx))
 
-    def visitBool_expr(self, ctx):
+    def visitExpr(self, ctx):
+        # skip
+
         if ctx.LEFT_PAREN() and ctx.RIGHT_PAREN():
             return self.visit(ctx.getChild(1))
 
         if ctx.getChildCount() == 1:
             return self.visit(ctx.getChild(0))
 
-        name = self.uuidCounter
-        self.uuidCounter += 1
-        my_ast = AST.LogicOp()
-
+        # unary operator
         if ctx.getChildCount() == 2:
             if ctx.NOT_OP():
                 my_ast = AST.Not()
 
             my_ast.addChild(self.visit(ctx.getChild(1)))
+
+            elif ctx.PLUS():
+                my_ast = AST.Pos()
+            elif ctx.MINUS():
+                my_ast = AST.Neg()
+
+            my_ast.addChild(self.visit(ctx.getChild(1)))
+        
+        # binary operators
+        if ctx.getChildCount() == 3:
+            if ctx.AND_OP():
+                my_ast = AST.And()
+            elif ctx.OR_OP():
+                my_ast = AST.Or()
+
+
+
+        
+        ### old ass trash, now absolutely useless :(
+
+        name = self.uuidCounter
+        self.uuidCounter += 1
+        my_ast = AST.LogicOp()
+
+        
 
         elif ctx.getChildCount() == 3:
             if ctx.AND_OP():
@@ -50,16 +74,9 @@ class CSTVisitor (GrammarVisitor):
             elif ctx.OR_OP():
                 my_ast = AST.Or()
 
-            my_ast.addChild(self.visit(ctx.getChild(0)))
-            my_ast.addChild(self.visit(ctx.getChild(2)))
 
-        my_ast.setName(name)
-        return my_ast
 
-    def visitComp_expr(self, ctx):
-        name = self.uuidCounter
-        self.uuidCounter += 1
-        my_ast = AST.CompOp()
+        # comp expr
 
         if ctx.SMALLER_OP():
             my_ast = AST.Less()
@@ -80,6 +97,7 @@ class CSTVisitor (GrammarVisitor):
         my_ast.setName(name)
         return my_ast
 
+
     def visitMath_expr(self, ctx):
         if ctx.LEFT_PAREN() and ctx.RIGHT_PAREN():
             return self.visit(ctx.getChild(1))
@@ -93,12 +111,7 @@ class CSTVisitor (GrammarVisitor):
                 my_ast = AST.IntLit(int(ctx.getText()))
 
         elif ctx.getChildCount() == 2:
-            if ctx.PLUS():
-                my_ast = AST.Pos()
-            elif ctx.MINUS():
-                my_ast = AST.Neg()
-
-            my_ast.addChild(self.visit(ctx.getChild(1)))
+            
 
         elif ctx.getChildCount() == 3:
             if ctx.STAR():
