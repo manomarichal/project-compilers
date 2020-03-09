@@ -72,33 +72,33 @@ class CSTVisitor (GrammarVisitor):
                 my_ast = AST.Or()
     
             # COMPARISON OPERATORS
-        if ctx.SMALLER_OP():
-            my_ast = AST.Less()
-        elif ctx.GREATER_OP():
-            my_ast = AST.More()
-        elif ctx.EQUAL_OP():
-            my_ast = AST.Equal()
-        elif ctx.SMALLER_E_OP():
-            my_ast = AST.LessE()
-        elif ctx.GREATER_E_OP():
-            my_ast = AST.MoreE()
-        elif ctx.NOT_EQUAL_OP():
-            my_ast = AST.NotEqual()
+            if ctx.SMALLER_OP():
+                my_ast = AST.Less()
+            elif ctx.GREATER_OP():
+                my_ast = AST.More()
+            elif ctx.EQUAL_OP():
+                my_ast = AST.Equal()
+            elif ctx.SMALLER_E_OP():
+                my_ast = AST.LessE()
+            elif ctx.GREATER_E_OP():
+                my_ast = AST.MoreE()
+            elif ctx.NOT_EQUAL_OP():
+                my_ast = AST.NotEqual()
 
-        # MATH OPERATORS
-        if ctx.STAR():
-            my_ast = AST.Prod()
-        elif ctx.SLASH():
-            my_ast = AST.Div()
-        elif ctx.PERCENT():
-            my_ast = AST.Mod()
-        elif ctx.PLUS():
-            my_ast = AST.Sum()
-        elif ctx.MINUS():
-            my_ast = AST.Sub()
+            # MATH OPERATORS
+            if ctx.STAR():
+                my_ast = AST.Prod()
+            elif ctx.SLASH():
+                my_ast = AST.Div()
+            elif ctx.PERCENT():
+                my_ast = AST.Mod()
+            elif ctx.PLUS():
+                my_ast = AST.Sum()
+            elif ctx.MINUS():
+                my_ast = AST.Sub()
 
-        my_ast.add_child(self.visit(ctx.getChild(0)))
-        my_ast.add_child(self.visit(ctx.getChild(2)))
+            my_ast.add_child(self.visit(ctx.getChild(0)))
+            my_ast.add_child(self.visit(ctx.getChild(2)))
 
         my_ast.set_name(name)
         return my_ast
@@ -127,15 +127,15 @@ class CSTVisitor (GrammarVisitor):
         # TODO (maybe) no more strings =(
         for tokenNr in range(ctx.getChildCount()):
             token = ctx.getChild(tokenNr)
-            token_type = token.getSymbol().getType()
+            token_type = token.getSymbol().type
 
             if token_type in {GrammarParser.CHAR, GrammarParser.INT, GrammarParser.FLOAT}:
                 assert len(type_stack) == 0
-                if token.getSymbol().getType() == GrammarParser.CHAR:
+                if token_type == GrammarParser.CHAR:
                     type_stack.append("char")
-                if token.getSymbol().getType() == GrammarParser.INT:
+                if token_type == GrammarParser.INT:
                     type_stack.append("int")
-                if token.getSymbol().getType() == GrammarParser.FLOAT:
+                if token_type == GrammarParser.FLOAT:
                     type_stack.append("float")
                 if const_reminder:
                     type_stack.append("const")
