@@ -1,28 +1,30 @@
 from src.ST import AST
+from src.ST.ASTVisitor import ASTVisitor
 import pydot
 
 
-class ASTDotVisitor():
+class ASTDotVisitor(ASTVisitor):
     graph = pydot.Dot(graph_type='graph')
-
-    def visit(self, ast: AST.Component):
-        return ast.accept(self)
-
     def visitComposite(self, ast: AST.Composite):
-        self.graph.add_node(pydot.Node(ast.getName(), label=type(ast).__name__))
+        self.graph.add_node(pydot.Node(ast.get_name(), label=type(ast).__name__))
 
-        if ast.getParent() is not None:
-            self.graph.add_edge(pydot.Edge(ast.getParent().getName(), ast.getName()))
+        if ast.get_parent() is not None:
+            self.graph.add_edge(pydot.Edge(ast.get_parent().get_name(), ast.get_name()))
 
-        for index in range(0, ast.getChildCount()):
-            self.visit(ast.getChild(index))
+        for index in range(0, ast.get_child_count()):
+            self.visit(ast.get_child(index))
 
     def visitLiteral(self, ast: AST.Literal):
-        self.graph.add_node(pydot.Node(ast.getName(), label=ast.val))
+        self.graph.add_node(pydot.Node(ast.get_name(), label=ast.val))
 
-        if ast.getParent() is not None:
-            self.graph.add_edge(pydot.Edge(ast.getParent().getName(), ast.getName()))
+        if ast.get_parent() is not None:
+            self.graph.add_edge(pydot.Edge(ast.get_parent().get_name(), ast.get_name()))
 
+    def visitVariable(self, ast: AST.Variable):
+        self.graph.add_node(pydot.Node(ast.get_name(), label='cool naam'))
+
+        if ast.get_parent() is not None:
+            self.graph.add_edge(pydot.Edge(ast.get_parent().get_name(), ast.get_name()))
 
 
 
