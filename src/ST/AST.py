@@ -262,7 +262,7 @@ class Variable(Leaf):
         return self.type_obj
 
     def accept(self, visitor):
-        return self._genericAccept(visitor, "IntLit", super().accept)
+        return self._generic_accept(visitor, "Variable", super().accept)
 
 
 class IntLit(Literal):
@@ -270,4 +270,4 @@ class IntLit(Literal):
         self.val = val
 
     def accept(self, visitor):
-        return self._genericAccept(visitor, "IntLit", super().accept)
+        return self._generic_accept(visitor, "IntLit", super().accept)

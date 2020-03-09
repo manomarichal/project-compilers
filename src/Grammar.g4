@@ -28,8 +28,8 @@ OR_OP : '||';
 INCR: '++';
 DECR: '--';
 NOT_OP : '!';
+ID : [a-z];
 WS: [ \n\t\r]+ -> skip;
-ID : [_a-zA-Z][_0-9a-zA-Z];
 
 
 doc : ((decl) SEMICOLON)* EOF;

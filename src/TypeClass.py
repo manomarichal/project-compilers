@@ -29,4 +29,4 @@ class TypeClass:
         result = ""
         for component in self.getType():
             result += component + " "
-        return result[0:len(result)-2]
+        return result[0:len(result)-1]

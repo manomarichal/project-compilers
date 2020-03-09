@@ -29,7 +29,6 @@ class CSTVisitor (GrammarVisitor):
 
         return AST.Doc(name, self.visitChildren(ctx))
 
-
     def visitExpr(self, ctx):
         # skip
         if ctx.LEFT_PAREN() and ctx.RIGHT_PAREN():
@@ -50,15 +49,14 @@ class CSTVisitor (GrammarVisitor):
                 my_ast = AST.Pos()
             elif ctx.MINUS():
                 my_ast = AST.Neg()
-            elif ctx.getChild(0).getSymbol().getType() == GrammarParser.INCR:
+            elif ctx.getChild(0).getSymbol().type == GrammarParser.INCR:
                 my_ast = AST.IncrPre()
-            elif ctx.getChild(1).getSymbol().getType() == GrammarParser.INCR:
+            elif ctx.getChild(1).getSymbol().type == GrammarParser.INCR:
                 my_ast = AST.IncrPost()
-            elif ctx.getChild(0).getSymbol().getType() == GrammarParser.DECR:
+            elif ctx.getChild(0).getSymbol().type == GrammarParser.DECR:
                 my_ast = AST.DecrPre()
-            elif ctx.getChild(1).getSymbol().getType() == GrammarParser.DECR:
+            elif ctx.getChild(1).getSymbol().type == GrammarParser.DECR:
                 my_ast = AST.DecrPost()
-
 
             my_ast.add_child(self.visit(ctx.getChild(1)))
 
@@ -104,10 +102,12 @@ class CSTVisitor (GrammarVisitor):
         return my_ast
 
     def visitLiteral(self, ctx):
-        my_ast = AST.Literal
+        name = self.uuidCounter
+        self.uuidCounter += 1
+        my_ast = AST.Literal()
 
-        if ctx.CHAR():
-            my_ast.val = ord(ctx.getText())
+        if ctx.CHAR():  #TODO (maybe) multivalue chars
+            my_ast.val = ord(ctx.getText()[1])
             my_ast.type_obj = TypeClass(["char"])
         if ctx.INT():
             my_ast.val = int(ctx.getText())
@@ -116,6 +116,7 @@ class CSTVisitor (GrammarVisitor):
             my_ast.val = float(ctx.getText())
             my_ast.type_obj = TypeClass(["float"])
 
+        my_ast.set_name(name)
         return my_ast
 
     def visitTypeObject(self, ctx):
@@ -156,10 +157,12 @@ class CSTVisitor (GrammarVisitor):
 
         name = self.uuidCounter
         self.uuidCounter += 1
+        name2 = self.uuidCounter
+        self.uuidCounter += 1
         my_ast = AST.AssignOp()
 
         var = AST.Variable()
-        var.set_name(ctx.getChild(1).getText())
+        var.set_name(name2)
         var.type_obj = self.visitTypeObject(ctx.getChild(0))
 
         my_ast.add_child(var)
