@@ -103,7 +103,6 @@ class Doc(Composite):
 
 
 class Expression(Composite):
-
     def getType(self):
         return self.TypeObj
 

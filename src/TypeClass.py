@@ -1,21 +1,20 @@
-# from enum import Enum, auto
-# class TypeComponents (Enum):
-#     CHAR = auto()
-#     INT = auto()
-#     FLOAT = auto()
-#     PTR = auto()
-#     CONST = auto()
+import copy
 
-
-TypeComponents = {"char", "int", "float", "*", "const"}
-
+PrimitiveComp = {"char", "int", "float"}
+ModifierComp = {"const", "*"}
+TypeComp = copy.deepcopy(PrimitiveComp)
+TypeComp.union(ModifierComp)
 
 class TypeClass:
+    # [0] = primitive type
+    # [1:] = type modifier
     _type_stack = []
 
     def __init__(self, type):
-        assert TypeComponents.issuperset(type)
         self._type_stack = type
+
+    def pushType (self, newType):
+        self._type_stack.append(newType)
 
     def __eq__(self, other):
         return other.getType() == self.getType()
