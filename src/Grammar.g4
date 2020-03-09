@@ -1,8 +1,15 @@
 grammar Grammar;
 
+CHAR: '\''[ -~] '\'';
 INT : [0-9]+;
-
+FLOAT : [0-9]+'.'[0-9]+;
+INT_TYPE: 'int';
+FLOAT_TYPE: 'float';
+CHAR_TYPE: 'char';
+CONST: 'const';
+ASSIGN_OP: '=';
 PLUS : '+' ;
+AMP : '&' ;
 MINUS : '-';
 STAR : '*';
 SLASH : '/';
@@ -20,20 +27,24 @@ AND_OP : '&&';
 OR_OP : '||';
 NOT_OP : '!';
 WS: [ \n\t\r]+ -> skip;
+ID : [_a-zA-Z][_0-9a-zA-Z];
 
 
-doc : ((bool_expr | math_expr) SEMICOLON)* EOF;
+doc : ((decl) SEMICOLON)* EOF;
 
-bool_expr : LEFT_PAREN bool_expr RIGHT_PAREN |
-    NOT_OP bool_expr |
-    bool_expr AND_OP bool_expr |
-    bool_expr OR_OP bool_expr |
-    comp_expr;
+type:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
-comp_expr : math_expr (SMALLER_OP | GREATER_OP | EQUAL_OP | SMALLER_E_OP | GREATER_E_OP | NOT_EQUAL_OP) math_expr;
+decl:  type ID ASSIGN_OP expr;
 
-math_expr : LEFT_PAREN math_expr RIGHT_PAREN |
-    (MINUS | PLUS) math_expr |
-    math_expr (STAR | SLASH | PERCENT) math_expr |
-    math_expr (PLUS | MINUS) math_expr |
-    INT;
+literal: INT | FLOAT | CHAR;
+
+expr : LEFT_PAREN expr RIGHT_PAREN |
+    (MINUS | PLUS | NOT_OP) expr |
+    expr (STAR | SLASH | PERCENT) expr |
+    expr (PLUS | MINUS) expr |
+    expr (SMALLER_OP | GREATER_OP | SMALLER_E_OP | GREATER_E_OP ) expr |
+    expr (EQUAL_OP | NOT_EQUAL_OP) expr |
+    expr AND_OP expr |
+    expr OR_OP expr |
+    ID |
+    literal;

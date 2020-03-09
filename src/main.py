@@ -1,6 +1,8 @@
 import sys
 import copy
 from antlr4 import *
+
+from src.ST.ASTCFVisitor import ASTCFVisitor
 from src.antlr.GrammarLexer import GrammarLexer
 from src.antlr.GrammarParser import GrammarParser
 from src.ST.CSTVisitor import CSTVisitor
