@@ -14,18 +14,23 @@ class GrammarVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by GrammarParser#bool_expr.
-    def visitBool_expr(self, ctx:GrammarParser.Bool_exprContext):
+    # Visit a parse tree produced by GrammarParser#typeObj.
+    def visitTypeObj(self, ctx:GrammarParser.TypeObjContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by GrammarParser#comp_expr.
-    def visitComp_expr(self, ctx:GrammarParser.Comp_exprContext):
+    # Visit a parse tree produced by GrammarParser#decl.
+    def visitDecl(self, ctx:GrammarParser.DeclContext):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by GrammarParser#math_expr.
-    def visitMath_expr(self, ctx:GrammarParser.Math_exprContext):
+    # Visit a parse tree produced by GrammarParser#literal.
+    def visitLiteral(self, ctx:GrammarParser.LiteralContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#expr.
+    def visitExpr(self, ctx:GrammarParser.ExprContext):
         return self.visitChildren(ctx)
 
 

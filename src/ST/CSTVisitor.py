@@ -1,4 +1,6 @@
 from src.antlr.GrammarVisitor import  GrammarVisitor
+from src.antlr.GrammarParser import GrammarParser
+from src.TypeClass import TypeClass
 from src.ST import AST
 
 
@@ -18,26 +20,15 @@ class CSTVisitor (GrammarVisitor):
             return aggregate
         if aggregate is None:
             return AST.DummyNode(nextResult)
-        aggregate.addChild(nextResult)
+        aggregate.add_child(nextResult)
         return aggregate
 
     def visitDoc(self, ctx):
         name = self.uuidCounter
         self.uuidCounter += 1
 
-        return AST.Doc(name, self.visitChildren(ctx))        
-    
-    def visitDecl(self, ctx):
+        return AST.Doc(name, self.visitChildren(ctx))
 
-        name = self.uuidCounter
-        self.uuidCounter += 1
-        my_ast = AST.AssignOp()
-
-        my_ast.addChild(self.visit(ctx.getChild(0)))
-        my_ast.addChild(self.visit(ctx.getChild(2)))
-
-        my_ast.setName(name)
-        return my_ast
 
     def visitExpr(self, ctx):
         # skip
@@ -46,11 +37,11 @@ class CSTVisitor (GrammarVisitor):
 
         if ctx.getChildCount() == 1:
             return self.visit(ctx.getChild(0))
-        
+
         name = self.uuidCounter
         self.uuidCounter += 1
         my_ast = None
-        
+
         # unary operator
         if ctx.getChildCount() == 2:
             if ctx.NOT_OP():
@@ -59,52 +50,121 @@ class CSTVisitor (GrammarVisitor):
                 my_ast = AST.Pos()
             elif ctx.MINUS():
                 my_ast = AST.Neg()
+            elif ctx.getChild(0).getSymbol().getType() == GrammarParser.INCR:
+                my_ast = AST.IncrPre()
+            elif ctx.getChild(1).getSymbol().getType() == GrammarParser.INCR:
+                my_ast = AST.IncrPost()
+            elif ctx.getChild(0).getSymbol().getType() == GrammarParser.DECR:
+                my_ast = AST.DecrPre()
+            elif ctx.getChild(1).getSymbol().getType() == GrammarParser.DECR:
+                my_ast = AST.DecrPost()
 
-            my_ast.addChild(self.visit(ctx.getChild(1)))
-        
+
+            my_ast.add_child(self.visit(ctx.getChild(1)))
+
         # binary operators
         if ctx.getChildCount() == 3:
-            
+
             # BOOLEAN OPERATORS
             if ctx.AND_OP():
                 my_ast = AST.And()
             elif ctx.OR_OP():
                 my_ast = AST.Or()
-            
-            # COMPARISON OPERATORS
-            if ctx.SMALLER_OP():
-                my_ast = AST.Less()
-            elif ctx.GREATER_OP():
-                my_ast = AST.More()
-            elif ctx.EQUAL_OP():
-                my_ast = AST.Equal()
-            elif ctx.SMALLER_E_OP():
-                my_ast = AST.LessE()
-            elif ctx.GREATER_E_OP():
-                my_ast = AST.MoreE()
-            elif ctx.NOT_EQUAL_OP():
-                my_ast = AST.NotEqual()
-            
-            # MATH OPERATORS    
-            if ctx.STAR():
-                my_ast = AST.Prod()
-            elif ctx.SLASH():
-                my_ast = AST.Div()
-            elif ctx.PERCENT():
-                my_ast = AST.Mod()
-            elif ctx.PLUS():
-                my_ast = AST.Sum()
-            elif ctx.MINUS():
-                my_ast = AST.Sub()
-            
-            my_ast.addChild(self.visit(ctx.getChild(0)))
-            my_ast.addChild(self.visit(ctx.getChild(2)))
-        
-        my_ast.setName(name)
-        return my_ast
     
-    def visitType(self, ctx):
+            # COMPARISON OPERATORS
+        if ctx.SMALLER_OP():
+            my_ast = AST.Less()
+        elif ctx.GREATER_OP():
+            my_ast = AST.More()
+        elif ctx.EQUAL_OP():
+            my_ast = AST.Equal()
+        elif ctx.SMALLER_E_OP():
+            my_ast = AST.LessE()
+        elif ctx.GREATER_E_OP():
+            my_ast = AST.MoreE()
+        elif ctx.NOT_EQUAL_OP():
+            my_ast = AST.NotEqual()
+
+        # MATH OPERATORS
+        if ctx.STAR():
+            my_ast = AST.Prod()
+        elif ctx.SLASH():
+            my_ast = AST.Div()
+        elif ctx.PERCENT():
+            my_ast = AST.Mod()
+        elif ctx.PLUS():
+            my_ast = AST.Sum()
+        elif ctx.MINUS():
+            my_ast = AST.Sub()
+
+        my_ast.add_child(self.visit(ctx.getChild(0)))
+        my_ast.add_child(self.visit(ctx.getChild(2)))
+
+        my_ast.set_name(name)
+        return my_ast
+
+    def visitLiteral(self, ctx):
+        my_ast = AST.Literal
+
+        if ctx.CHAR():
+            my_ast.val = ord(ctx.getText())
+            my_ast.type_obj = TypeClass(["char"])
+        if ctx.INT():
+            my_ast.val = int(ctx.getText())
+            my_ast.type_obj = TypeClass(["int"])
+        if ctx.FLOAT():
+            my_ast.val = float(ctx.getText())
+            my_ast.type_obj = TypeClass(["float"])
+
+        return my_ast
+
+    def visitTypeObject(self, ctx):
+        type_stack = []
+
+        const_reminder = False
+
+        # TODO syntax errors, semantic shit and warnings
+        # TODO (maybe) no more strings =(
         for tokenNr in range(ctx.getChildCount()):
             token = ctx.getChild(tokenNr)
             token_type = token.getSymbol().getType()
-            if token.getSymbol().getType() == G
+
+            if token_type in {GrammarParser.CHAR, GrammarParser.INT, GrammarParser.FLOAT}:
+                assert len(type_stack) == 0
+                if token.getSymbol().getType() == GrammarParser.CHAR:
+                    type_stack.append("char")
+                if token.getSymbol().getType() == GrammarParser.INT:
+                    type_stack.append("int")
+                if token.getSymbol().getType() == GrammarParser.FLOAT:
+                    type_stack.append("float")
+                if const_reminder:
+                    type_stack.append("const")
+
+            if token_type == GrammarParser.STAR:
+                assert len(type_stack) > 0
+                type_stack.append("*")
+            if token_type == GrammarParser.CONST:
+                if len(type_stack) == 0:
+                    const_reminder = True
+                else:
+                    assert type_stack[len(type_stack)-1] != "const"
+                    type_stack.append("const")
+
+        return TypeClass(type_stack)
+
+    def visitDecl(self, ctx):
+
+        name = self.uuidCounter
+        self.uuidCounter += 1
+        my_ast = AST.AssignOp()
+
+        var = AST.Variable()
+        var.set_name(ctx.getChild(1).getText())
+        var.type_obj = self.visitTypeObject(ctx.getChild(0))
+
+        my_ast.add_child(var)
+        my_ast.add_child(self.visit(ctx.getChild(3)))
+
+        my_ast.set_name(name)
+        return my_ast
+
