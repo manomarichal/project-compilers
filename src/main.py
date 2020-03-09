@@ -1,18 +1,17 @@
 import sys
 import copy
 from antlr4 import *
-from antlr.MathLexer import MathLexer
-from antlr.MathParser import MathParser
-from ST.CSTVisitor import CSTVisitor
-from ST.ASTDotVisitor import ASTDotVisitor
-from ST.ASTCFVisitor import ASTCFVisitor
+from src.antlr.GrammarLexer import GrammarLexer
+from src.antlr.GrammarParser import GrammarParser
+from src.CSTVisitor import CSTVisitor
+from src.ASTDotVisitor import ASTDotVisitor
 
 
 def main(argv):
     input_stream = FileStream(argv[1])
-    lexer = MathLexer(input_stream)
+    lexer = GrammarLexer(input_stream)
     stream = CommonTokenStream(lexer)
-    parser = MathParser(stream)
+    parser = GrammarParser(stream)
     tree = parser.doc()
 
     visitor = CSTVisitor()

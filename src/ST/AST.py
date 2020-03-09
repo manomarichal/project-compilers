@@ -1,8 +1,6 @@
 # Implemented according to the composite design pattern
 # some of these classes are mostly just interfaces / use for type-checking if needed
 
-# _genericAccept() not for external use!
-
 
 # Component
 class Component:

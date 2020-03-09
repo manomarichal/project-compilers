@@ -1,5 +1,5 @@
-from antlr.MathVisitor import MathVisitor
-from ST import AST
+from src.antlr.GrammarVisitor import  GrammarVisitor
+from src import AST
 
 
 # to check a token's "type" (hopefully):
@@ -10,7 +10,7 @@ from ST import AST
 # <context>.getChild(<index>)
 
 
-class CSTVisitor (MathVisitor):
+class CSTVisitor (GrammarVisitor):
     uuidCounter = 0
 
     def aggregateResult(self, aggregate, nextResult):

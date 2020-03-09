@@ -1,6 +1,7 @@
-grammar Math;
+grammar Grammar;
 
 INT : [0-9]+;
+
 PLUS : '+' ;
 MINUS : '-';
 STAR : '*';
