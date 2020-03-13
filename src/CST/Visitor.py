@@ -1,8 +1,8 @@
 from src.antlr.GrammarVisitor import  GrammarVisitor
 from src.antlr.GrammarParser import GrammarParser
-from src.utility import TypeClass
-from src.utility import AST
-from src.utility import SymbolTable
+from src.AST import AST
+from src.utility.TypeClass import TypeClass
+from src.utility.SymbolTable import SymbolTable
 
 
 # to check a token's "type" (hopefully):
@@ -14,7 +14,8 @@ from src.utility import SymbolTable
 
 
 class Visitor (GrammarVisitor):
-    uuidCounter = 0
+
+    _current_scope = None
 
     def aggregateResult(self, aggregate, nextResult):
         if nextResult is None:
@@ -25,8 +26,10 @@ class Visitor (GrammarVisitor):
         return aggregate
 
     def visitDoc(self, ctx):
-        my_ast = AST.Doc(self.visitChildren(ctx))
+        my_ast = AST.Doc()
         my_ast.set_symbol_table(SymbolTable())
+        self._current_scope = my_ast.get_symbol_table()
+        my_ast.swap_children(self.visitChildren(ctx))
         return my_ast
 
     def visitExpr(self, ctx):
@@ -124,13 +127,13 @@ class Visitor (GrammarVisitor):
             token = ctx.getChild(tokenNr)
             token_type = token.getSymbol().type
 
-            if token_type in {GrammarParser.CHAR, GrammarParser.INT, GrammarParser.FLOAT}:
+            if token_type in {GrammarParser.CHAR_TYPE, GrammarParser.INT_TYPE, GrammarParser.FLOAT_TYPE}:
                 assert len(type_stack) == 0
-                if token_type == GrammarParser.CHAR:
+                if token_type == GrammarParser.CHAR_TYPE:
                     type_stack.append("char")
-                if token_type == GrammarParser.INT:
+                if token_type == GrammarParser.INT_TYPE:
                     type_stack.append("int")
-                if token_type == GrammarParser.FLOAT:
+                if token_type == GrammarParser.FLOAT_TYPE:
                     type_stack.append("float")
                 if const_reminder:
                     type_stack.append("const")
@@ -148,16 +151,18 @@ class Visitor (GrammarVisitor):
         return TypeClass(type_stack)
 
     def visitDecl(self, ctx):
-        my_ast = AST.AssignOp()
+        my_ast = AST.Decl(self.visit(ctx.getChild(1)).get_name())
 
-        var = AST.Variable(ctx.getChild(0).getText())
-        var.type_obj = self.visitTypeObject(ctx.getChild(0))
+        self._current_scope[ctx.getChild(1).getText()] = self.visitTypeObject(ctx.getChild(0))
 
-        if my_ast.get_child_count() == 4:
-            my_ast.add_child(var)
-            my_ast.add_child(self.visit(ctx.getChild(3)))
+        if ctx.getChildCount() == 4:
+            assign = AST.AssignOp()
+            assign.add_child(my_ast)
+            assign.add_child(self.visit(ctx.getChild(3)))
+            return assign
 
-        return my_ast
+        else:
+            return my_ast
 
     def visitIdentifier(self, ctx):
         my_ast = AST.Variable(name=ctx.getText())

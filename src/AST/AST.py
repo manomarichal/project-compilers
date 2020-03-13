@@ -1,14 +1,13 @@
 # Implemented according to the composite design pattern
 # some of these classes are mostly just interfaces / use for type-checking if needed
 
-from src.utility import SymbolTable
+from src.utility.SymbolTable import SymbolTable
 from src.utility import TypeClass
 
 
 # Component
 class Component:
     _parent = None
-    sym_table = None
 
     def get_parent(self):
         return self._parent
@@ -27,6 +26,35 @@ class Component:
             return getattr(visitor, "visit" + name)(self)
         else:
             return next_attempt(visitor)
+
+
+class Scope(Component):
+    _symbol_table = None
+
+    def get_scope(self):
+        return self
+
+    def get_symbol_table(self) -> SymbolTable:
+        return self._symbol_table
+
+    def set_symbol_table(self, table: SymbolTable):
+        self._symbol_table = table
+
+    def symbol_find(self, symbol):
+        if symbol in self.get_symbol_table():
+            return symbol
+        if self.get_parent() is None:
+            print("No scope found for symbol " + symbol + "when finding")
+            return None
+        return self.get_parent().get_scope().symbol_find(symbol)
+
+    def symbol_remove(self, symbol):
+        if symbol in self.get_symbol_table():
+            self.get_symbol_table().pop(symbol)
+        if self.get_parent() is None:
+            print("No scope found for symbol " + symbol + "when removing")
+            return None
+        return self.get_parent().get_scope().symbol_remove(symbol)
 
 
 # Composites
@@ -78,32 +106,6 @@ class Composite(Component):
         return self._generic_accept(visitor, "Composite", super().accept)
 
 
-class Scope (Composite):
-    _symbol_table = None
-    
-    def get_symbol_table(self) -> SymbolTable:
-        return self._symbol_table
-    
-    def set_symbol_table(self, table:SymbolTable):
-        self._symbol_table = table
-
-    def symbol_find(self, symbol):
-        if symbol in self.get_symbol_table:
-            return symbol
-        if self.get_parent() is None:
-            print("No scope found for symbol " + symbol + "when finding")
-            return None
-        return self.get_parent().get_scope().symbol_find(symbol)
-
-    def symbol_remove(self, symbol):
-        if symbol in self.get_symbol_table:
-            self.get_symbol_table().pop(symbol)
-        if self.get_parent() is None:
-            print("No scope found for symbol " + symbol + "when removing")
-            return None
-        return self.get_parent().get_scope().symbol_remove(symbol)
-
-
 class DummyNode(Composite):
     def __init__(self, children):
         Composite.__init__(self)
@@ -120,15 +122,12 @@ class DummyNode(Composite):
         return self._generic_accept(visitor, "DummyNode", super().accept)
 
 
-class Doc(Scope):
+class Doc(Composite, Scope):
     def accept(self, visitor):
         return self._generic_accept(visitor, "Doc", super().accept)
 
 
 class Expression(Composite):
-    def get_type(self):
-        return self.type_obj
-
     def accept(self, visitor):
         return self._generic_accept(visitor, "Literal", super().accept)
 
@@ -136,17 +135,17 @@ class Expression(Composite):
 # OPERATORS
 class BinaryOp(Composite):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Operator", super().accept)
+        return self._generic_accept(visitor, "BinaryOp", super().accept)
 
 
 class UnaryOp(Composite):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Operator", super().accept)
+        return self._generic_accept(visitor, "UnaryOp", super().accept)
 
 
 class MathOp(BinaryOp):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Operator", super().accept)
+        return self._generic_accept(visitor, "MathOp", super().accept)
 
 
 class Neg(UnaryOp):
@@ -156,22 +155,22 @@ class Neg(UnaryOp):
 
 class IncrPost(UnaryOp):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Neg", super().accept)
+        return self._generic_accept(visitor, "IncrPost", super().accept)
 
 
 class IncrPre(UnaryOp):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Neg", super().accept)
+        return self._generic_accept(visitor, "IncrPre", super().accept)
 
 
 class DecrPost(UnaryOp):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Neg", super().accept)
+        return self._generic_accept(visitor, "DecrPost", super().accept)
 
 
 class DecrPre(UnaryOp):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Neg", super().accept)
+        return self._generic_accept(visitor, "DecrPre", super().accept)
 
 
 class Pos(UnaryOp):
@@ -181,12 +180,12 @@ class Pos(UnaryOp):
 
 class LogicOp(BinaryOp):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Operator", super().accept)
+        return self._generic_accept(visitor, "LogicOp", super().accept)
 
 
 class CompOp(BinaryOp):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Operator", super().accept)
+        return self._generic_accept(visitor, "CompOp", super().accept)
 
 
 class Prod(MathOp):
@@ -297,19 +296,20 @@ class Variable(Leaf):
     def __init__(self, name):
         self._name = name
 
+    def get_type(self):
+        assert(self.get_name() is not None)
+        return self.get_scope().get_symbol_table()[self.get_name()]
+
     def get_name(self):
         return self._name
 
-    def get_type(self):
-        return self.symbol_lookup(self.get_name())
-
-    def set_type(self, type_obj):
-        info = self.symbol_lookup(self.get_name())
-        if info is not None:
-            info.type_obj = type_obj
-
     def accept(self, visitor):
         return self._generic_accept(visitor, "Variable", super().accept)
+
+
+class Decl(Variable):
+    def accept(self, visitor):
+        return self._generic_accept(visitor, "Decl", super().accept)
 
 
 

@@ -4,14 +4,17 @@ class Visitor:
     def visit(self, tree):
         return tree.accept(self)
 
+    def visitComposite(self, node):
+        return self.visitChildren(node)
+
     def visitChildren(self, node):
         result = self.defaultResult()
-        n = node.getChildCount()
+        n = node.get_child_count()
         for i in range(n):
             if not self.shouldVisitNextChild(node, result):
                 return result
 
-            c = node.getChild(i)
+            c = node.get_child(i)
             childResult = c.accept(self)
             result = self.aggregateResult(result, childResult)
 

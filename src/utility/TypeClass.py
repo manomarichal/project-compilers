@@ -26,11 +26,20 @@ class TypeClass:
     def getType(self):
         return self._type_stack
 
+    def is_const(self) -> bool:
+        tmp = self.get_top_type() == "const"
+        return tmp
+
+    def is_ptr(self) -> bool:
+        if self.get_top_type() == "const":
+            return self._type_stack[len(self._type_stack)] == "*"
+        return self.get_top_type == "*"
+
+    def get_top_type(self):
+        return self._type_stack[len(self._type_stack)-1]
+
     def __repr__(self):
         result = ""
         for component in self.getType():
             result += component + " "
         return result[0:len(result)-1]
-
-
-NO_TYPE = TypeClass(None)

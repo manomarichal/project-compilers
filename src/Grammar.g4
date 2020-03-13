@@ -30,6 +30,8 @@ DECR: '--';
 NOT_OP : '!';
 ID : [_a-zA-Z][_a-zA-Z0-9]*;
 WS: [ \n\t\r]+ -> skip;
+COMMENT_SINGLE: '//'~('\r'|'\n')* -> skip;
+COMMENT_MULTI: '/*' .*? '*/' -> skip;
 
 
 doc : ((decl | expr) SEMICOLON)* EOF;
@@ -47,6 +49,7 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     expr (DECR | INCR) |
     (DECR | INCR) expr |
     (MINUS | PLUS) expr |
+    (AMP | STAR) expr |
     (NOT_OP) expr |
     expr (STAR | SLASH | PERCENT) expr |
     expr (PLUS | MINUS) expr |
