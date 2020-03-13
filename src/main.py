@@ -2,11 +2,32 @@ import sys
 import copy
 from antlr4 import *
 
-from src.SyntaxTrees.ASTCFVisitor import ASTCFVisitor
+from src.AST.CFVisitor import CFVisitor
 from src.antlr.GrammarLexer import GrammarLexer
 from src.antlr.GrammarParser import GrammarParser
-from src.SyntaxTrees.CSTVisitor import CSTVisitor
-from src.SyntaxTrees.ASTDotVisitor import ASTDotVisitor
+from src.CST.Visitor import Visitor as CSTVisitor
+from src.AST.DotVisitor import DotVisitor
+from src.AST.SemanticVisitor import SemanticVisitor
+
+# Mandatory
+# P2
+#TODO semantic erros -> zo (J)
+#TODO syntax errors -> zo (J)
+#TODO pointer operators & assigment (LVAL vs RVAL) -> zo (M)
+#TODO pointer semantic errors -> deadline (J & M)
+#TODO constant propagation until next assignment -> zo (brent)
+
+# P3
+#TODO printf() -> ma
+#TODO to LLVM -> ma
+#TODO scripts -> deadline
+
+# Optional
+
+#TODO ++--
+#TODO implicit not python conversions
+#TODO dont ignore comments
+#TODO comment after every instruction
 
 
 def main(argv):
@@ -19,10 +40,13 @@ def main(argv):
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
-    constant_folding = ASTCFVisitor()
+    semantic_checker = SemanticVisitor()
+    semantic_checker.visit(ast)
+
+    constant_folding = CFVisitor()
     constant_folding.visit(ast)
 
-    astVisualiser = ASTDotVisitor()
+    astVisualiser = DotVisitor()
     astVisualiser.visit(ast)
     astVisualiser.graph.write("test_IO/result.dot")
     astVisualiser.graph.write_png("test_IO/result.png")

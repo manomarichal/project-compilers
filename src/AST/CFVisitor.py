@@ -1,83 +1,98 @@
 from src.AST import AST
+from src.AST.Visitor import Visitor
 
 
-class CFVisitor:
+class CFVisitor(Visitor):
     def visit(self, tree):
         return tree.accept(self)
 
-    def visitComponent(self, ast):
+    def visitComposite(self, ast):
+        self.visitChildren(ast)
 
-        if isinstance(ast, AST.Leaf):
-            return
+    def visitMathOp(self, ast):
+        self.visitChildren(ast)
 
-        for index in range(0, ast.get_child_count()):
-            self.visit(ast.get_child(index))
+        if not (isinstance (ast.get_child(0), AST.Literal) and isinstance(ast.get_child(1), AST.Literal)): return
 
-        if isinstance(ast, AST.MathOp):
-            if isinstance(ast.get_child(0), AST.Literal) and isinstance(ast.get_child(1), AST.Literal):
-                value = 0
+        value = 0
+        if isinstance(ast, AST.Sum):
+            value = ast.get_child(0).get_value() + ast.get_child(1).get_value()
+        elif isinstance(ast, AST.Sub):
+            value = ast.get_child(0).get_value() - ast.get_child(1).get_value()
+        elif isinstance(ast, AST.Prod):
+            value = ast.get_child(0).get_value() * ast.get_child(1).get_value()
+        elif isinstance(ast, AST.Div):
+            value = ast.get_child(0).get_value() / ast.get_child(1).get_value()
+        elif isinstance(ast, AST.Mod):
+            value = ast.get_child(0).get_value() % ast.get_child(1).get_value()
+        else:
+            print("invalid math operator found while constant folding")
 
-                if isinstance(ast, AST.Sum):
-                    value = ast.get_child(0).get_value() + ast.get_child(1).get_value()
-                elif isinstance(ast, AST.Sub):
-                    value = ast.get_child(0).get_value() - ast.get_child(1).get_value()
-                elif isinstance(ast, AST.Prod):
-                    value = ast.get_child(0).get_value() * ast.get_child(1).get_value()
-                elif isinstance(ast, AST.Div):
-                    value = ast.get_child(0).get_value() / ast.get_child(1).get_value()
-                elif isinstance(ast, AST.Mod):
-                    value = ast.get_child(0).get_value() % ast.get_child(1).get_value()
-                else:
-                    print("invalid math operator found while constant folding")
+        ast.get_parent().replace_child(ast, AST.Literal(value))
 
-                ast.get_parent().replace_child(ast, AST.Literal(value))
+    def visitCompOp(self, ast):
+        self.visitChildren(ast)
 
-        elif isinstance(ast, AST.CompOp):
-            if isinstance(ast.get_child(0), AST.Literal) and isinstance(ast.get_child(1), AST.Literal):
+        if not (isinstance(ast.get_child(0), AST.Literal) and isinstance(ast.get_child(1), AST.Literal)): return
 
-                value = False
-                if isinstance(ast, AST.Equal):
-                    value = ast.get_child(0).get_value() == ast.get_child(1).get_value()
-                elif isinstance(ast, AST.NotEqual):
-                    value = ast.get_child(0).get_value() != ast.get_child(1).get_value()
-                elif isinstance(ast, AST.More):
-                    value = ast.get_child(0).get_value() > ast.get_child(1).get_value()
-                elif isinstance(ast, AST.Less):
-                    value = ast.get_child(0).get_value() < ast.get_child(1).get_value()
-                elif isinstance(ast, AST.MoreE):
-                    value = ast.get_child(0).get_value() >= ast.get_child(1).get_value()
-                elif isinstance(ast, AST.LessE):
-                    value = ast.get_child(0).get_value() <= ast.get_child(1).get_value()
-                else:
-                    print("invalid comparison operator found while constant folding")
+        value = False
+        if isinstance(ast, AST.Equal):
+            value = ast.get_child(0).get_value() == ast.get_child(1).get_value()
+        elif isinstance(ast, AST.NotEqual):
+            value = ast.get_child(0).get_value() != ast.get_child(1).get_value()
+        elif isinstance(ast, AST.More):
+            value = ast.get_child(0).get_value() > ast.get_child(1).get_value()
+        elif isinstance(ast, AST.Less):
+            value = ast.get_child(0).get_value() < ast.get_child(1).get_value()
+        elif isinstance(ast, AST.MoreE):
+            value = ast.get_child(0).get_value() >= ast.get_child(1).get_value()
+        elif isinstance(ast, AST.LessE):
+            value = ast.get_child(0).get_value() <= ast.get_child(1).get_value()
+        else:
+            print("invalid comparison operator found while constant folding")
 
-                ast.get_parent().replace_child(ast, AST.Literal(value))
+        ast.get_parent().replace_child(ast, AST.Literal(value))
 
-        elif isinstance(ast, AST.LogicOp):
-            if isinstance(ast.get_child(0), AST.Literal):
-                if isinstance(ast, AST.Not):
-                    value = not (ast.get_child(0).get_value() != 0)
+    def visitLogicOp(self, ast):
+        self.visitChildren(ast)
 
-                elif isinstance(ast.get_child(1), AST.Literal):
-                    if isinstance(ast, AST.Or):
-                        value = (ast.get_child(0).get_value() != 0) or (ast.get_child(1).get_value() != 0)
-                    elif isinstance(ast, AST.And):
-                        value = (ast.get_child(0).get_value() != 0) and (ast.get_child(1).get_value() != 0)
-                    else:
-                        print("invalid logic operator found while constant folding")
-                        exit(1)
-                else:
-                    print("something went wrong when constant folding with a logic operator")
-                    exit(1)
+        if not isinstance(ast.get_child(0), AST.Literal): return
 
-                ast.get_parent().replace_child(ast, AST.Literal(value))
+        if isinstance(ast, AST.Not):
+            value = not (ast.get_child(0).get_value() != 0)
+        elif isinstance(ast.get_child(1), AST.Literal):
+            if isinstance(ast, AST.Or):
+                value = (ast.get_child(0).get_value() != 0) or (ast.get_child(1).get_value() != 0)
+            elif isinstance(ast, AST.And):
+                value = (ast.get_child(0).get_value() != 0) and (ast.get_child(1).get_value() != 0)
+            else:
+                print("invalid logic operator found while constant folding")
+                exit(1)
+        else:
+            print("something went wrong when constant folding with a logic operator")
+            exit(1)
 
-        elif isinstance(ast, AST.UnaryOp):
-            if isinstance(ast.get_child(0), AST.Literal):
-                if isinstance(ast, AST.Pos):
-                    ast.get_parent().replace_child(ast, AST.Literal(ast.get_child(0).get_value()))
-                elif isinstance(ast, AST.Neg):
-                    ast.get_parent().replace_child(ast, AST.Literal(-ast.get_child(0).get_value()))
-                else:
-                    print("something went wrong when constant folding with an unary operator")
-                    exit(1)
+        ast.get_parent().replace_child(ast, AST.Literal(value))
+
+    def visitUnaryOp(self, ast):
+        self.visitChildren(ast)
+
+        if not isinstance(ast.get_child(0), AST.Literal): return
+
+        if isinstance(ast, AST.Pos):
+            ast.get_parent().replace_child(ast, AST.Literal(ast.get_child(0).get_value()))
+        elif isinstance(ast, AST.Neg):
+            ast.get_parent().replace_child(ast, AST.Literal(-ast.get_child(0).get_value()))
+        elif isinstance(ast, AST.Adress): return
+        elif isinstance(ast, AST.Indir): return
+        else:
+            print("something went wrong when constant folding with an unary operator")
+            exit(1)
+
+    def visitAssignOp(self, ast: AST.AssignOp):
+        self.visitChildren(ast)
+
+        if ast.get_child(0).get_type().is_const():
+            ast.get_parent().replace_child(ast, AST.Literal(ast.get_child(1).get_value()))
+
+
