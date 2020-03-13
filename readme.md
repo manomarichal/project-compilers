@@ -1,7 +1,7 @@
 # Project Compilers 2020
 ## Mano Marichal & Joren Van Borm
 
-### > Status:
+### Status:
 #### Project 1)
 - 2.1 Grammar:
   -  [x] (mandatory) Binary operations + , - , * , and /
