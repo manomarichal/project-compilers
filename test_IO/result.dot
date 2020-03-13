@@ -1,0 +1,11 @@
+graph G {
+1 [label=Doc];
+2 [label=a];
+1 -- 2;
+3 [label=AssignOp];
+4 [label=a];
+3 -- 4;
+5 [label=5];
+3 -- 5;
+1 -- 3;
+}
