@@ -8,7 +8,6 @@ from src.TypeClass import TypeClass
 class Component:
     _parent = None
     _name = None
-    type_obj = None
 
     def __init__(self, name=None):
         self._name = name

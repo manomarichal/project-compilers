@@ -1,5 +1,5 @@
-from src.ST import AST
-from src.ST.ASTVisitor import ASTVisitor
+from src.SyntaxTrees import AST
+from src.SyntaxTrees.ASTVisitor import ASTVisitor
 import pydot
 
 

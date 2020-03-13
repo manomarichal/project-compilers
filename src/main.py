@@ -2,11 +2,11 @@ import sys
 import copy
 from antlr4 import *
 
-from src.ST.ASTCFVisitor import ASTCFVisitor
+from src.SyntaxTrees.ASTCFVisitor import ASTCFVisitor
 from src.antlr.GrammarLexer import GrammarLexer
 from src.antlr.GrammarParser import GrammarParser
-from src.ST.CSTVisitor import CSTVisitor
-from src.ST.ASTDotVisitor import ASTDotVisitor
+from src.SyntaxTrees.CSTVisitor import CSTVisitor
+from src.SyntaxTrees.ASTDotVisitor import ASTDotVisitor
 
 
 def main(argv):

@@ -1,4 +1,4 @@
-from src.ST import AST
+from src.SyntaxTrees import AST
 
 
 class ASTCFVisitor:

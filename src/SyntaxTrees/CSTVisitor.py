@@ -1,7 +1,7 @@
 from src.antlr.GrammarVisitor import  GrammarVisitor
 from src.antlr.GrammarParser import GrammarParser
 from src.TypeClass import TypeClass
-from src.ST import AST
+from src.SyntaxTrees import AST
 
 
 # to check a token's "type" (hopefully):

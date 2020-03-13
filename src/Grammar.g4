@@ -28,7 +28,7 @@ OR_OP : '||';
 INCR: '++';
 DECR: '--';
 NOT_OP : '!';
-ID : [a-z]+;
+ID : [_a-zA-Z][_a-zA-Z0-9]*;
 WS: [ \n\t\r]+ -> skip;
 
 
