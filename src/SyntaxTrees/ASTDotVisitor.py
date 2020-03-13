@@ -25,7 +25,7 @@ class ASTDotVisitor(ASTVisitor):
 
     def visitVariable(self, ast: AST.Variable):
         self.counter += 1
-        self.graph.add_node(pydot.Node(self.counter, label='cool naam'))
+        self.graph.add_node(pydot.Node(self.counter, label=ast.get_name()))
 
         return self.counter
 

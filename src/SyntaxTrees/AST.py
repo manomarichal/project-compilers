@@ -1,27 +1,25 @@
 # Implemented according to the composite design pattern
 # some of these classes are mostly just interfaces / use for type-checking if needed
 
+from src.SymbolTable import SymbolTable
+
+
 from src.TypeClass import TypeClass
 
 
 # Component
 class Component:
     _parent = None
-    type_obj = None
+    sym_table = None
 
     def get_parent(self):
         return self._parent
 
-    def symbol_lookup(self, symbol):
-        if hasattr(self, "sybol_table"):
-            symbol_talbe = dict()
-            entry = symbol_talbe[symbol]
-            if entry is not None:
-                return entry
-        elif self._parent is not None:
-            return self._parent.symbol_lookup(symbol)
-        else:
+    def get_scope(self):
+        if self.get_parent() is None:
+            print("Ohnoes! No scope...")
             return None
+        return self.get_parent().get_scope()
 
     def accept(self, visitor):
         return self._generic_accept(visitor, "Component", lambda x: None)
@@ -82,6 +80,32 @@ class Composite(Component):
         return self._generic_accept(visitor, "Composite", super().accept)
 
 
+class Scope (Composite):
+    _symbol_table = None
+    
+    def get_symbol_table(self) -> SymbolTable:
+        return self._symbol_table
+    
+    def set_symbol_table(self, table:SymbolTable):
+        self._symbol_table = table
+
+    def symbol_find(self, symbol):
+        if symbol in self.get_symbol_table:
+            return symbol
+        if self.get_parent() is None:
+            print("No scope found for symbol " + symbol + "when finding")
+            return None
+        return self.get_parent().get_scope().symbol_find(symbol)
+
+    def symbol_remove(self, symbol):
+        if symbol in self.get_symbol_table:
+            self.get_symbol_table().pop(symbol)
+        if self.get_parent() is None:
+            print("No scope found for symbol " + symbol + "when removing")
+            return None
+        return self.get_parent().get_scope().symbol_remove(symbol)
+
+
 class DummyNode(Composite):
     def __init__(self, children):
         Composite.__init__(self)
@@ -98,7 +122,7 @@ class DummyNode(Composite):
         return self._generic_accept(visitor, "DummyNode", super().accept)
 
 
-class Doc(Composite):
+class Doc(Scope):
     def accept(self, visitor):
         return self._generic_accept(visitor, "Doc", super().accept)
 
@@ -259,6 +283,9 @@ class Literal(Leaf):
     def get_type(self):
         return self.type_obj
 
+    def set_type(self, type_obj):
+        self.type_obj = type_obj
+
     def get_value(self):
         return self.val
 
@@ -277,6 +304,11 @@ class Variable(Leaf):
 
     def get_type(self):
         return self.symbol_lookup(self.get_name())
+
+    def set_type(self, type_obj):
+        info = self.symbol_lookup(self.get_name())
+        if info is not None:
+            info.type_obj = type_obj
 
     def accept(self, visitor):
         return self._generic_accept(visitor, "Variable", super().accept)

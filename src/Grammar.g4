@@ -38,7 +38,8 @@ typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
 identifier: ID;
 
-decl:  typeObj identifier ASSIGN_OP expr;
+decl:  typeObj identifier ASSIGN_OP expr |
+    typeObj identifier;
 
 literal: INT | FLOAT | CHAR;
 

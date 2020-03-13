@@ -2,6 +2,7 @@ from src.antlr.GrammarVisitor import  GrammarVisitor
 from src.antlr.GrammarParser import GrammarParser
 from src.TypeClass import TypeClass
 from src.SyntaxTrees import AST
+from src.SymbolTable import SymbolTable
 
 
 # to check a token's "type" (hopefully):
@@ -24,7 +25,9 @@ class CSTVisitor (GrammarVisitor):
         return aggregate
 
     def visitDoc(self, ctx):
-        return AST.Doc(self.visitChildren(ctx))
+        my_ast = AST.Doc(self.visitChildren(ctx))
+        my_ast.set_symbol_table(SymbolTable())
+        return my_ast
 
     def visitExpr(self, ctx):
         # skip
@@ -147,15 +150,16 @@ class CSTVisitor (GrammarVisitor):
     def visitDecl(self, ctx):
         my_ast = AST.AssignOp()
 
-        var = AST.Variable()
+        var = AST.Variable(ctx.getChild(0).getText())
         var.type_obj = self.visitTypeObject(ctx.getChild(0))
 
-        my_ast.add_child(var)
-        my_ast.add_child(self.visit(ctx.getChild(3)))
+        if my_ast.get_child_count() == 4:
+            my_ast.add_child(var)
+            my_ast.add_child(self.visit(ctx.getChild(3)))
 
         return my_ast
 
     def visitIdentifier(self, ctx):
-        my_ast = AST.Variable()
+        my_ast = AST.Variable(name=ctx.getText())
         return my_ast
 
