@@ -1,9 +1,9 @@
-from src.SyntaxTrees import AST
-from src.SyntaxTrees.ASTVisitor import ASTVisitor
+from src.AST import AST
+from src.AST.Visitor import Visitor
 import pydot
 
 
-class ASTDotVisitor(ASTVisitor):
+class DotVisitor(Visitor):
     graph = pydot.Dot(graph_type='graph')
     counter = 0
     def visitComposite(self, ast: AST.Composite):

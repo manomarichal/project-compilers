@@ -1,10 +1,8 @@
 # Implemented according to the composite design pattern
 # some of these classes are mostly just interfaces / use for type-checking if needed
 
-from src.SymbolTable import SymbolTable
-
-
-from src.TypeClass import TypeClass
+from src.utility import SymbolTable
+from src.utility import TypeClass
 
 
 # Component

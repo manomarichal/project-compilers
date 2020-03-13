@@ -1,7 +1,7 @@
-from src.SyntaxTrees import AST
+from src.AST import AST
 
 
-class ASTCFVisitor:
+class CFVisitor:
     def visit(self, tree):
         return tree.accept(self)
 
