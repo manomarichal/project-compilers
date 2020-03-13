@@ -28,11 +28,11 @@ OR_OP : '||';
 INCR: '++';
 DECR: '--';
 NOT_OP : '!';
-ID : [a-z];
+ID : [a-z]+;
 WS: [ \n\t\r]+ -> skip;
 
 
-doc : ((decl) SEMICOLON)* EOF;
+doc : ((decl | expr) SEMICOLON)* EOF;
 
 typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
@@ -44,12 +44,16 @@ literal: INT | FLOAT | CHAR;
 
 expr : LEFT_PAREN expr RIGHT_PAREN |
     expr (DECR | INCR) |
-    (MINUS | PLUS | NOT_OP | DECR | INCR) expr |
+    (DECR | INCR) expr |
+    (MINUS | PLUS) expr |
+    (NOT_OP) expr |
     expr (STAR | SLASH | PERCENT) expr |
     expr (PLUS | MINUS) expr |
-    expr (SMALLER_OP | GREATER_OP | SMALLER_E_OP | GREATER_E_OP ) expr |
+    expr (SMALLER_OP | SMALLER_E_OP) expr |
+    expr (GREATER_OP | GREATER_E_OP) expr |
     expr (EQUAL_OP | NOT_EQUAL_OP) expr |
     expr AND_OP expr |
     expr OR_OP expr |
+    <assoc=right> expr ASSIGN_OP expr |
     identifier |
     literal;
