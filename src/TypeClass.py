@@ -5,6 +5,7 @@ ModifierComp = {"const", "*"}
 TypeComp = copy.deepcopy(PrimitiveComp)
 TypeComp.union(ModifierComp)
 
+
 class TypeClass:
     # [0] = primitive type
     # [1:] = type modifier
@@ -13,7 +14,7 @@ class TypeClass:
     def __init__(self, type):
         self._type_stack = type
 
-    def pushType (self, newType):
+    def pushType(self, newType):
         self._type_stack.append(newType)
 
     def __eq__(self, other):
@@ -30,3 +31,6 @@ class TypeClass:
         for component in self.getType():
             result += component + " "
         return result[0:len(result)-1]
+
+
+NO_TYPE = TypeClass(None)

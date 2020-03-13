@@ -19,6 +19,9 @@ def main(argv):
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
+    constant_folding = ASTCFVisitor()
+    constant_folding.visit(ast)
+
     astVisualiser = ASTDotVisitor()
     astVisualiser.visit(ast)
     astVisualiser.graph.write("test_IO/result.dot")

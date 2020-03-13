@@ -7,19 +7,21 @@ from src.TypeClass import TypeClass
 # Component
 class Component:
     _parent = None
-    _name = None
-
-    def __init__(self, name=None):
-        self._name = name
-
-    def get_name(self):
-        return self._name
-
-    def set_name(self, name):
-        self._name = name
+    type_obj = None
 
     def get_parent(self):
         return self._parent
+
+    def symbol_lookup(self, symbol):
+        if hasattr(self, "sybol_table"):
+            symbol_talbe = dict()
+            entry = symbol_talbe[symbol]
+            if entry is not None:
+                return entry
+        elif self._parent is not None:
+            return self._parent.symbol_lookup(symbol)
+        else:
+            return None
 
     def accept(self, visitor):
         return self._generic_accept(visitor, "Component", lambda x: None)
@@ -35,8 +37,8 @@ class Component:
 class Composite(Component):
     _children = []
 
-    def __init__(self, name=None, dummy=None):
-        Component.__init__(self, name)
+    def __init__(self, dummy=None):
+        Component.__init__(self)
 
         if dummy is None:
             self._children = []
@@ -248,6 +250,14 @@ class Leaf(Component):
 
 class Literal(Leaf):
     val = None
+    type_obj = None
+
+    def __init__(self, value=None):
+        Leaf.__init__(self)
+        self.val = value
+
+    def get_type(self):
+        return self.type_obj
 
     def get_value(self):
         return self.val
@@ -257,16 +267,19 @@ class Literal(Leaf):
 
 
 class Variable(Leaf):
+    _name: str
+
+    def __init__(self, name):
+        self._name = name
+
+    def get_name(self):
+        return self._name
+
     def get_type(self):
-        return self.type_obj
+        return self.symbol_lookup(self.get_name())
 
     def accept(self, visitor):
         return self._generic_accept(visitor, "Variable", super().accept)
 
 
-class IntLit(Literal):
-    def __init__(self, val: int = 0):
-        self.val = val
 
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "IntLit", super().accept)

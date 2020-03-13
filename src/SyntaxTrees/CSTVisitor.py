@@ -24,10 +24,7 @@ class CSTVisitor (GrammarVisitor):
         return aggregate
 
     def visitDoc(self, ctx):
-        name = self.uuidCounter
-        self.uuidCounter += 1
-
-        return AST.Doc(name, self.visitChildren(ctx))
+        return AST.Doc(self.visitChildren(ctx))
 
     def visitExpr(self, ctx):
         # skip
@@ -37,8 +34,6 @@ class CSTVisitor (GrammarVisitor):
         if ctx.getChildCount() == 1:
             return self.visit(ctx.getChild(0))
 
-        name = self.uuidCounter
-        self.uuidCounter += 1
         my_ast = None
 
         # unary operator
@@ -98,12 +93,9 @@ class CSTVisitor (GrammarVisitor):
             my_ast.add_child(self.visit(ctx.getChild(0)))
             my_ast.add_child(self.visit(ctx.getChild(2)))
 
-        my_ast.set_name(name)
         return my_ast
 
     def visitLiteral(self, ctx):
-        name = self.uuidCounter
-        self.uuidCounter += 1
         my_ast = AST.Literal()
 
         if ctx.CHAR():  #TODO (maybe) multivalue chars
@@ -116,7 +108,6 @@ class CSTVisitor (GrammarVisitor):
             my_ast.val = float(ctx.getText())
             my_ast.type_obj = TypeClass(["float"])
 
-        my_ast.set_name(name)
         return my_ast
 
     def visitTypeObject(self, ctx):
@@ -154,26 +145,17 @@ class CSTVisitor (GrammarVisitor):
         return TypeClass(type_stack)
 
     def visitDecl(self, ctx):
-
-        name = self.uuidCounter
-        self.uuidCounter += 1
-        name2 = self.uuidCounter
-        self.uuidCounter += 1
         my_ast = AST.AssignOp()
 
         var = AST.Variable()
-        var.set_name(name2)
         var.type_obj = self.visitTypeObject(ctx.getChild(0))
 
         my_ast.add_child(var)
         my_ast.add_child(self.visit(ctx.getChild(3)))
 
-        my_ast.set_name(name)
         return my_ast
 
     def visitIdentifier(self, ctx):
-        name = self.uuidCounter
-        self.uuidCounter += 1
-        my_ast = AST.Variable(name)
+        my_ast = AST.Variable()
         return my_ast
 
