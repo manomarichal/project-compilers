@@ -178,6 +178,16 @@ class Pos(UnaryOp):
         return self._generic_accept(visitor, "Pos", super().accept)
 
 
+class Indir(UnaryOp):
+    def accept(self, visitor):
+        return self._generic_accept(visitor, "Indir", super().accept)
+
+
+class Adress(UnaryOp):
+    def accept(self, visitor):
+        return self._generic_accept(visitor, "Indir", super().accept)
+
+
 class LogicOp(BinaryOp):
     def accept(self, visitor):
         return self._generic_accept(visitor, "LogicOp", super().accept)

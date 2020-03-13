@@ -83,6 +83,8 @@ class CFVisitor(Visitor):
             ast.get_parent().replace_child(ast, AST.Literal(ast.get_child(0).get_value()))
         elif isinstance(ast, AST.Neg):
             ast.get_parent().replace_child(ast, AST.Literal(-ast.get_child(0).get_value()))
+        elif isinstance(ast, AST.Adress): return
+        elif isinstance(ast, AST.Indir): return
         else:
             print("something went wrong when constant folding with an unary operator")
             exit(1)

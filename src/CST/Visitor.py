@@ -50,6 +50,10 @@ class Visitor (GrammarVisitor):
                 my_ast = AST.Pos()
             elif ctx.MINUS():
                 my_ast = AST.Neg()
+            elif ctx.AMP():
+                my_ast = AST.Adress()
+            elif ctx.STAR():
+                my_ast = AST.Indir()
             elif ctx.getChild(0).getSymbol().type == GrammarParser.INCR:
                 my_ast = AST.IncrPre()
             elif ctx.getChild(1).getSymbol().type == GrammarParser.INCR:
@@ -63,9 +67,12 @@ class Visitor (GrammarVisitor):
 
         # binary operators
         if ctx.getChildCount() == 3:
+            # ASSIGNMENT
+            if ctx.ASSIGN_OP():
+                my_ast = AST.AssignOp
 
             # BOOLEAN OPERATORS
-            if ctx.AND_OP():
+            elif ctx.AND_OP():
                 my_ast = AST.And()
             elif ctx.OR_OP():
                 my_ast = AST.Or()
