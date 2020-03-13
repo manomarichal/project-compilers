@@ -14,13 +14,14 @@ from src.AST.SemanticVisitor import SemanticVisitor
 #TODO semantic erros -> zo (J)
 #TODO syntax errors -> zo (J)
 #TODO pointer operators & assigment (LVAL vs RVAL) -> zo (M)
-#TODO pointer semantic errors -> deadline (J & M)
-#TODO constant propagation until next assignment -> zo (brent)
+#TODO pointer grammar -> ma (M)
+#TODO pointer semantic errors -> deadline
+#TODO constant propagation until next assignment -> zo
 
 # P3
 #TODO printf() -> ma
 #TODO to LLVM -> ma
-#TODO scripts -> deadline
+#TODO scripts + readme + verslag -> deadline
 
 # Optional
 
