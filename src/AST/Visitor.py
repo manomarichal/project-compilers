@@ -1,6 +1,6 @@
 
 
-class ASTVisitor:
+class Visitor:
     def visit(self, tree):
         return tree.accept(self)
 

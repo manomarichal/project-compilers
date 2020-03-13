@@ -1,8 +1,8 @@
 from src.antlr.GrammarVisitor import  GrammarVisitor
 from src.antlr.GrammarParser import GrammarParser
-from src.TypeClass import TypeClass
-from src.SyntaxTrees import AST
-from src.SymbolTable import SymbolTable
+from src.utility import TypeClass
+from src.utility import AST
+from src.utility import SymbolTable
 
 
 # to check a token's "type" (hopefully):
@@ -13,7 +13,7 @@ from src.SymbolTable import SymbolTable
 # <context>.getChild(<index>)
 
 
-class CSTVisitor (GrammarVisitor):
+class Visitor (GrammarVisitor):
     uuidCounter = 0
 
     def aggregateResult(self, aggregate, nextResult):
