@@ -1,7 +1,7 @@
 # Project Compilers 2020
 ## Mano Marichal & Joren Van Borm
 
-### Status:
+### > Status:
 #### Project 1)
 - 2.1 Grammar:
   -  [x] (mandatory) Binary operations + , - , * , and /
@@ -45,7 +45,7 @@
 - [x] 1.3 (mandatory) Visualization
 - [x] 2 (mandatory) LLVM
 
-Overall evertying went really good
+Overall everything went really good
 
 
 
