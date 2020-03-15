@@ -31,12 +31,28 @@ class TypeClass:
         return tmp
 
     def is_ptr(self) -> bool:
-        if self.get_top_type() == "const":
-            return self._type_stack[len(self._type_stack)] == "*"
-        return self.get_top_type == "*"
+        return self.get_top_type("const") == "*"
 
-    def get_top_type(self):
-        return self._type_stack[len(self._type_stack)-1]
+    def promotes_to(self, other):
+        self_type = self.get_top_type("const")
+        other_type = other.get_top_type("const")
+        if self_type == "char" and other_type in {"int", "float"}:
+            return True
+        if self_type == "int" and other_type == "float":
+            return True
+        return False
+
+    def converts_to(self, other):
+        return True
+
+    def get_top_type(self, exclude=None):
+        if exclude is None:
+            return self._type_stack[len(self._type_stack)-1]
+        if not isinstance(exclude, list):
+            exclude = [exclude]
+        for type_comp in reversed(self._type_stack):
+            if type_comp not in exclude:
+                return type
 
     def __repr__(self):
         result = ""
