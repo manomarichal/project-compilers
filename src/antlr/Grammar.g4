@@ -28,13 +28,14 @@ OR_OP : '||';
 INCR: '++';
 DECR: '--';
 NOT_OP : '!';
+PRINT : 'printf';
 ID : [_a-zA-Z][_a-zA-Z0-9]*;
 WS: [ \n\t\r]+ -> skip;
 COMMENT_SINGLE: '//'~('\r'|'\n')* -> skip;
 COMMENT_MULTI: '/*' .*? '*/' -> skip;
 
 
-doc : ((decl | expr) SEMICOLON)* EOF;
+doc : ((decl | expr | printf) SEMICOLON)* EOF;
 
 typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
@@ -61,3 +62,5 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     <assoc=right> expr ASSIGN_OP expr |
     identifier |
     literal;
+
+printf : PRINT LEFT_PAREN (literal | identifier) RIGHT_PAREN;

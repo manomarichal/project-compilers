@@ -324,5 +324,8 @@ class Decl(Variable):
     def accept(self, visitor):
         return self._generic_accept(visitor, "Decl", super().accept)
 
+class Printf(Composite):
+    def accept(self, visitor):
+        return self._generic_accept(visitor, "Printf", super().accept)
 
 

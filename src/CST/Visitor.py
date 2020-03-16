@@ -175,3 +175,8 @@ class Visitor (GrammarVisitor):
         my_ast = AST.Variable(name=ctx.getText())
         return my_ast
 
+    def visitPrintf(self, ctx):
+        my_ast = AST.Printf()
+        my_ast.add_child(self.visit(ctx.getChild(2)))
+        return my_ast
+
