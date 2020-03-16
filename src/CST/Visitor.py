@@ -69,7 +69,7 @@ class Visitor (GrammarVisitor):
         if ctx.getChildCount() == 3:
             # ASSIGNMENT
             if ctx.ASSIGN_OP():
-                my_ast = AST.AssignOp
+                my_ast = AST.AssignOp()
 
             # BOOLEAN OPERATORS
             elif ctx.AND_OP():
