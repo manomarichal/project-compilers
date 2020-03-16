@@ -1,6 +1,8 @@
 # Implemented according to the composite design pattern
 # some of these classes are mostly just interfaces / use for type-checking if needed
 
+# WARNING: single inheritance ONLY or visitors might break
+
 from src.utility.SymbolTable import SymbolTable
 from src.utility import TypeClass
 
@@ -18,43 +20,17 @@ class Component:
             return None
         return self.get_parent().get_scope()
 
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Component", lambda x: None)
+    def accept(self, visitor, *args):
+        return self.generic_accept(visitor, "visit", *args)
 
-    def _generic_accept(self, visitor, name, next_attempt):
-        if hasattr(visitor, "visit" + name):
-            return getattr(visitor, "visit" + name)(self)
+    def generic_accept(self, visitor, prefix: str, *args):
+        try_type = type(self)
+        while not hasattr(visitor, prefix + try_type.__name__):
+            if try_type == Component:
+                break
+            try_type = try_type.__bases__[0]
         else:
-            return next_attempt(visitor)
-
-
-class Scope(Component):
-    _symbol_table = None
-
-    def get_scope(self):
-        return self
-
-    def get_symbol_table(self) -> SymbolTable:
-        return self._symbol_table
-
-    def set_symbol_table(self, table: SymbolTable):
-        self._symbol_table = table
-
-    def symbol_find(self, symbol):
-        if symbol in self.get_symbol_table():
-            return symbol
-        if self.get_parent() is None:
-            print("No scope found for symbol " + symbol + "when finding")
-            return None
-        return self.get_parent().get_scope().symbol_find(symbol)
-
-    def symbol_remove(self, symbol):
-        if symbol in self.get_symbol_table():
-            self.get_symbol_table().pop(symbol)
-        if self.get_parent() is None:
-            print("No scope found for symbol " + symbol + "when removing")
-            return None
-        return self.get_parent().get_scope().symbol_remove(symbol)
+            return getattr(visitor, prefix + try_type.__name__)(self, *args)
 
 
 # Composites
@@ -102,8 +78,34 @@ class Composite(Component):
             for child in other._children:
                 child._parent = other
 
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Composite", super().accept)
+
+class Scope(Composite):
+    _symbol_table = None
+
+    def get_scope(self):
+        return self
+
+    def get_symbol_table(self) -> SymbolTable:
+        return self._symbol_table
+
+    def set_symbol_table(self, table: SymbolTable):
+        self._symbol_table = table
+
+    def symbol_find(self, symbol):
+        if symbol in self.get_symbol_table():
+            return symbol
+        if self.get_parent() is None:
+            print("No scope containing \"" + symbol + "\" found when finding the symbol")
+            return None
+        return self.get_parent().get_scope().symbol_find(symbol)
+
+    def symbol_remove(self, symbol):
+        if symbol in self.get_symbol_table():
+            self.get_symbol_table().pop(symbol)
+        if self.get_parent() is None:
+            print("No scope containing \"" + symbol + "\" found when removing the symbol")
+            return None
+        return self.get_parent().get_scope().symbol_remove(symbol)
 
 
 class DummyNode(Composite):
@@ -118,166 +120,130 @@ class DummyNode(Composite):
             assert isinstance(children, Component)
             self.add_child(children)
 
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "DummyNode", super().accept)
 
-
-class Doc(Composite, Scope):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Doc", super().accept)
+class Doc(Scope):
+    pass
 
 
 class Expression(Composite):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Literal", super().accept)
+    pass
 
 
 # OPERATORS
 class BinaryOp(Composite):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "BinaryOp", super().accept)
+    pass
 
 
 class UnaryOp(Composite):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "UnaryOp", super().accept)
+    pass
 
 
 class MathOp(BinaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "MathOp", super().accept)
+    pass
 
 
 class Neg(UnaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Neg", super().accept)
+    pass
 
 
 class IncrPost(UnaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "IncrPost", super().accept)
+    pass
 
 
 class IncrPre(UnaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "IncrPre", super().accept)
+    pass
 
 
 class DecrPost(UnaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "DecrPost", super().accept)
+    pass
 
 
 class DecrPre(UnaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "DecrPre", super().accept)
+    pass
 
 
 class Pos(UnaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Pos", super().accept)
+    pass
 
 
 class Indir(UnaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Indir", super().accept)
+    pass
 
 
 class Adress(UnaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Adress", super().accept)
+    pass
 
 
 class LogicOp(BinaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "LogicOp", super().accept)
+    pass
 
 
 class CompOp(BinaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "CompOp", super().accept)
+    pass
 
 
 class Prod(MathOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Prod", super().accept)
+    pass
 
 
 class Div(MathOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Div", super().accept)
+    pass
 
 
 class Mod(MathOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Mod", super().accept)
+    pass
 
 
 class Sum(MathOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Sum", super().accept)
+    pass
 
 
 class Sub(MathOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Sub", super().accept)
+    pass
 
 
 class Not(LogicOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Not", super().accept)
+    pass
 
 
 class And(LogicOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "And", super().accept)
+    pass
 
 
 class Or(LogicOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Or", super().accept)
+    pass
 
 
 class Equal(CompOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Equal", super().accept)
+    pass
 
 
 class NotEqual(CompOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "NotEqual", super().accept)
+    pass
 
 
 class Less(CompOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Less", super().accept)
+    pass
 
 
 class LessE(CompOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "LessE", super().accept)
+    pass
 
 
 class More(CompOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "More", super().accept)
+    pass
 
 
 class MoreE(CompOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "MoreE", super().accept)
+    pass
 
 
 class AssignOp(BinaryOp):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "AssignOp", super().accept)
+    pass
 
 
 # Leaves
 class Leaf(Component):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Leaf", super().accept)
-
     def get_type(self):
         pass
 
@@ -299,9 +265,6 @@ class Literal(Leaf):
     def get_value(self):
         return self.val
 
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Literal", super().accept)
-
 
 class Variable(Leaf):
     _name: str
@@ -316,13 +279,9 @@ class Variable(Leaf):
     def get_name(self):
         return self._name
 
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Variable", super().accept)
-
 
 class Decl(Variable):
-    def accept(self, visitor):
-        return self._generic_accept(visitor, "Decl", super().accept)
+    pass
 
 
 
