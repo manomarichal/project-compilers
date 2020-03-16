@@ -32,6 +32,8 @@ class TypeClass:
         self._type_stack.append(new_type)
 
     def popType(self):
+        if self.get_top_type() == TypeComponents.CONST:
+            self._type_stack.pop()
         self._type_stack.pop()
 
     def __eq__(self, other):
