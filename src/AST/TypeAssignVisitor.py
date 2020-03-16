@@ -11,15 +11,18 @@ class TypeAssignVisitor (Visitor):
     def implicit_conversion_warning(self, from_type: TypeClass, to_type: TypeClass):
         self.warnings.append("implicitly converting " + str(from_type) + " to " + str(to_type))
 
+    def unary_propagate(self, node):
+        return self.visit(node.get_child(0))
+
     def visit(self, node) -> TypeClass:
         return Visitor.visit(self, node)
 
     def visitLeaf(self, node: Leaf):
         return node.get_type()
 
-    def visitMathop(self, node: MathOp):  # TODO: unary math ops are not math ops, assignment behaves in the same way
+    def visitMathop(self, node: MathOp):
         a_type = self.visit(node.get_child(0))
-        b_type = self.visit(node.get_child(0))
+        b_type = self.visit(node.get_child(1))
         if a_type == b_type:
             return a_type
         if b_type.promotes_to(a_type):
@@ -32,6 +35,35 @@ class TypeAssignVisitor (Visitor):
         if a_type.converts_to(b_type) and not b_type.converts_to(a_type):
             self.implicit_conversion_warning(b_type, a_type)
             return b_type
+
+    def visitAssignOp(self, node):
+        a_type = self.visit(node.get_child(0))
+        b_type = self.visit(node.get_child(1))
+        if a_type == b_type:
+            return a_type
+        if b_type.promotes_to(a_type):
+            return a_type
+        if b_type.converts_to(a_type) and not a_type.converts_to(b_type):
+            self.implicit_conversion_warning(b_type, a_type)
+            return a_type
+
+    def visitPos(self, node):
+        return self.unary_propagate(node)
+
+    def visitNeg(self, node):
+        return self.unary_propagate(node)
+
+    def visitIncrPre(self, node):
+        return self.unary_propagate(node)
+
+    def visitIncrPost(self, node):
+        return self.unary_propagate(node)
+
+    def visitDecrPre(self, node):
+        return self.unary_propagate(node)
+
+    def visitDecrPost(self, node):
+        return self.unary_propagate(node)
 
     def visitLogicOp(self, node: LogicOp):
         child_types = self.visitChildren(node)
