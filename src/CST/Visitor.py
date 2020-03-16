@@ -1,7 +1,7 @@
-from src.antlr.GrammarVisitor import  GrammarVisitor
+from src.antlr.GrammarVisitor import GrammarVisitor
 from src.antlr.GrammarParser import GrammarParser
 from src.AST import AST
-from src.utility.TypeClass import TypeClass
+from src.utility.TypeClass import TypeClass, TypeComponents
 from src.utility.SymbolTable import SymbolTable
 
 
@@ -113,13 +113,13 @@ class Visitor (GrammarVisitor):
 
         if ctx.CHAR():  #TODO (maybe) multivalue chars
             my_ast.val = ord(ctx.getText()[1])
-            my_ast.type_obj = TypeClass(["char"])
+            my_ast.type_obj = TypeClass([TypeComponents.CHAR])
         if ctx.INT():
             my_ast.val = int(ctx.getText())
-            my_ast.type_obj = TypeClass(["int"])
+            my_ast.type_obj = TypeClass([TypeComponents.INT])
         if ctx.FLOAT():
             my_ast.val = float(ctx.getText())
-            my_ast.type_obj = TypeClass(["float"])
+            my_ast.type_obj = TypeClass([TypeComponents.FLOAT])
 
         return my_ast
 
@@ -137,23 +137,23 @@ class Visitor (GrammarVisitor):
             if token_type in {GrammarParser.CHAR_TYPE, GrammarParser.INT_TYPE, GrammarParser.FLOAT_TYPE}:
                 assert len(type_stack) == 0
                 if token_type == GrammarParser.CHAR_TYPE:
-                    type_stack.append("char")
+                    type_stack.append(TypeComponents.CHAR)
                 if token_type == GrammarParser.INT_TYPE:
-                    type_stack.append("int")
+                    type_stack.append(TypeComponents.INT)
                 if token_type == GrammarParser.FLOAT_TYPE:
-                    type_stack.append("float")
+                    type_stack.append(TypeComponents.FLOAT)
                 if const_reminder:
-                    type_stack.append("const")
+                    type_stack.append(TypeComponents.CONST)
 
             if token_type == GrammarParser.STAR:
                 assert len(type_stack) > 0
-                type_stack.append("*")
+                type_stack.append(TypeComponents.PTR)
             if token_type == GrammarParser.CONST:
                 if len(type_stack) == 0:
                     const_reminder = True
                 else:
-                    assert type_stack[len(type_stack)-1] != "const"
-                    type_stack.append("const")
+                    assert type_stack[len(type_stack)-1] != TypeComponents.CONST
+                    type_stack.append(TypeComponents.CONST)
 
         return TypeClass(type_stack)
 

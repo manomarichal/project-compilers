@@ -1,9 +1,23 @@
 import copy
 
-PrimitiveComp = {"char", "int", "float"}
-ModifierComp = {"const", "*"}
-TypeComp = copy.deepcopy(PrimitiveComp)
-TypeComp.union(ModifierComp)
+
+class TypeComponents:
+    BOOL = 1
+    CHAR = 2
+    INT = 3
+    FLOAT = 4
+    CONST = 5
+    PTR = 6
+
+    primitive = {BOOL, CHAR, INT, FLOAT}
+    modifier = {CONST, PTR}
+
+    translations = {BOOL: "bool",
+                    CHAR: "char",
+                    INT: "int",
+                    FLOAT: "float",
+                    CONST: "const",
+                    PTR: "*"}
 
 
 class TypeClass:
@@ -11,11 +25,14 @@ class TypeClass:
     # [1:] = type modifier
     _type_stack = []
 
-    def __init__(self, type):
-        self._type_stack = type
+    def __init__(self, type_stack):
+        self._type_stack = type_stack
 
-    def pushType(self, newType):
-        self._type_stack.append(newType)
+    def pushType(self, new_type):
+        self._type_stack.append(new_type)
+
+    def popType(self):
+        self._type_stack.pop()
 
     def __eq__(self, other):
         return other.getType() == self.getType()
@@ -27,19 +44,35 @@ class TypeClass:
         return self._type_stack
 
     def is_const(self) -> bool:
-        tmp = self.get_top_type() == "const"
+        tmp = self.get_top_type() == TypeComponents.CONST
         return tmp
 
     def is_ptr(self) -> bool:
-        if self.get_top_type() == "const":
-            return self._type_stack[len(self._type_stack)] == "*"
-        return self.get_top_type == "*"
+        return self.get_top_type(TypeComponents.CONST) == TypeComponents.PTR
 
-    def get_top_type(self):
-        return self._type_stack[len(self._type_stack)-1]
+    def promotes_to(self, other):
+        self_type = self.get_top_type(TypeComponents.CONST)
+        other_type = other.get_top_type(TypeComponents.CONST)
+        if self_type == TypeComponents.CHAR and other_type in {TypeComponents.INT, TypeComponents.FLOAT}:
+            return True
+        if self_type == TypeComponents.INT and other_type == TypeComponents.FLOAT:
+            return True
+        return False
+
+    def converts_to(self, other):
+        return True
+
+    def get_top_type(self, exclude=None):
+        if exclude is None:
+            return self._type_stack[len(self._type_stack)-1]
+        if not isinstance(exclude, list):
+            exclude = [exclude]
+        for type_comp in reversed(self._type_stack):
+            if type_comp not in exclude:
+                return type
 
     def __repr__(self):
         result = ""
         for component in self.getType():
-            result += component + " "
+            result += TypeComponents.translations[component] + " "
         return result[0:len(result)-1]
