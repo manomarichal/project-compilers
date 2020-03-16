@@ -320,7 +320,7 @@ class Variable(Leaf):
         return self._generic_accept(visitor, "Variable", super().accept)
 
 
-class Decl(Variable):
+class Decl(Composite):
     def accept(self, visitor):
         return self._generic_accept(visitor, "Decl", super().accept)
 
