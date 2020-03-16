@@ -48,7 +48,8 @@ def main(argv):
     constant_folding = CFVisitor()
     constant_folding.visit(ast)
 
-
+    llvm = LLVMVisitor()
+    llvm.visit(ast)
 
     astVisualiser = DotVisitor()
     astVisualiser.visit(ast)
