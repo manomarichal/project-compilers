@@ -185,7 +185,7 @@ class Indir(UnaryOp):
 
 class Adress(UnaryOp):
     def accept(self, visitor):
-        return self._generic_accept(visitor, "Indir", super().accept)
+        return self._generic_accept(visitor, "Adress", super().accept)
 
 
 class LogicOp(BinaryOp):
@@ -277,6 +277,9 @@ class AssignOp(BinaryOp):
 class Leaf(Component):
     def accept(self, visitor):
         return self._generic_accept(visitor, "Leaf", super().accept)
+
+    def get_type(self):
+        pass
 
 
 class Literal(Leaf):
