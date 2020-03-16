@@ -1,8 +1,8 @@
 
 
 class Visitor:
-    def visit(self, tree):
-        return tree.accept(self)
+    def visit(self, node):
+        return node.accept(self)
 
     def visitComposite(self, node):
         return self.visitChildren(node)
