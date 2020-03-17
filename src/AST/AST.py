@@ -3,6 +3,9 @@
 
 # WARNING: single inheritance ONLY or visitors might break
 
+# TODO: add type to each node
+# TODO: add type conversion nodes
+
 from src.utility.SymbolTable import SymbolTable
 from src.utility import TypeClass
 
@@ -11,6 +14,13 @@ from src.utility import TypeClass
 class Component:
     _parent = None
     _register = None
+    _type: TypeClass = None
+
+    def get_type(self) -> TypeClass:
+        return self._type
+
+    def set_type(self, new_type: TypeClass):
+        self._type = new_type
 
     def get_register(self):
         return self._register
@@ -283,7 +293,11 @@ class Variable(Leaf):
 
     def get_type(self):
         assert(self.get_name() is not None)
-        return self.get_scope().get_symbol_table()[self.get_name()]
+        return self.get_scope().get_symbol_table()[self.get_name()].type_obj
+
+    def get_val(self):
+        assert (self.get_name() is not None)
+        return self.get_scope().get_symbol_table()[self.get_name()].value
 
     def get_name(self):
         return self._name
