@@ -43,9 +43,9 @@ def math_opp(res, lhs: AST.Component ,rhs: AST.Component, ast: AST.MathOp):
     lhs_reg = lhs.get_register()
     rhs_reg = lhs.get_register()
 
-    comment = colored(' // ' + res + ' = ' + lhs_reg + op_com + rhs_reg + '\t', 'green')
-    print("{: <35} ".format(res + ' =' + op_str + to_llvm_type(lhs) + ', *' + lhs_reg))
-    print("{: <35} {: <35} ".format(res + ' =' + op_str + to_llvm_type(rhs) + ', *' + rhs_reg, comment))
+    comment = colored('// ' + res + ' = ' + lhs_reg + op_com + rhs_reg + '\t', 'green')
+    print("{: <30} ".format(res + ' =' + op_str + to_llvm_type(lhs) + ', *' + lhs_reg))
+    print("{: <30} {: <30} ".format(res + ' =' + op_str + to_llvm_type(rhs) + ', *' + rhs_reg, comment))
 
 class LLVMVisitor(Visitor):
 
@@ -64,7 +64,7 @@ class LLVMVisitor(Visitor):
         var: AST.Variable = ast.get_child(0)
         comment = colored('// init '+ var.get_register() + ' as ' + var.get_name() + '\t', 'green')
         
-        print("{: <35} {: <35} ".format('%' + var.get_name() + ' = alloca ' + to_llvm_type(var), comment))
+        print("{: <30} {: <30} ".format('%' + var.get_name() + ' = alloca ' + to_llvm_type(var), comment))
 
     def visitAssignOp(self, ast:AST.AssignOp):
         self.visitChildren(ast)
@@ -77,27 +77,21 @@ class LLVMVisitor(Visitor):
 
         reg = '%' + var.get_name()
         
-        comment = colored(' // assign ' + ast.get_child(1).get_register() + ' to ' + reg + '\t', 'green')
-        print("{: <35} {: <35} ".format(reg + ' = load ' + to_llvm_type(var) + ', *' + str(ast.get_child(1).get_register()), comment))
+        comment = colored('// assign ' + ast.get_child(1).get_register() + ' to ' + reg + '\t', 'green')
+        print("{: <30} {: <30} ".format(reg + ' = load ' + to_llvm_type(var) + ', *' + str(ast.get_child(1).get_register()), comment))
 
     def visitMathOp(self, ast: AST.MathOp):
-
-        self.visitChildren(ast)
-
-        if not (isinstance(ast.get_child(0), AST.Literal) and isinstance(ast.get_child(1), AST.Literal)): return
-
-
         self.visitChildren(ast)
         reg = self._get_rname()
         ast.set_register(reg)
-        math_opp(reg, ast.get_child(0), ast.get_child(1), )
+        math_opp(reg, ast.get_child(0), ast.get_child(1), ast)
 
     def visitLiteral(self, ast: AST.Literal):
         reg = self._get_rname()
         ast.set_register(reg)
 
-        comment = colored(' // load ' + str(ast.get_value()) + ' in ' + reg + '\t', 'green')
-        print("{: <35} {: <35} ".format(reg + ' = load ' + to_llvm_type(ast) + ', ' + str(ast.get_value()), comment))
+        comment = colored('// load ' + str(ast.get_value()) + ' in ' + reg + '\t', 'green')
+        print("{: <30} {: <30} ".format(reg + ' = load ' + to_llvm_type(ast) + ', ' + str(ast.get_value()), comment))
 
     
 
