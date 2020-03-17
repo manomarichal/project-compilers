@@ -22,13 +22,13 @@ class SemanticVisitor(TypeListener):
         self.visitor.visit(node)
 
     def enterDecl(self, node: AST.Decl):
-        entry = node.get_scope().symbol_find(node.get_name())
+        entry = node.get_scope().symbol_find(node.get_child(0).get_name())
         if entry in self.defined_st_entries:
-            print("redeclaration of variable "+node.get_name(), file=stderr)
+            print("redeclaration of variable "+node.get_child(0).get_name(), file=stderr)
         else:
             self.defined_st_entries.add(entry)
 
-    def enterVariable(self, node: AST.Decl):
+    def enterVariable(self, node: AST.Variable):
         entry = node.get_scope().symbol_find(node.get_name())
         if entry not in self.defined_st_entries:
             print("usage of undeclared variable " + node.get_name(), file=stderr)

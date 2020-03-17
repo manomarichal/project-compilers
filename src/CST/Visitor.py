@@ -158,7 +158,9 @@ class Visitor (GrammarVisitor):
         return TypeClass(type_stack)
 
     def visitDecl(self, ctx):
-        my_ast = AST.Decl(self.visit(ctx.getChild(1)).get_name())
+        my_ast = AST.Decl()
+        var = AST.Variable(ctx.getChild(1).getText())
+        my_ast.add_child(var)
 
         self._current_scope[ctx.getChild(1).getText()] = self.visitTypeObject(ctx.getChild(0))
 
@@ -173,5 +175,10 @@ class Visitor (GrammarVisitor):
 
     def visitIdentifier(self, ctx):
         my_ast = AST.Variable(name=ctx.getText())
+        return my_ast
+
+    def visitPrintf(self, ctx):
+        my_ast = AST.Printf()
+        my_ast.add_child(self.visit(ctx.getChild(2)))
         return my_ast
 

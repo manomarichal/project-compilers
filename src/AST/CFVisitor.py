@@ -92,7 +92,7 @@ class CFVisitor(Visitor):
     def visitAssignOp(self, ast: AST.AssignOp):
         self.visitChildren(ast)
 
-        if ast.get_child(0).get_type().is_const():
+        if ast.get_child(0).get_child(0).get_type().is_const():
             ast.get_parent().replace_child(ast, AST.Literal(ast.get_child(1).get_value()))
 
 

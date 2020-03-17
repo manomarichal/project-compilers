@@ -10,6 +10,13 @@ from src.utility import TypeClass
 # Component
 class Component:
     _parent = None
+    _register = None
+
+    def get_register(self):
+        return self._register
+
+    def set_register(self, register):
+        self._register = register
 
     def get_parent(self):
         return self._parent
@@ -39,6 +46,8 @@ class Composite(Component):
 
     def __init__(self, dummy=None):
         Component.__init__(self)
+
+        self._register = ''
 
         if dummy is None:
             self._children = []
@@ -279,9 +288,15 @@ class Variable(Leaf):
     def get_name(self):
         return self._name
 
+    def get_register(self):
+        return '%' + self.get_name()
 
-class Decl(Variable):
+
+class Decl(Composite):
     pass
 
+
+class Printf(Composite):
+    pass
 
 

@@ -8,6 +8,7 @@ from src.antlr.GrammarParser import GrammarParser
 from src.CST.Visitor import Visitor as CSTVisitor
 from src.AST.DotVisitor import DotVisitor
 from src.AST.SemanticVisitor import SemanticVisitor
+from src.AST.LLVMVisitor import LLVMVisitor
 
 # Mandatory
 # P2
@@ -46,6 +47,9 @@ def main(argv):
 
     constant_folding = CFVisitor()
     constant_folding.visit(ast)
+
+    llvm = LLVMVisitor()
+    llvm.visit(ast)
 
     astVisualiser = DotVisitor()
     astVisualiser.visit(ast)
