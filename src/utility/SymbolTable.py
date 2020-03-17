@@ -6,6 +6,9 @@ SymbolTable = dict
 
 class VarEntry:
     value = None
-    name = None
     type_obj = None
+
+    def __init__(self, type_obj, value):
+        self.value = value
+        self.type_obj = type_obj
 
