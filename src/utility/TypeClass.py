@@ -46,8 +46,7 @@ class TypeClass:
         return self._type_stack
 
     def is_const(self) -> bool:
-        tmp = self.get_top_type() == TypeComponents.CONST
-        return tmp
+        return self.get_top_type() == TypeComponents.CONST
 
     def is_ptr(self) -> bool:
         return self.get_top_type(TypeComponents.CONST) == TypeComponents.PTR
@@ -71,7 +70,7 @@ class TypeClass:
             exclude = [exclude]
         for type_comp in reversed(self._type_stack):
             if type_comp not in exclude:
-                return type
+                return type_comp
 
     def __repr__(self):
         result = ""
