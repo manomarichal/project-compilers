@@ -1,6 +1,5 @@
 from src.AST import AST
 from src.AST.Visitor import Visitor
-from enum import Enum
 from termcolor import colored, cprint
 
 
@@ -11,7 +10,7 @@ def to_llvm_type(var) -> str:
     elif var_type == 'float':
         return 'float'
     elif var_type == 'char':
-        return 'i32'
+        return 'i8'
     elif var_type == 'None':
         # TODO literals hebben soms none type
         return 'none'
@@ -20,51 +19,79 @@ def to_llvm_type(var) -> str:
         exit(0)
 
 
-def math_opp(res, lhs: AST.Component ,rhs: AST.Component, ast: AST.MathOp):
-
-    if isinstance(ast, AST.Sum):
-        op_str = ' add '
-        op_com = ' + '
-    elif isinstance(ast, AST.Sub):
-        op_str = ' sub '
-        op_com = ' - '
-    elif isinstance(ast, AST.Prod):
-        op_str = ' mul '
-        op_com = ' * '
-    elif isinstance(ast, AST.Div):
-        op_str = ' mod '
-        op_com = ' / '
-    elif isinstance(ast, AST.Mod):
-        op_str = ' mod '
-        op_com = ' % '
-    else:
-        print("invalid math operator found while constant folding")
-
-    lhs_reg = lhs.get_register()
-    rhs_reg = lhs.get_register()
-
-    comment = colored('// ' + res + ' = ' + lhs_reg + op_com + rhs_reg + '\t', 'green')
-    print("{: <30} ".format(res + ' =' + op_str + to_llvm_type(lhs) + ', *' + lhs_reg))
-    print("{: <30} {: <30} ".format(res + ' =' + op_str + to_llvm_type(rhs) + ', *' + rhs_reg, comment))
-
 class LLVMVisitor(Visitor):
-
+    file = None
     _rcounter = 0
 
+    def __init__(self, file):
+        self.file = file
+        self.file.write('define i32 @main() {\nstart:')
+
     # HELPER FUNCTIONS
-    def _get_rname(self) -> str:
+    def print_to_file(self, string, comment=None):
+        if comment is not None:
+            color = colored(comment, 'green')
+            print("{: <30} {: <30} ".format(string, color))
+        else:
+            print("{: <30}".format(string))
+        self.file.write('\n\t\t' + string)
+        self.file.write('\n\t; ' + comment)
+
+    def load_var_in_reg(self, var: AST.Variable):
+        reg = self.get_rname()
+        comment = 'load ' + str(var.get_name()) + ' in ' + reg
+        string = reg + ' = load ' + to_llvm_type(var) + '*, ' + str(var.get_register())
+        self.print_to_file(string, comment)
+        return reg
+
+    def get_rname(self) -> str:
         self._rcounter += 1
         return '%t' + str(self._rcounter)
 
+    def math_opp(self, res, lhs: AST.Component, rhs: AST.Component, ast: AST.MathOp):
+
+        if isinstance(ast, AST.Sum):
+            op_str = ' add '
+            op_com = ' + '
+        elif isinstance(ast, AST.Sub):
+            op_str = ' sub '
+            op_com = ' - '
+        elif isinstance(ast, AST.Prod):
+            op_str = ' mul '
+            op_com = ' * '
+        elif isinstance(ast, AST.Div):
+            op_str = ' mod '
+            op_com = ' / '
+        elif isinstance(ast, AST.Mod):
+            op_str = ' mod '
+            op_com = ' % '
+        else:
+            print("invalid math operator found while constant folding")
+
+        if isinstance(lhs, AST.Variable):
+            lhs_reg = self.load_var_in_reg(lhs)
+        else:
+            lhs_reg = lhs.get_register()
+
+        if isinstance(rhs, AST.Variable):
+            rhs_reg = self.load_var_in_reg(rhs)
+        else:
+            rhs_reg = rhs.get_register()
+
+        comment = res + ' = ' + lhs_reg + op_com + rhs_reg
+        string = res + ' =' + op_str + to_llvm_type(lhs) + ' ' + lhs_reg + ', ' + rhs_reg
+        self.print_to_file(string, comment)
+
+    #VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
         self.visitChildren(ast)
 
-
     def visitDecl(self, ast: AST.Decl):
         var: AST.Variable = ast.get_child(0)
-        comment = colored('// init '+ var.get_register() + ' as ' + var.get_name() + '\t', 'green')
-        
-        print("{: <30} {: <30} ".format('%' + var.get_name() + ' = alloca ' + to_llvm_type(var), comment))
+
+        comment = 'init '+ var.get_register() + ' as ' + var.get_name()
+        string = '%' + var.get_name() + ' = alloca ' + to_llvm_type(var)
+        self.print_to_file(string, comment)
 
     def visitAssignOp(self, ast:AST.AssignOp):
         self.visitChildren(ast)
@@ -77,23 +104,28 @@ class LLVMVisitor(Visitor):
 
         reg = '%' + var.get_name()
         
-        comment = colored('// assign ' + ast.get_child(1).get_register() + ' to ' + reg + '\t', 'green')
-        print("{: <30} {: <30} ".format(reg + ' = load ' + to_llvm_type(var) + ', *' + str(ast.get_child(1).get_register()), comment))
+        comment = 'assign ' + ast.get_child(1).get_register() + ' to ' + reg
+        string = 'store ' + to_llvm_type(var) + ' ' + str(ast.get_child(1).get_register() + ', ' + to_llvm_type(var) + '* ' + reg)
+        self.print_to_file(string, comment)
 
     def visitMathOp(self, ast: AST.MathOp):
         self.visitChildren(ast)
-        reg = self._get_rname()
+        reg = self.get_rname()
         ast.set_register(reg)
-        math_opp(reg, ast.get_child(0), ast.get_child(1), ast)
+
+        self.math_opp(reg, ast.get_child(0), ast.get_child(1), ast)
 
     def visitLiteral(self, ast: AST.Literal):
-        reg = self._get_rname()
+        reg = self.get_rname()
         ast.set_register(reg)
 
-        comment = colored('// load ' + str(ast.get_value()) + ' in ' + reg + '\t', 'green')
-        print("{: <30} {: <30} ".format(reg + ' = load ' + to_llvm_type(ast) + ', ' + str(ast.get_value()), comment))
+        comment = 'load ' + str(ast.get_value()) + ' in ' + reg
+        string = reg + ' = add ' + to_llvm_type(ast) + ' ' + str(ast.get_value()) + ', ' + '0'
+        self.print_to_file(string, comment)
 
-    
+    def visitPrintf(self, ast: AST.Printf): #TODO
+        pass
+
 
 
 
