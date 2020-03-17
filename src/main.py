@@ -45,8 +45,8 @@ def main(argv):
     semantic_checker = SemanticVisitor()
     semantic_checker.visit(ast)
 
-    constant_folding = CFVisitor()
-    constant_folding.visit(ast)
+    # constant_folding = CFVisitor()
+    # constant_folding.visit(ast)
 
     llvm = LLVMVisitor()
     llvm.visit(ast)
@@ -55,6 +55,7 @@ def main(argv):
     astVisualiser.visit(ast)
     astVisualiser.graph.write("test_IO/result.dot")
     astVisualiser.graph.write_png("test_IO/result.png")
+
 
 if __name__ == '__main__':
     main(sys.argv)

@@ -6,6 +6,7 @@ import pydot
 class DotVisitor(Visitor):
     graph = pydot.Dot(graph_type='graph')
     counter = 0
+
     def visitComposite(self, ast: AST.Composite):
         self.counter += 1
         name = self.counter
