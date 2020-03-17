@@ -4,6 +4,9 @@ from src.utility.TypeClass import TypeClass, TypeComponents
 from src.utility.SemanticExceptions import *
 from copy import deepcopy
 
+# OUTDATED – moved to TypeVisitor
+# types now stored inside AST
+
 
 class TypeListener:
     def generic_enter(self, node: Component):
