@@ -2,13 +2,18 @@ import sys
 import copy
 from antlr4 import *
 
-from src.AST.CFVisitor import CFVisitor
 from src.antlr.GrammarLexer import GrammarLexer
 from src.antlr.GrammarParser import GrammarParser
+
+from src.AST.Visitor import Visitor as ASTVisitor
+from src.AST.AST import Component
+from src.utility.SemanticExceptions import SemanticError, SemanticWarning
+
+from src.AST.CFVisitor import CFVisitor
 from src.CST.Visitor import Visitor as CSTVisitor
 from src.AST.DotVisitor import DotVisitor
-from src.AST.SemanticVisitor import SemanticVisitor
 from src.AST.LLVMVisitor import LLVMVisitor
+from src.AST.TypeVisitor import TypeVisitor
 
 # Mandatory
 # P2
@@ -32,6 +37,16 @@ from src.AST.LLVMVisitor import LLVMVisitor
 #TODO comment after every instruction
 
 
+def ast_pass(visitor: ASTVisitor, tree: Component):
+    try:
+        visitor.visit(tree)
+    except SemanticError as oops:
+        print(oops, sys.stderr)
+        exit(1)
+
+
+
+
 def main(argv):
     input_stream = FileStream(argv[1])
     lexer = GrammarLexer(input_stream)
@@ -42,14 +57,19 @@ def main(argv):
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
-    semantic_checker = SemanticVisitor()
-    semantic_checker.visit(ast)
+    # semantic_checker = SemanticVisitor()
+    # semantic_checker.visit(ast)
 
-    # constant_folding = CFVisitor()
-    # constant_folding.visit(ast)
+    assign_types = TypeVisitor()
+    assign_types.visit(ast)
 
-    llvm = LLVMVisitor()
+    constant_folding = CFVisitor()
+    constant_folding.visit(ast)
+
+    tfile = open('./test_IO/result.ll', 'w+')
+    llvm = LLVMVisitor(tfile)
     llvm.visit(ast)
+    llvm.close()
 
     astVisualiser = DotVisitor()
     astVisualiser.visit(ast)

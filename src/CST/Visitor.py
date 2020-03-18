@@ -2,7 +2,7 @@ from src.antlr.GrammarVisitor import GrammarVisitor
 from src.antlr.GrammarParser import GrammarParser
 from src.AST import AST
 from src.utility.TypeClass import TypeClass, TypeComponents
-from src.utility.SymbolTable import SymbolTable
+from src.utility.SymbolTable import SymbolTable, VarEntry
 
 
 # to check a token's "type" (hopefully):
@@ -162,7 +162,7 @@ class Visitor (GrammarVisitor):
         var = AST.Variable(ctx.getChild(1).getText())
         my_ast.add_child(var)
 
-        self._current_scope[ctx.getChild(1).getText()] = self.visitTypeObject(ctx.getChild(0))
+        self._current_scope[ctx.getChild(1).getText()] = VarEntry(self.visitTypeObject(ctx.getChild(0)), None)
 
         if ctx.getChildCount() == 4:
             assign = AST.AssignOp()
