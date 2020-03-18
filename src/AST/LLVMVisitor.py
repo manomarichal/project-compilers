@@ -1,7 +1,43 @@
 from src.AST import AST
 from src.AST.Visitor import Visitor
 from termcolor import colored, cprint
+from src.utility.TypeClass import TypeClass
 
+def get_math_instruction(op:AST.MathOp, floating):
+
+    if floating:
+        op_str = ' f'
+    else:
+        op_str = ' '
+
+    op_com = 'error in get_math_instruction'
+
+    if isinstance(op, AST.Sum):
+        op_str += 'add '
+        op_com = ' + '
+    elif isinstance(op, AST.Sub):
+        op_str += 'sub '
+        op_com = ' - '
+    elif isinstance(op, AST.Prod):
+        op_str += 'mul '
+        op_com = ' * '
+    elif isinstance(op, AST.Div):
+        op_str += 'div '
+        op_com = ' / '
+    elif isinstance(op, AST.Mod):
+        op_str += 'mod '
+        op_com = ' % '
+
+    return op_str, op_com
+
+def check_var_type(var: AST.Variable):
+    value = var.get_val()
+    if isinstance(value, int):
+        var.set_type(TypeClass([3]))
+    if isinstance(value, float):
+        var.set_type(TypeClass([4]))
+    else:
+        var.set_type(TypeClass([3]))
 
 def to_llvm_type(var) -> str:
     var_type = var.get_type().__repr__()
@@ -63,24 +99,6 @@ class LLVMVisitor(Visitor):
 
     def math_opp(self, res, lhs: AST.Component, rhs: AST.Component, ast: AST.MathOp):
 
-        if isinstance(ast, AST.Sum):
-            op_str = ' add '
-            op_com = ' + '
-        elif isinstance(ast, AST.Sub):
-            op_str = ' sub '
-            op_com = ' - '
-        elif isinstance(ast, AST.Prod):
-            op_str = ' mul '
-            op_com = ' * '
-        elif isinstance(ast, AST.Div):
-            op_str = ' mod '
-            op_com = ' / '
-        elif isinstance(ast, AST.Mod):
-            op_str = ' mod '
-            op_com = ' % '
-        else:
-            print("invalid math operator found while constant folding")
-
         if isinstance(lhs, AST.Variable):
             lhs_reg = self.load_var_in_reg(lhs)
         else:
@@ -90,6 +108,8 @@ class LLVMVisitor(Visitor):
             rhs_reg = self.load_var_in_reg(rhs)
         else:
             rhs_reg = rhs.get_register()
+
+        op_str, op_com = get_math_instruction(ast, lhs.get_type().__repr__() == 'float')
 
         comment = res + ' = ' + lhs_reg + op_com + rhs_reg
         string = res + ' =' + op_str + to_llvm_type(lhs) + ' ' + lhs_reg + ', ' + rhs_reg
@@ -101,7 +121,6 @@ class LLVMVisitor(Visitor):
 
     def visitDecl(self, ast: AST.Decl):
         var: AST.Variable = ast.get_child(0)
-
         comment = 'init ' + var.get_register() + ' as ' + var.get_name()
         string = '%' + var.get_name() + ' = alloca ' + to_llvm_type(var)
         self.print_to_file(string, comment)
@@ -115,8 +134,9 @@ class LLVMVisitor(Visitor):
         else:
             var: AST.Variable = ast.get_child(0)
 
-        reg = '%' + var.get_name()
+        #TODO door constant folding worden types van functions verandert
 
+        reg = '%' + var.get_name()
         comment = 'assign ' + ast.get_child(1).get_register() + ' to ' + reg
         string = 'store ' + to_llvm_type(var) + ' ' + str(
             ast.get_child(1).get_register() + ', ' + to_llvm_type(var) + '* ' + reg)
@@ -133,8 +153,16 @@ class LLVMVisitor(Visitor):
         reg = self.get_rname()
         ast.set_register(reg)
 
+        if to_llvm_type(ast) == 'float':
+            t1 = '0.0'
+            t2 = 'fadd '
+        else:
+            t1 = '0'
+            t2 = 'add '
+
         comment = 'load ' + str(ast.get_value()) + ' in ' + reg
-        string = reg + ' = add ' + to_llvm_type(ast) + ' ' + str(ast.get_value()) + ', ' + '0'
+        string = reg + ' = ' + t2 + to_llvm_type(ast) + ' ' + str(ast.get_value()) + ', ' + t1
+
         self.print_to_file(string, comment)
 
     def visitPrintf(self, ast: AST.Printf):  # TODO
