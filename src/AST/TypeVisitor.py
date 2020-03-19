@@ -10,18 +10,18 @@ class TypeVisitor (Visitor):
         self.warnings = []
         self.errors = []
 
-    def warn(self, warning):
+    def add_warning(self, warning):
         self.warnings.append(warning)
 
-    def error(self, error):
+    def add_error(self, error):
         self.errors.append(error)
-        yield error
+        raise error
 
     def implicit_conversion_warning(self, node, from_type: TypeClass, to_type: TypeClass):
-        self.warn(ImplicitConversionWarning(node, from_type, to_type))
+        self.add_warning(ImplicitConversionWarning(node, from_type, to_type))
 
     def no_conversion_error(self, node, a_type, b_type, bi_dir):
-        self.warn(NoConversionError(node, a_type, b_type, bi_dir))
+        self.add_error(NoConversionError(node, a_type, b_type, bi_dir))
 
     def visit(self, node) -> TypeClass:
         return Visitor.visit(self, node)
@@ -139,7 +139,8 @@ class TypeVisitor (Visitor):
 
     def visitAdress(self, node: Adress):
         child_type = self.visit(node.get_child(0))
-        own_type = deepcopy(child_type).pushType(TypeComponents.PTR)
+        own_type = deepcopy(child_type)
+        own_type.pushType(TypeComponents.PTR)
         node.set_type(own_type)
         return own_type
 
@@ -150,6 +151,6 @@ class TypeVisitor (Visitor):
             own_type = deepcopy(child_type)
             own_type.popType()
         else:
-            self.error(InvalidTypeError(node, child_type))
+            self.add_error(InvalidTypeError(node, child_type))
         node.set_type(own_type)
         return own_type

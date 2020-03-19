@@ -14,6 +14,10 @@ from src.CST.Visitor import Visitor as CSTVisitor
 from src.AST.DotVisitor import DotVisitor
 from src.AST.LLVMVisitor import LLVMVisitor
 from src.AST.TypeVisitor import TypeVisitor
+from src.AST.SemanticVisitor import UntypedSemanticVisitor, TypedSemanticsVisitor
+
+from src.AST.DotVisitor import label_big as label_style
+
 
 # Mandatory
 # P2
@@ -38,13 +42,28 @@ from src.AST.TypeVisitor import TypeVisitor
 
 
 def ast_pass(visitor: ASTVisitor, tree: Component):
+    return visitor, visitor.visit(tree)
+
+
+def ast_error_pass(visitor: ASTVisitor, tree: Component):
     try:
         visitor.visit(tree)
     except SemanticError as oops:
-        print(oops, sys.stderr)
+        print(oops.__repr__(), file=sys.stderr)
         exit(1)
+    else:
+        for error in visitor.errors:
+            print(error.__repr__(), file=sys.stderr)
+        for warning in visitor.warnings:
+            print(warning.__repr__(), file=sys.stderr)
+        if len(visitor.errors) > 0:
+            exit(1)
 
 
+def ast_visualise(ast: Component, filename: str, style):
+    graph = ast_pass(DotVisitor(style), ast)[0].graph
+    graph.write(filename + ".dot")
+    graph.write_png(filename + ".png")
 
 
 def main(argv):
@@ -57,24 +76,22 @@ def main(argv):
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
-    # semantic_checker = SemanticVisitor()
-    # semantic_checker.visit(ast)
+    ast_error_pass(UntypedSemanticVisitor(), ast)
 
-    assign_types = TypeVisitor()
-    assign_types.visit(ast)
+    ast_error_pass(TypeVisitor(), ast)
 
-    constant_folding = CFVisitor()
-    constant_folding.visit(ast)
+    ast_error_pass(TypedSemanticsVisitor(), ast)
 
-    tfile = open('./test_IO/result.ll', 'w+')
-    llvm = LLVMVisitor(tfile)
-    llvm.visit(ast)
-    llvm.close()
+    ast_visualise(ast, "./test_IO/typed", label_style)
 
-    astVisualiser = DotVisitor()
-    astVisualiser.visit(ast)
-    astVisualiser.graph.write("test_IO/result.dot")
-    astVisualiser.graph.write_png("test_IO/result.png")
+    ast_pass(CFVisitor(), ast)
+
+    # tfile = open('./test_IO/result.ll', 'w+')
+    # llvm = LLVMVisitor(tfile)
+    # llvm.visit(ast)
+    # llvm.close()
+
+    ast_visualise(ast, "./test_IO/final", label_style)
 
 
 if __name__ == '__main__':

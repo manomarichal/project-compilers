@@ -1,41 +1,84 @@
-from src.AST.TypeAssignVisitor import TypeAssignVisitor, TypeListener
 from src.AST import AST
-from src.utility.TypeClass import TypeClass
-from sys import stderr
+from src.AST.Visitor import Visitor
+from src.utility.SemanticExceptions import StatementException, UndeclaredError, RedeclaredError, RValError, ConstAssignmentError
 
 
-class SemanticVisitor(TypeListener):
-    visitor: TypeAssignVisitor
+class UntypedSemanticVisitor(Visitor):
     defined_st_entries: set
+    warnings: list
+    errors: list
 
-    def __init__(self, type_assign_visitor=None):
-        TypeListener.__init__(self)
+    def __init__(self):
         self.defined_st_entries = set()
-        if type_assign_visitor is None:
-            self.visitor = TypeAssignVisitor()
-            self.visitor.attach(self)
-        else:
-            self.visitor = type_assign_visitor
-            self.visitor.attach(self)
+        self.warnings = list()
+        self.errors = list()
 
-    def visit(self, node):
-        self.visitor.visit(node)
+    def visit_outside_statement(self, node):
+        try:
+            return self.visit(node)
+        except StatementException:
+            pass
 
-    def enterDecl(self, node: AST.Decl):
+    def warn(self, warning):
+        self.warnings.append(warning)
+
+    def error(self, error):
+        self.errors.append(error)
+        raise error
+
+    def visitComposite(self, node):
+        self.visitChildren(node)
+
+    def visitDoc(self, node: AST.Doc):
+        for child_nr in range(node.get_child_count()):
+            self.visit_outside_statement(node.get_child(child_nr))
+
+    def visitDecl(self, node: AST.Decl):
         entry = node.get_scope().symbol_find(node.get_child(0).get_name())
         if entry in self.defined_st_entries:
-            print("redeclaration of variable "+node.get_child(0).get_name(), file=stderr)
+            self.error(RedeclaredError(node.get_child(0)))
         else:
             self.defined_st_entries.add(entry)
 
-    def enterVariable(self, node: AST.Variable):
-        entry = node.get_scope().symbol_find(node.get_name())
-        if entry not in self.defined_st_entries:
-            print("usage of undeclared variable " + node.get_name(), file=stderr)
+    def visitVariable(self, node: AST.Variable):
+        entry = node.get_st_entry()
+        if entry is None or entry not in self.defined_st_entries:
+            if entry not in self.defined_st_entries:
+                self.error(UndeclaredError(node))
 
-    def exitAssignOp(self, node: AST.AssignOp, node_type: TypeClass, child_types: list):
-        if child_types[0].is_const():
-            print("assigning to const type " + child_types[0])
-        if not node.get_child(0).isRval():
-            print("assigning to lval of type " + child_types[0])
+    def visitAdress(self, node: AST.Adress):
+        if not node.get_child(0).is_lval():
+            self.error(RValError(node))
 
+
+class TypedSemanticsVisitor(Visitor):
+    warnings: list
+    errors: list
+
+    def __init__(self):
+        self.warnings = list()
+        self.errors = list()
+
+    def visit_outside_statement(self, node):
+        try:
+            return self.visit(node)
+        except StatementException:
+            pass
+
+    def warn(self, warning):
+        self.warnings.append(warning)
+
+    def error(self, error):
+        self.errors.append(error)
+        raise error
+
+    def visitComposite(self, node):
+        self.visitChildren(node)
+
+    def visitDoc(self, node: AST.Doc):
+        for child_nr in range(node.get_child_count()):
+            self.visit_outside_statement(node.get_child(child_nr))
+
+    def visitAssignOp(self, node: AST.AssignOp):
+        if node.get_type().is_const() and not isinstance(node.get_child(0), AST.Decl):
+            self.error(ConstAssignmentError(node))
