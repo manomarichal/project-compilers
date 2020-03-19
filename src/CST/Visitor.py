@@ -54,16 +54,21 @@ class Visitor (GrammarVisitor):
                 my_ast = AST.Adress()
             elif ctx.STAR():
                 my_ast = AST.Indir()
+            elif isinstance(ctx.getChild(0), GrammarParser.ExprContext):
+                if ctx.getChild(1).getSymbol().type == GrammarParser.DECR:
+                    my_ast = AST.DecrPost()
+                elif ctx.getChild(1).getSymbol().type == GrammarParser.INCR:
+                    my_ast = AST.IncrPost()
+                my_ast.add_child(self.visit(ctx.getChild(0)))
+                return
             elif ctx.getChild(0).getSymbol().type == GrammarParser.INCR:
                 my_ast = AST.IncrPre()
-            elif ctx.getChild(1).getSymbol().type == GrammarParser.INCR:
-                my_ast = AST.IncrPost()
             elif ctx.getChild(0).getSymbol().type == GrammarParser.DECR:
                 my_ast = AST.DecrPre()
-            elif ctx.getChild(1).getSymbol().type == GrammarParser.DECR:
-                my_ast = AST.DecrPost()
 
             my_ast.add_child(self.visit(ctx.getChild(1)))
+
+
 
         # binary operators
         if ctx.getChildCount() == 3:

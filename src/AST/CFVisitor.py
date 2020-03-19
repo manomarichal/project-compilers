@@ -1,5 +1,10 @@
 from src.AST import AST
 from src.AST.Visitor import Visitor
+from src.utility.TypeClass import TypeClass
+
+def create_literal(value, lhs: AST.Literal, rhs:AST.Literal):
+    lit = AST.Literal()
+
 
 
 class CFVisitor(Visitor):
@@ -28,7 +33,7 @@ class CFVisitor(Visitor):
         else:
             print("invalid math operator found while constant folding")
 
-        ast.get_parent().replace_child(ast, AST.Literal(value))
+        ast.get_parent().replace_child(ast, create_literal(value))
 
     def visitCompOp(self, ast):
         self.visitChildren(ast)
@@ -51,7 +56,7 @@ class CFVisitor(Visitor):
         else:
             print("invalid comparison operator found while constant folding")
 
-        ast.get_parent().replace_child(ast, AST.Literal(value))
+        ast.get_parent().replace_child(ast, create_literal(value))
 
     def visitLogicOp(self, ast):
         self.visitChildren(ast)
@@ -72,7 +77,7 @@ class CFVisitor(Visitor):
             print("something went wrong when constant folding with a logic operator")
             exit(1)
 
-        ast.get_parent().replace_child(ast, AST.Literal(value))
+        ast.get_parent().replace_child(ast, create_literal(value))
 
     def visitUnaryOp(self, ast):
         self.visitChildren(ast)
@@ -93,6 +98,6 @@ class CFVisitor(Visitor):
         self.visitChildren(ast)
 
         if ast.get_child(0).get_child(0).get_type().is_const():
-            ast.get_parent().replace_child(ast, AST.Literal(ast.get_child(1).get_value()))
+            ast.get_parent().replace_child(ast, create_literal(ast.get_child(1).get_value()))
 
 

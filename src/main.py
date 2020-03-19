@@ -30,8 +30,8 @@ from src.utility.SemanticExceptions import ImplicitConversionWarning
 #TODO constant propagation until next assignment -> zo
 
 # P3
-#TODO printf() -> ma
-#TODO to LLVM -> ma
+#TODO printf()
+#TODO to LLVM
 #TODO scripts + readme + verslag -> deadline
 
 # Optional
@@ -84,7 +84,6 @@ def main(argv):
     stream = CommonTokenStream(lexer)
     parser = GrammarParser(stream)
     tree = parser.doc()
-
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
@@ -98,10 +97,16 @@ def main(argv):
 
     ast_pass(CFVisitor(), ast)
 
-    # tfile = open('./test_IO/result.ll', 'w+')
-    # llvm = LLVMVisitor(tfile)
-    # llvm.visit(ast)
-    # llvm.close()
+    fname = argv[1][0:(len(argv[1])-1)]
+    astVisualiser = DotVisitor()
+    astVisualiser.visit(ast)
+    astVisualiser.graph.write(fname + "dot")
+    astVisualiser.graph.write_png(fname + "png")
+
+    tfile = open(fname + 'll', 'w+')
+    llvm = LLVMVisitor(tfile)
+    llvm.visit(ast)
+    llvm.close()
 
     ast_visualise(ast, "./test_IO/final", label_style)
 
