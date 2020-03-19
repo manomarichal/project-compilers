@@ -3,7 +3,7 @@ from src.AST.Visitor import Visitor
 from termcolor import colored, cprint
 from src.utility.TypeClass import TypeClass
 
-def get_math_instruction(op:AST.MathOp, floating):
+def get_math_instruction(op:AST.MathOp, floating: bool):
 
     if floating:
         op_str = ' f'
@@ -79,33 +79,46 @@ class LLVMVisitor(Visitor):
         self.file.write('\n\t' + 'ret i32 0\n}\n')
         self.file.close()
 
-    def load_var_in_reg(self, var: AST.Variable):
+    def get_rname(self) -> str:
+        self._rcounter += 1
+        return '%t' + str(self._rcounter)
+
+    def get_lhs_and_rhs(self, lhs: AST.Component, rhs: AST.Component):
+        if isinstance(lhs, AST.Variable):
+            lhs_reg = self.generate_load(lhs)
+        else:
+            lhs_reg = lhs.get_register()
+
+        if isinstance(rhs, AST.Variable):
+            rhs_reg = self.generate_load(rhs)
+        else:
+            rhs_reg = rhs.get_register()
+
+        return lhs_reg, rhs_reg
+
+    # GENERATOR FUNCTIONS
+    def generate_load(self, var: AST.Variable):
         reg = self.get_rname()
         comment = 'load ' + str(var.get_name()) + ' in ' + reg
         string = reg + ' = load ' + to_llvm_type(var) + ', ' + to_llvm_type(var) + '* ' + str(var.get_register())
         self.print_to_file(string, comment)
         return reg
 
-    def get_rname(self) -> str:
-        self._rcounter += 1
-        return '%t' + str(self._rcounter)
+    def generate_store(self, var: AST.Variable, org: str):
+        comment = 'assign ' + org + ' to ' + var.get_register()
+        string = 'store ' + to_llvm_type(var) + ' ' + org + ', ' + to_llvm_type(var) + '* ' + var.get_register()
+        self.print_to_file(string, comment)
 
-    def math_opp(self, res, lhs: AST.Component, rhs: AST.Component, ast: AST.MathOp):
+    def generate_math_instr(self, res, lhs, rhs, type_of, op: AST.MathOp):
 
-        if isinstance(lhs, AST.Variable):
-            lhs_reg = self.load_var_in_reg(lhs)
-        else:
-            lhs_reg = lhs.get_register()
+        op_str, op_com = get_math_instruction(op, type_of == 'float')
+        comment = res + ' = ' + str(lhs) + op_com + str(rhs)
+        string = res + ' =' + op_str + type_of + ' ' + str(lhs) + ', ' + str(rhs)
+        self.print_to_file(string, comment)
 
-        if isinstance(rhs, AST.Variable):
-            rhs_reg = self.load_var_in_reg(rhs)
-        else:
-            rhs_reg = rhs.get_register()
-
-        op_str, op_com = get_math_instruction(ast, lhs.get_type().__repr__() == 'float')
-
-        comment = res + ' = ' + lhs_reg + op_com + rhs_reg
-        string = res + ' =' + op_str + to_llvm_type(lhs) + ' ' + lhs_reg + ', ' + rhs_reg
+    def generate_printf(self, reg, type):
+        comment = 'print ' + reg
+        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @str,i32 0, i32 0)," + type + " " + reg + ")"
         self.print_to_file(string, comment)
 
     # VISITOR FUNCTIONS
@@ -127,45 +140,66 @@ class LLVMVisitor(Visitor):
         else:
             var: AST.Variable = ast.get_child(0)
 
-        reg = '%' + var.get_name()
-        comment = 'assign ' + ast.get_child(1).get_register() + ' to ' + reg
-        string = 'store ' + to_llvm_type(var) + ' ' + str(
-            ast.get_child(1).get_register() + ', ' + to_llvm_type(var) + '* ' + reg)
-        self.print_to_file(string, comment)
+        self.generate_store(var, ast.get_child(1).get_register())
 
     def visitMathOp(self, ast: AST.MathOp):
         self.visitChildren(ast)
         reg = self.get_rname()
         ast.set_register(reg)
-
-        self.math_opp(reg, ast.get_child(0), ast.get_child(1), ast)
+        lhs, rhs = self.get_lhs_and_rhs(ast.get_child(0), ast.get_child(1))
+        self.generate_math_instr(reg, lhs, rhs, to_llvm_type(ast), ast)
 
     def visitLiteral(self, ast: AST.Literal):
         reg = self.get_rname()
         ast.set_register(reg)
-
         if to_llvm_type(ast) == 'float':
-            t1 = '0.0'
-            t2 = 'fadd '
+            c = '0.0'
         else:
-            t1 = '0'
-            t2 = 'add '
+            c = '0'
 
-        comment = 'load ' + str(ast.get_value()) + ' in ' + reg
-        string = reg + ' = ' + t2 + to_llvm_type(ast) + ' ' + str(ast.get_value()) + ', ' + t1
-
-        self.print_to_file(string, comment)
+        self.generate_math_instr(reg, ast.get_value(), c, to_llvm_type(ast), AST.Sum())
 
     def visitPrintf(self, ast: AST.Printf):  # TODO
         self.visitChildren(ast)
 
         if isinstance(ast.get_child(0), AST.Variable):
-            reg = self.load_var_in_reg(ast.get_child(0))
+            reg = self.generate_load(ast.get_child(0))
         else:
             reg = ast.get_child(0).get_register()
 
-        comment = 'print ' + reg
-        string =  self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @str,i32 0, i32 0)," + to_llvm_type(ast.get_child(0)) + " " + reg +")"
+        self.generate_printf(reg, to_llvm_type(ast.get_child(0)))
 
-        # TODO printf afmaken
-        self.print_to_file(string, comment)
+    def visitIncrPre(self, ast: AST.IncrPre):
+        self.visitChildren(ast)
+        reg = self.get_rname()                                              # reserve register
+        ast.set_register(reg)
+        var_reg = self.generate_load(ast.get_child(0))                      # load child variable in var_reg
+        self.generate_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())  # increase by 1
+        self.generate_store(ast.get_child(0), reg)                          # store variable
+
+    def visitIncrPost(self, ast: AST.IncrPost):
+        self.visitChildren(ast)
+        reg = self.generate_load(ast.get_child(0))
+        ast.set_register(reg)
+        var_reg = self.get_rname()
+        self.generate_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())
+        self.generate_store(ast.get_child(0), var_reg)
+
+    def visitDecrPre(self, ast: AST.DecrPre):
+        self.visitChildren(ast)
+        reg = self.get_rname()  # reserve register
+        ast.set_register(reg)
+        var_reg = self.generate_load(ast.get_child(0))  # load child variable in var_reg
+        self.generate_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())  # increase by 1
+        self.generate_store(ast.get_child(0), reg)  # store variable
+
+    def visitDecrPost(self, ast: AST.DecrPost):
+        self.visitChildren(ast)
+        reg = self.generate_load(ast.get_child(0))
+        ast.set_register(reg)
+        var_reg = self.get_rname()
+        self.generate_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
+        self.generate_store(ast.get_child(0), var_reg)
+
+
+

@@ -2,15 +2,10 @@ from src.AST import AST
 from src.AST.Visitor import Visitor
 from src.utility.TypeClass import TypeClass
 
-def create_literal(value):
-    lit = AST.Literal(value)
-    if isinstance(value, int):
-         lit.set_type(TypeClass([3]))
-    if isinstance(value, float):
-         lit.set_type(TypeClass([4]))
-    else:
-        lit.set_type(TypeClass([3]))
-    return lit
+def create_literal(value, lhs: AST.Literal, rhs:AST.Literal):
+    lit = AST.Literal()
+
+
 
 class CFVisitor(Visitor):
     def visit(self, tree):
