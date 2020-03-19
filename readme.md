@@ -28,7 +28,7 @@
         - [x] float
         - [x] char
     - [x] (mandatory) Variables
-    - [ ] (optional) Identifier Operations ++ and --
+    - [x] (optional) Identifier Operations ++ and --
     - [ ] (optional) Conversions
 - [x] 1.2 (mandatory) AST
 - [x] 1.3 (mandatory) Visualization
@@ -44,6 +44,16 @@
 - [x] 1.2 (mandatory) AST
 - [x] 1.3 (mandatory) Visualization
 - [x] 2 (mandatory) LLVM
+  -  [x] (mandatory) Binary operations + , - , * , and /
+  -  [x] (mandatory) Binary operations > , < , and ==
+  -  [x] (mandatory) Unary operators + and -
+  -  [x] (mandatory) Brackets to overwrite the order of operations
+  -  [x] (mandatory) Printf
+  -  [x] (optional) Identifier Operations ++ and --
+  -  [x] (optional) Comments for each machine instruction
+  -  [ ] (optional) Binary operator %
+  -  [ ] (optional) Comparison operators >= , <= , and !=
+  -  [ ] (optional) Logical operators && , || , and !
 
 Overall everything went really good
 
