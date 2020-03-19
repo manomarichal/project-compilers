@@ -10,41 +10,31 @@ define i32 @main() {
 		store i32 %t1, i32* %a
 	; init %c as c
 		%c = alloca i32
-	; assign  to %c
-		store i32 , i32* %c
-	; init %b as b
-		%b = alloca i32
 	; load a in %t3
 		%t3 = load i32, i32* %a
-	; load c in %t4
-		%t4 = load i32, i32* %c
-	; %t2 = %t3 + %t4
-		%t2 = add i32 %t3, %t4
-	; assign %t2 to %b
-		store i32 %t2, i32* %b
-	; init %c as c
-		%c = alloca i32
-	; %t5 = 5 + 0
-		%t5 = add i32 5, 0
-	; assign %t5 to %c
-		store i32 %t5, i32* %c
-	; init %d as d
-		%d = alloca i32
-	; load c in %t7
-		%t7 = load i32, i32* %c
-	; %t6 = %t7 + 1
-		%t6 = add i32 %t7, 1
-	; assign %t6 to %c
-		store i32 %t6, i32* %c
-	; assign %t6 to %d
-		store i32 %t6, i32* %d
-	; load b in %t8
-		%t8 = load i32, i32* %b
+	; %t2 = %t3 + 1
+		%t2 = add i32 %t3, 1
+	; assign %t2 to %a
+		store i32 %t2, i32* %a
+	; assign %t2 to %c
+		store i32 %t2, i32* %c
+	; init %e as e
+		%e = alloca i32
+	; load a in %t5
+		%t5 = load i32, i32* %a
+	; %t4 = %t5 - 1
+		%t4 = sub i32 %t5, 1
+	; assign %t4 to %a
+		store i32 %t4, i32* %a
+	; assign %t4 to %e
+		store i32 %t4, i32* %e
+	; load c in %t6
+		%t6 = load i32, i32* %c
+	; print %t6
+		%t7 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @str,i32 0, i32 0),i32 %t6)
+	; load e in %t8
+		%t8 = load i32, i32* %e
 	; print %t8
 		%t9 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @str,i32 0, i32 0),i32 %t8)
-	; load d in %t10
-		%t10 = load i32, i32* %d
-	; print %t10
-		%t11 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @str,i32 0, i32 0),i32 %t10)
 	ret i32 0
 }

@@ -23,7 +23,7 @@ def get_math_instruction(op:AST.MathOp, floating: bool):
         op_com = ' * '
     elif isinstance(op, AST.Div):
         if (op_str == ' f'): op_str = ' fdiv '
-        else: op_str += 'udiv '
+        else: op_str += 'sdiv '
         op_com = ' / '
     elif isinstance(op, AST.Mod):
         op_str += 'mod '
@@ -82,19 +82,12 @@ class LLVMVisitor(Visitor):
     def get_rname(self) -> str:
         self._rcounter += 1
         return '%t' + str(self._rcounter)
-
-    def get_lhs_and_rhs(self, lhs: AST.Component, rhs: AST.Component):
-        if isinstance(lhs, AST.Variable):
-            lhs_reg = self.generate_load(lhs)
+    
+    def get_reg(self, ast: AST.Component):
+        if isinstance(ast, AST.Variable):
+            return self.generate_load(ast)
         else:
-            lhs_reg = lhs.get_register()
-
-        if isinstance(rhs, AST.Variable):
-            rhs_reg = self.generate_load(rhs)
-        else:
-            rhs_reg = rhs.get_register()
-
-        return lhs_reg, rhs_reg
+            return ast.get_register()
 
     # GENERATOR FUNCTIONS
     def generate_load(self, var: AST.Variable):
@@ -146,7 +139,7 @@ class LLVMVisitor(Visitor):
         self.visitChildren(ast)
         reg = self.get_rname()
         ast.set_register(reg)
-        lhs, rhs = self.get_lhs_and_rhs(ast.get_child(0), ast.get_child(1))
+        lhs, rhs = self.get_reg(ast.get_child(0)), self.get_reg(ast.get_child(1))
         self.generate_math_instr(reg, lhs, rhs, to_llvm_type(ast), ast)
 
     def visitLiteral(self, ast: AST.Literal):
@@ -187,11 +180,11 @@ class LLVMVisitor(Visitor):
 
     def visitDecrPre(self, ast: AST.DecrPre):
         self.visitChildren(ast)
-        reg = self.get_rname()  # reserve register
+        reg = self.get_rname()
         ast.set_register(reg)
-        var_reg = self.generate_load(ast.get_child(0))  # load child variable in var_reg
-        self.generate_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())  # increase by 1
-        self.generate_store(ast.get_child(0), reg)  # store variable
+        var_reg = self.generate_load(ast.get_child(0))
+        self.generate_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
+        self.generate_store(ast.get_child(0), reg)
 
     def visitDecrPost(self, ast: AST.DecrPost):
         self.visitChildren(ast)
@@ -201,5 +194,15 @@ class LLVMVisitor(Visitor):
         self.generate_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
         self.generate_store(ast.get_child(0), var_reg)
 
+    def visitNeg(self, ast: AST.Neg):
+        self.visitChildren(ast)
+        var_reg = self.get_reg(ast.get_child(0))
+        reg = self.get_rname()
+        ast.set_register(reg)
+        self.generate_math_instr(reg, var_reg, -1, to_llvm_type(ast.get_child(0)), AST.Prod())
 
+    def visitPos(self, ast: AST.Neg):
+        self.visitChildren(ast)
+        reg = self.get_reg(ast.get_child(0))
+        ast.set_register(reg)
 
