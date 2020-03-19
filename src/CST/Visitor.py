@@ -60,15 +60,13 @@ class Visitor (GrammarVisitor):
                 elif ctx.getChild(1).getSymbol().type == GrammarParser.INCR:
                     my_ast = AST.IncrPost()
                 my_ast.add_child(self.visit(ctx.getChild(0)))
-                return
+                return my_ast
             elif ctx.getChild(0).getSymbol().type == GrammarParser.INCR:
                 my_ast = AST.IncrPre()
             elif ctx.getChild(0).getSymbol().type == GrammarParser.DECR:
                 my_ast = AST.DecrPre()
 
             my_ast.add_child(self.visit(ctx.getChild(1)))
-
-
 
         # binary operators
         if ctx.getChildCount() == 3:

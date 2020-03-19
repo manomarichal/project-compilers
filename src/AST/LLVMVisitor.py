@@ -43,6 +43,7 @@ def to_llvm_type(var) -> str:
         print('invalid type')
         exit(0)
 
+
 class LLVMVisitor(Visitor):
     file = None
     _rcounter = 0
