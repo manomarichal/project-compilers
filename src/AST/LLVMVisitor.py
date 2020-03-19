@@ -67,11 +67,11 @@ class LLVMVisitor(Visitor):
 
     # HELPER FUNCTIONS
     def print_to_file(self, string, comment=None):
-        if comment is not None:
-            color = colored(comment, 'green')
-            print("{: <30} {: <30} ".format(string, color))
-        else:
-            print("{: <30}".format(string))
+        # if comment is not None:
+        #     color = colored(comment, 'green')
+        #     print("{: <30} {: <30} ".format(string, color))
+        # else:
+        #     print("{: <30}".format(string))
         self.file.write('\n\t; ' + comment)
         self.file.write('\n\t\t' + string)
 

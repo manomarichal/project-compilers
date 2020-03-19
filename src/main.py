@@ -53,7 +53,6 @@ def main(argv):
     stream = CommonTokenStream(lexer)
     parser = GrammarParser(stream)
     tree = parser.doc()
-
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
@@ -66,12 +65,13 @@ def main(argv):
     # constant_folding = CFVisitor()
     # constant_folding.visit(ast)
 
+    fname = argv[1][0:(len(argv[1])-1)]
     astVisualiser = DotVisitor()
     astVisualiser.visit(ast)
-    astVisualiser.graph.write("test_IO/result.dot")
-    astVisualiser.graph.write_png("test_IO/result.png")
+    astVisualiser.graph.write(fname + "dot")
+    astVisualiser.graph.write_png(fname + "png")
 
-    tfile = open('./test_IO/result.ll', 'w+')
+    tfile = open(fname + 'll', 'w+')
     llvm = LLVMVisitor(tfile)
     llvm.visit(ast)
     llvm.close()
