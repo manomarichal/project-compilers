@@ -79,7 +79,7 @@ class TypeVisitor (Visitor):
             own_type = a_type
         elif b_type.promotes_to(a_type):
             own_type = a_type
-        elif b_type.converts_to(a_type) and not a_type.converts_to(b_type):
+        elif b_type.converts_to(a_type):
             self.implicit_conversion_warning(node, b_type, a_type)
             own_type = a_type
         else:

@@ -113,13 +113,13 @@ class Visitor (GrammarVisitor):
 
         if ctx.CHAR():  #TODO (maybe) multivalue chars
             my_ast.val = ord(ctx.getText()[1])
-            my_ast.type_obj = TypeClass([TypeComponents.CHAR])
+            my_ast.set_type(TypeClass([TypeComponents.CHAR]))
         if ctx.INT():
             my_ast.val = int(ctx.getText())
-            my_ast.type_obj = TypeClass([TypeComponents.INT])
+            my_ast.set_type(TypeClass([TypeComponents.INT]))
         if ctx.FLOAT():
             my_ast.val = float(ctx.getText())
-            my_ast.type_obj = TypeClass([TypeComponents.FLOAT])
+            my_ast.set_type(TypeClass([TypeComponents.FLOAT]))
 
         return my_ast
 
