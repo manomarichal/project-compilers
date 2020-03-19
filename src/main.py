@@ -17,6 +17,7 @@ from src.AST.TypeVisitor import TypeVisitor
 from src.AST.SemanticVisitor import UntypedSemanticVisitor, TypedSemanticsVisitor
 
 from src.AST.DotVisitor import label_big as label_style
+from src.utility.SemanticExceptions import ImplicitConversionWarning
 
 
 # Mandatory
@@ -41,6 +42,9 @@ from src.AST.DotVisitor import label_big as label_style
 #TODO comment after every instruction
 
 
+tmp_errors = [ImplicitConversionWarning]
+
+
 def ast_pass(visitor: ASTVisitor, tree: Component):
     return visitor, visitor.visit(tree)
 
@@ -52,11 +56,19 @@ def ast_error_pass(visitor: ASTVisitor, tree: Component):
         print(oops.__repr__(), file=sys.stderr)
         exit(1)
     else:
+        hit_tmp_error = False
         for error in visitor.errors:
             print(error.__repr__(), file=sys.stderr)
         for warning in visitor.warnings:
             print(warning.__repr__(), file=sys.stderr)
+            for tmp_error in tmp_errors:
+                if isinstance(warning, tmp_error):
+                    hit_tmp_error = True
+                    print("^^ UNSUPPORTED WARNING ^^", file=sys.stderr)
         if len(visitor.errors) > 0:
+            exit(1)
+        if hit_tmp_error:
+            print("Terminating because of currently unsupported warnings", file=sys.stderr)
             exit(1)
 
 
