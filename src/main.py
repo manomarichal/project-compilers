@@ -15,27 +15,12 @@ from src.AST.DotVisitor import DotVisitor
 from src.AST.LLVMVisitor import LLVMVisitor
 from src.AST.TypeVisitor import TypeVisitor
 
-# Mandatory
-# P2
-#TODO semantic erros -> zo (J)
-#TODO syntax errors -> zo (J)
-#TODO pointer operators & assigment (LVAL vs RVAL) -> zo (M)
-#TODO pointer grammar -> ma (M)
-#TODO pointer semantic errors -> deadline
-#TODO constant propagation until next assignment -> zo
-
-# P3
-#TODO printf()
-#TODO to LLVM
-#TODO scripts + readme + verslag -> deadline
-
-# Optional
-
-#TODO ++--
-#TODO implicit not python conversions
-#TODO dont ignore comments
-#TODO comment after every instruction
-
+# LLVM
+#TODO comparison operators
+#TODO boolean operators
+#TODO floating points afprinten
+#TODO pointer types
+#TODO constant propagation
 
 def ast_pass(visitor: ASTVisitor, tree: Component):
     try:
@@ -43,9 +28,6 @@ def ast_pass(visitor: ASTVisitor, tree: Component):
     except SemanticError as oops:
         print(oops, sys.stderr)
         exit(1)
-
-
-
 
 def main(argv):
     input_stream = FileStream(argv[1])
