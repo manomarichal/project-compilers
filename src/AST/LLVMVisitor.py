@@ -61,16 +61,8 @@ class LLVMVisitor(Visitor):
 
     def __init__(self, file):
         self.file = file
-        # self.file.write('declare i32 @printf(i8*, ...)\n'
-        #
-        #               'define void @print(i32 %a){\n'
-        #                '\t%p = call i32 (i8*, ...)\n'
-        #                '\t\t@printf(i8* getelementptr inbounds (i32 0, i32 0),\n'
-        #                '\t\t\ti32 %a)\n'
-        #                '\tret void\n'
-        #                '}\n\n')
-        # self.file.write('\ndeclare void @printf(i32)')
-        self.file.write('define i32 @main() {\n\tstart:')
+        self.file.write("declare i32 @printf(i8*, ...)\n@str = private constant [4 x i8] c\"%d\\0A\\00\"")
+        self.file.write('\ndefine i32 @main() {\n\tstart:')
 
     # HELPER FUNCTIONS
     def print_to_file(self, string, comment=None):
@@ -173,7 +165,7 @@ class LLVMVisitor(Visitor):
             reg = ast.get_child(0).get_register()
 
         comment = 'print ' + reg
-        string = 'call i32 @printf(i8* %p, i32 ' + reg + ')'
+        string =  self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @str,i32 0, i32 0)," + to_llvm_type(ast.get_child(0)) + " " + reg +")"
 
         # TODO printf afmaken
-        # self.print_to_file(string, comment)
+        self.print_to_file(string, comment)

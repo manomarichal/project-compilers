@@ -25,8 +25,8 @@ from src.AST.TypeVisitor import TypeVisitor
 #TODO constant propagation until next assignment -> zo
 
 # P3
-#TODO printf() -> ma
-#TODO to LLVM -> ma
+#TODO printf()
+#TODO to LLVM
 #TODO scripts + readme + verslag -> deadline
 
 # Optional
