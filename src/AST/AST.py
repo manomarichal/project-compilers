@@ -289,12 +289,6 @@ class Literal(Leaf):
         self.type_obj = type_obj
 
     def get_value(self):
-        if self.val == 7.0:
-            pass
-        if self.get_type().__repr__() == 'float':
-            return float(self.val)
-        if self.get_type().__repr__() == 'int':
-            return int(self.val)
         return self.val
 
 
@@ -309,13 +303,7 @@ class Variable(Leaf):
         return self.get_scope().get_symbol_table()[self.get_name()].type_obj
 
     def get_val(self):
-        val = self.get_scope().get_symbol_table()[self.get_name()].value
-        if val == 7.0:
-            pass
-        if self.get_type().__repr__() == 'float':
-            return float(val)
-        if self.get_type().__repr__() == 'int':
-            return int(val)
+        return self.get_scope().get_symbol_table()[self.get_name()].value
 
     def get_name(self):
         return self._name

@@ -22,7 +22,8 @@ def get_math_instruction(op:AST.MathOp, floating):
         op_str += 'mul '
         op_com = ' * '
     elif isinstance(op, AST.Div):
-        op_str += 'div '
+        if (op_str == ' f'): op_str = ' fdiv '
+        else: op_str += 'udiv '
         op_com = ' / '
     elif isinstance(op, AST.Mod):
         op_str += 'mod '
@@ -126,8 +127,6 @@ class LLVMVisitor(Visitor):
         else:
             var: AST.Variable = ast.get_child(0)
 
-        #TODO door constant folding worden types van functions verandert
-
         reg = '%' + var.get_name()
         comment = 'assign ' + ast.get_child(1).get_register() + ' to ' + reg
         string = 'store ' + to_llvm_type(var) + ' ' + str(
@@ -158,6 +157,7 @@ class LLVMVisitor(Visitor):
         self.print_to_file(string, comment)
 
     def visitPrintf(self, ast: AST.Printf):  # TODO
+        self.visitChildren(ast)
 
         if isinstance(ast.get_child(0), AST.Variable):
             reg = self.load_var_in_reg(ast.get_child(0))

@@ -63,18 +63,20 @@ def main(argv):
     assign_types = TypeVisitor()
     assign_types.visit(ast)
 
-    constant_folding = CFVisitor()
-    constant_folding.visit(ast)
+    # constant_folding = CFVisitor()
+    # constant_folding.visit(ast)
+
+    astVisualiser = DotVisitor()
+    astVisualiser.visit(ast)
+    astVisualiser.graph.write("test_IO/result.dot")
+    astVisualiser.graph.write_png("test_IO/result.png")
 
     tfile = open('./test_IO/result.ll', 'w+')
     llvm = LLVMVisitor(tfile)
     llvm.visit(ast)
     llvm.close()
 
-    astVisualiser = DotVisitor()
-    astVisualiser.visit(ast)
-    astVisualiser.graph.write("test_IO/result.dot")
-    astVisualiser.graph.write_png("test_IO/result.png")
+
 
 
 if __name__ == '__main__':

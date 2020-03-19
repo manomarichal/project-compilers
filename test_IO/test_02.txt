@@ -1,5 +1,9 @@
-int a = 10;
-int b = 10;
-int c = a * b;
-printf(c);
-printf(c);
+/**
+My program
+*/
+int x = 5*(13/10 + 29/10);
+int y = 100/89*10 - 6;
+int result = x + y;
+
+//calculate the result
+printf(result); //show the result
