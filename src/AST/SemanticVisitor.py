@@ -1,15 +1,17 @@
 from src.AST import AST
 from src.AST.Visitor import Visitor
-from src.utility.SemanticExceptions import StatementException, UndeclaredError, RedeclaredError, RValError, ConstAssignmentError
+from src.utility.SemanticExceptions import *
 
 
 class UntypedSemanticVisitor(Visitor):
     defined_st_entries: set
+    uninitialised_st_entries: set
     warnings: list
     errors: list
 
     def __init__(self):
         self.defined_st_entries = set()
+        self.uninitialised_st_entries = set()
         self.warnings = list()
         self.errors = list()
 
@@ -39,16 +41,33 @@ class UntypedSemanticVisitor(Visitor):
             self.error(RedeclaredError(node.get_child(0)))
         else:
             self.defined_st_entries.add(entry)
+            if not isinstance(node.get_parent(), AST.AssignOp):
+                self.uninitialised_st_entries.add(entry)
 
     def visitVariable(self, node: AST.Variable):
         entry = node.get_st_entry()
         if entry is None or entry not in self.defined_st_entries:
-            if entry not in self.defined_st_entries:
-                self.error(UndeclaredError(node))
+            self.error(UndeclaredError(node))
+        else:
+            if entry in self.uninitialised_st_entries:
+                if isinstance(node.get_parent(), AST.AssignOp) and node.get_parent().get_child(0) is node:
+                    self.uninitialised_st_entries.remove(entry)
+                else:
+                    self.warn(UninitialisedWarning(node))
 
     def visitAdress(self, node: AST.Adress):
         if not node.get_child(0).is_lval():
             self.error(RValError(node))
+
+        self.visit(node.get_child(0))
+
+    def visitAssignOp(self, node: AST.AssignOp):
+        if not node.get_child(0).is_lval():
+            self.error(RValError(node, "in lhs"))
+
+        # order matters! because of uninitialised warnings
+        self.visit(node.get_child(1))
+        self.visit(node.get_child(0))
 
 
 class TypedSemanticsVisitor(Visitor):
@@ -82,3 +101,6 @@ class TypedSemanticsVisitor(Visitor):
     def visitAssignOp(self, node: AST.AssignOp):
         if node.get_type().is_const() and not isinstance(node.get_child(0), AST.Decl):
             self.error(ConstAssignmentError(node))
+
+        self.visit(node.get_child(0))
+        self.visit(node.get_child(1))

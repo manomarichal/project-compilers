@@ -46,6 +46,12 @@ class ImplicitConversionWarning (SemanticWarning, StatementException):
         self.to_type = to_type
 
 
+class UninitialisedWarning (SemanticWarning, StatementException):
+    def __init__(self, node: Variable):
+        self.node = node
+        self.message = "usage of value of uninitialised variable \"" + node.get_name() + "\""
+
+
 class NoConversionError (SemanticError, StatementException):
     def __init__(self, node: Component, a_type: TypeClass, b_type: TypeClass, bidirectional: bool):
         self.node = node
@@ -76,11 +82,11 @@ class RedeclaredError (SemanticError, StatementException):
 
 
 class RValError (SemanticError, StatementException):
-    def __init__(self, node: Component, childnr=None):
+    def __init__(self, node: Component, detail=None):
         self.node = node
         self.message = self.repr_node(node) + " expected l-val, got r-val"
-        if childnr is not None:
-            self. message += " (child " + childnr + ")"
+        if detail is not None:
+            self. message += " (" + detail + ")"
 
 
 class ConstAssignmentError (SemanticError, StatementException):
