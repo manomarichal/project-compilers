@@ -17,6 +17,9 @@ class Component:
     _ir_rep = None
     _type: TypeClass = None
 
+    def is_lval(self):
+        return False
+
     def get_ir_rep(self):
         return self._ir_rep
 
@@ -40,7 +43,6 @@ class Component:
 
     def get_scope(self):
         if self.get_parent() is None:
-            print("Ohnoes! No scope...")
             return None
         return self.get_parent().get_scope()
 
@@ -72,7 +74,7 @@ class Composite(Component):
             assert isinstance(dummy, Composite)
             self.swap_children(dummy)
 
-    def get_child(self, i: int):
+    def get_child(self, i: int)->Component:
         return self._children[i]
 
     def replace_child(self, old_child: Component, new_child: Component):
@@ -119,9 +121,8 @@ class Scope(Composite):
 
     def symbol_find(self, symbol):
         if symbol in self.get_symbol_table():
-            return symbol
+            return self.get_symbol_table()[symbol]
         if self.get_parent() is None:
-            print("No scope containing \"" + symbol + "\" found when finding the symbol")
             return None
         return self.get_parent().get_scope().symbol_find(symbol)
 
@@ -129,7 +130,6 @@ class Scope(Composite):
         if symbol in self.get_symbol_table():
             self.get_symbol_table().pop(symbol)
         if self.get_parent() is None:
-            print("No scope containing \"" + symbol + "\" found when removing the symbol")
             return None
         return self.get_parent().get_scope().symbol_remove(symbol)
 
@@ -197,7 +197,8 @@ class Indir(UnaryOp):
 
 
 class Adress(UnaryOp):
-    pass
+    def is_lval(self):
+        return True
 
 
 class LogicOp(BinaryOp):
@@ -270,23 +271,15 @@ class AssignOp(BinaryOp):
 
 # Leaves
 class Leaf(Component):
-    def get_type(self):
-        pass
+    pass
 
 
 class Literal(Leaf):
     val = None
-    type_obj = None
 
     def __init__(self, value=None):
         Leaf.__init__(self)
         self.val = value
-
-    def get_type(self):
-        return self.type_obj
-
-    def set_type(self, type_obj):
-        self.type_obj = type_obj
 
     def get_value(self):
         return self.val
@@ -298,12 +291,26 @@ class Variable(Leaf):
     def __init__(self, name):
         self._name = name
 
+    def is_lval(self):
+        return True
+
+    def get_st_entry(self):
+        scope = self.get_scope()
+        if scope is None:
+            return None
+        return scope.symbol_find(self.get_name())
+
     def get_type(self):
-        assert(self.get_name() is not None)
-        return self.get_scope().get_symbol_table()[self.get_name()].type_obj
+        entry = self.get_st_entry()
+        if entry is None:
+            return None
+        return entry.type_obj
 
     def get_val(self):
-        return self.get_scope().get_symbol_table()[self.get_name()].value
+        entry = self.get_st_entry()
+        if entry is None:
+            return None
+        return entry.value
 
     def get_name(self):
         return self._name

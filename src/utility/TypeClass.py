@@ -31,8 +31,8 @@ class TypeClass:
     def pushType(self, new_type):
         self._type_stack.append(new_type)
 
-    def popType(self):
-        if self.get_top_type() == TypeComponents.CONST:
+    def popType(self, indiv_const: bool = False):
+        if indiv_const and self.get_top_type() == TypeComponents.CONST:
             self._type_stack.pop()
         self._type_stack.pop()
 
@@ -54,10 +54,19 @@ class TypeClass:
     def promotes_to(self, other):
         self_type = self.get_top_type(TypeComponents.CONST)
         other_type = other.get_top_type(TypeComponents.CONST)
+        if self_type == TypeComponents.BOOL and other_type in {TypeComponents.INT}:
+            return True
         if self_type == TypeComponents.CHAR and other_type in {TypeComponents.INT, TypeComponents.FLOAT}:
             return True
-        if self_type == TypeComponents.INT and other_type == TypeComponents.FLOAT:
+        if self_type == TypeComponents.INT and other_type in {TypeComponents.BOOL, TypeComponents.FLOAT}:
             return True
+
+        self.pushType(TypeComponents.CONST)
+        if self == other:
+            self.popType()
+            return True
+        self.popType()
+
         return False
 
     def converts_to(self, other):
