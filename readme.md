@@ -3,35 +3,35 @@
 
 ### Installing:
 
-## Clone git repository   
+#### Clone git repository   
     
     git clone https://github.com/shano19/compilers-2020.git
  
-## Install **pip** 
+#### Install **pip** 
 
     sudo apt-get install python3-pip
 
-## Install **virtualenv** using pip3
+#### Install **virtualenv** using pip3
 
     sudo pip3 install virtualenv 
 
-## Create virtual environment 
+#### Create virtual environment 
 
     virtualenv venv 
   
-## Active virtual environment:    
+#### Active virtual environment:    
     
     source venv/bin/activate
 
-## Install prerequisites:    
+#### Install prerequisites:    
     
     pip3 install -r requirements.txt    
     
-## Run the test files  
+#### Run the test files  
     
     python3 run.py
     
- ## Active your virtual environment:    
+ #### Active your virtual environment:    
     
     source venv/bin/activate
  
