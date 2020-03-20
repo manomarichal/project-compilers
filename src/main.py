@@ -60,7 +60,7 @@ def main(argv):
     parser = GrammarParser(stream)
     tree = parser.doc()
 
-    fname = argv[1][0:(len(argv[1]) - 1)]
+    fname = argv[1][0:(len(argv[1]) - 2)]
 
     if parser.getNumberOfSyntaxErrors() != 0:
         exit(1)
@@ -79,7 +79,7 @@ def main(argv):
             ast_pass(ConstantFoldingVisitor(), ast)
 
     ast_visualise(ast, fname, label_style)
-    tfile = open(fname + 'll', 'w+')
+    tfile = open(fname + '.ll', 'w+')
     llvm = LLVMVisitor(tfile)
     llvm.visit(ast)
     llvm.close()
