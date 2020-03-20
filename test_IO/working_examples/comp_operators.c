@@ -12,20 +12,6 @@ printf(d);
 printf(e);
 printf(f);
 
-/**
-float g = 1 > 2;
-float h = 1 < 2;
-float i = 1 >= 2;
-float j = 1 >= 2;
-float k = 1 == 2;
-float l = 1 != 2;
 
-printf(g);
-printf(h);
-printf(i);
-printf(j);
-printf(k);
-printf(l);
-*/
 
 
