@@ -11,7 +11,7 @@ class SemanticException (Exception):
         self.message = message
 
     def __repr__(self):  # TODO: add source text to AST nodes
-        return type(self).__name__ + ": " + self.message + "\n\tat " + "<node_location>"
+        return type(self).__name__ + ": " + self.message + "\n\tat " + self.node.get_source_loc()
 
     @staticmethod
     def repr_node(node):

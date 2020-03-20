@@ -13,8 +13,12 @@ from src.utility.SymbolTable import SymbolTable, VarEntry
 # <context>.getChild(<index>)
 
 
-class Visitor (GrammarVisitor):
+def source_from_ctx(ctx):
+    start = ctx.start
+    return "\"" + start.source[1].fileName + "\", line " + str(start.line)
 
+
+class Visitor (GrammarVisitor):
     _current_scope = None
 
     def aggregateResult(self, aggregate, nextResult):
@@ -30,6 +34,7 @@ class Visitor (GrammarVisitor):
         my_ast.set_symbol_table(SymbolTable())
         self._current_scope = my_ast.get_symbol_table()
         my_ast.swap_children(self.visitChildren(ctx))
+        my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
     def visitExpr(self, ctx):
@@ -60,6 +65,7 @@ class Visitor (GrammarVisitor):
                 elif ctx.getChild(1).getSymbol().type == GrammarParser.INCR:
                     my_ast = AST.IncrPost()
                 my_ast.add_child(self.visit(ctx.getChild(0)))
+                my_ast.set_source_loc(source_from_ctx(ctx))
                 return my_ast
             elif ctx.getChild(0).getSymbol().type == GrammarParser.INCR:
                 my_ast = AST.IncrPre()
@@ -109,6 +115,7 @@ class Visitor (GrammarVisitor):
             my_ast.add_child(self.visit(ctx.getChild(0)))
             my_ast.add_child(self.visit(ctx.getChild(2)))
 
+        my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
     def visitLiteral(self, ctx):
@@ -124,6 +131,7 @@ class Visitor (GrammarVisitor):
             my_ast.val = float(ctx.getText())
             my_ast.set_type(TypeClass([TypeComponents.FLOAT]))
 
+        my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
     def visitTypeObject(self, ctx):
@@ -171,17 +179,21 @@ class Visitor (GrammarVisitor):
             assign = AST.AssignOp()
             assign.add_child(my_ast)
             assign.add_child(self.visit(ctx.getChild(3)))
+            assign.set_source_loc(source_from_ctx(ctx))
             return assign
 
         else:
+            my_ast.set_source_loc(source_from_ctx(ctx))
             return my_ast
 
     def visitIdentifier(self, ctx):
         my_ast = AST.Variable(name=ctx.getText())
+        my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
     def visitPrintf(self, ctx):
         my_ast = AST.Printf()
         my_ast.add_child(self.visit(ctx.getChild(2)))
+        my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 

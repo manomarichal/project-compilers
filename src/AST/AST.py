@@ -16,6 +16,13 @@ class Component:
     _register = None
     _ir_rep = None
     _type: TypeClass = None
+    _source_loc = None
+
+    def get_source_loc(self):
+        return self._source_loc
+
+    def set_source_loc(self, loc):
+        self._source_loc = loc
 
     def is_lval(self):
         return False
