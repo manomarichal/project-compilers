@@ -12,6 +12,10 @@ char j = 1.5;
 
 int d = (1.0 && 'a') + ' ' % '*';
 
+char a1 = 'a';
+char* pa = &1;
+float b1 = 1.5 + *pa;
+
 printf(a);
 printf(b);
 printf(c);
@@ -22,3 +26,4 @@ printf(h);
 printf(i);
 printf(j);
 printf(d);
+printf(b1);
