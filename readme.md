@@ -30,7 +30,7 @@ clean.py Verwijdert alle gegenereerde files uit test_IO/working_examples.
     
     source venv/bin/activate 
 
-to deactivate it later, use the `deactivate` command
+When you're done using the compiler, deactivate it again using the `deactivate` command. (or just quit the terminal)
 
 #### Install prerequisites:    
     
@@ -39,12 +39,14 @@ to deactivate it later, use the `deactivate` command
 #### Run the test files  
     
     python3 run.py
+    
+Some of these test files will print to stderr when warnings (or errors) are encountered. Some of them won't compile at all because they're testing error detection.
  
 #### Compiling a file  
     
     python3 ./src/main.py <filename> 
 
-you can add the `-cf flag` after `<filename>` to enable constant folding
+The `-cf` flag can be added after `<filename>` to enable constant folding.
     
 ### Status:
 #### Project 1)
