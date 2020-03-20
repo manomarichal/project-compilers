@@ -344,7 +344,8 @@ class Variable(Leaf):
 
 
 class Decl(Composite):
-    pass
+    def is_lval(self):
+        return True
 
 
 class Printf(Composite):
