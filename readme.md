@@ -4,10 +4,11 @@
 ### Overview
 
 We hebben alle mandatory dingen afgewerkt. Onderaan de readme kan je een overzicht zien van wat we allemaal gemaakt hebben.
-Voor elk feature hebben we een testfile, in test_IO/working_examples/. Je kan voor al deze de llvm ir, dotfiles en ast visualization genereren met run.py.
-clean.py verwijdert alle gegenereerde files uit test_IO/working_examples/. 
+Voor elk feature hebben we een testfile, in test_IO/working_examples Je kan voor al deze de llvm ir en ast dot / png files genereren met run.py.
+clean.py Verwijdert alle gegenereerde files uit test_IO/working_examples. 
 
 ### Installing and running:
+(assuming a linux-based system)
 
 #### Clone git repository   
     
@@ -27,7 +28,9 @@ clean.py verwijdert alle gegenereerde files uit test_IO/working_examples/.
   
 #### Active virtual environment:    
     
-    source venv/bin/activate
+    source venv/bin/activate 
+
+to deactivate it later, use the `deactivate` command
 
 #### Install prerequisites:    
     
@@ -36,73 +39,79 @@ clean.py verwijdert alle gegenereerde files uit test_IO/working_examples/.
 #### Run the test files  
     
     python3 run.py
-    
- #### Active your virtual environment:    
-    
-    source venv/bin/activate
  
 #### Compiling a file  
     
     python3 ./src/main.py <filename> 
 
-you can add the -c flag to indicate that constant folding should be used
+you can add the `-cf flag` after `<filename>` to enable constant folding
     
 ### Status:
 #### Project 1)
-- 2.1 Grammar:
-  -  [x] (mandatory) Binary operations + , - , * , and /
-  -  [x] (mandatory) Binary operations > , < , and ==
-  -  [x] (mandatory) Unary operators + and -
-  -  [x] (mandatory) Brackets to overwrite the order of operations
-  -  [x] (optional) Binary operator %
-  -  [x] (optional) Comparison operators >= , <= , and !=
-  -  [x] (optional) Logical operators && , || , and !
-- [x] 2.2 (mandatory) AST
-- [x] 2.3 (mandatory) Visualization
-- [x] 2.4 (optional) Constant folding
+- 2 Expression Parser
+    - 2.1 Grammar:
+      -  [x] (mandatory) Binary operations + , - , * , and /
+      -  [x] (mandatory) Binary operations > , < , and ==
+      -  [x] (mandatory) Unary operators + and -
+      -  [x] (mandatory) Brackets to overwrite the order of operations
+      -  [x] (optional) Binary operator %
+      -  [x] (optional) Comparison operators >= , <= , and !=
+      -  [x] (optional) Logical operators && , || , and !
+    - [x] 2.2 (mandatory) AST
+    - [x] 2.3 (mandatory) Visualization
+    - [x] 2.4 (optional) Constant folding
 
 #### Project 2)
-- 1.1 Grammar:
-    - [x] (mandatory) Types
-        - [x] int
-        - [x] float
-        - [x] char
-        - [x] pointer
-    - [x] (mandatory) Reserved words
-        - [x] const
-        - [x] int
-        - [x] float
-        - [x] char
-    - [x] (mandatory) Variables
-    - [x] (optional) Identifier Operations ++ and --
-    - [x] (optional) Implicit Conversions
+- 1 Variables:
+    - 1.1 Grammar:
+        - (mandatory) Types
+            - [x] char
+            - [x] int
+            - [x] float
+            - [x] pointer
+        - (mandatory) Reserved words
+            - [x] const
+            - [x] int
+            - [x] float
+            - [x] char
+        - [x] (mandatory) Variables
+        - [x] (mandatory) Pointer Operations * and &
+        - [x] (optional) Identifier Operations ++ and --
+        - [x] (optional) Implicit Conversions (+ warnings for non-promotions)
 - [x] 1.2 (mandatory) AST
 - [x] 1.3 (mandatory) Visualization
-- [x] 1.4 (optional) Constant Propagation
-- [x] 2.1 (mandatory) Syntax errors
-- [x] 2.2 (mandatory) Semantic errors
+- [ ] 1.4 (optional) Constant Propagation
+- 2 Error Analysis
+    - [x] 2.1 Syntax Errors
+    - [x] 2.2 Semantic Errors
+        - [x] undefined & uninitialised variables
+        - [x] redeclared & redefined variables
+        - [x] operations on incompatible types (dereferencing a non-ptr type)
+        - [x] Assignment to an rvalue
+        - [x] Assignment to a const variable
+        - [x] Symbol table (scoped)
 
 #### Project 3)
-- 1.1 Grammar
-    - [x] (mandatory) Comments
-    - [ ] (optional) Not ignoring comments
-    - [x] (mandatory) Printf
-- [x] 1.2 (mandatory) AST
-- [x] 1.3 (mandatory) Visualization
-- [x] 2 (mandatory) LLVM
-  -  [x] (mandatory) Binary operations + , - , * , and /
-  -  [x] (mandatory) Binary operations > , < , and ==
-  -  [x] (mandatory) Unary operators + and -
-  -  [x] (mandatory) Brackets to overwrite the order of operations
-  -  [x] (mandatory) Printf
-  -  [x] (mandatory) Pointers + pointer operators
-  -  [x] (optional) Identifier Operations ++ and --
-  -  [x] (optional) Comments for each machine instruction
-  -  [ ] (optional) Binary operator %
-  -  [x] (optional) Comparison operators >= , <= , and !=
-  -  [x] (optional) Logical operators && , || , and !
-  -  [x] (optional) Constant folding
-  -  [x] (optional) Implicit conversions (bool <> char <> int <> float)
+- 1 Variables
+    - 1.1 Grammar
+        - [x] (mandatory) Comments
+        - [x] (mandatory) printf() for char, int & float (without metastring)
+    - [x] 1.2 (mandatory) AST
+    - [x] 1.3 (mandatory) Visualization
+    - 2 (mandatory) LLVM
+      - [x] (mandatory) Binary operations + , - , * , and /
+      - [x] (mandatory) Binary operations > , < , and ==
+      - [x] (mandatory) Unary operators + and -
+      - [x] (mandatory) Brackets to overwrite the order of operations
+      - [x] (mandatory) Printf
+      - [x] (mandatory) Pointers + pointer operators
+      - [x] (optional) Identifier Operations ++ and --
+      - [x] (optional) Comments for each machine instruction
+      - [x] (optional) Comparison operators >= , <= , and !=
+      - [x] (optional) Logical operators && , || , and !
+      - [x] (optional) Conversions (bool <> char <> int <> float)
+      - [ ] (optional) Binary operator %
+      - [ ] (optional) Include comments in compiled LLVM
 
 
 
