@@ -122,7 +122,8 @@ dit komt wanneer je een floating point constant wil inladen dat een repeating de
 
     float a = 1.3;
 
-Meer hierover op de LLVM documentatie: https://llvm.org/docs/LangRef.html#simple-constants
+Meer hierover op de LLVM documentatie: https://llvm.org/docs/LangRef.html#simple-constants 
+
 We hebben een mail gestuurt naar Brent of we hier rekening mee moesten houden, en hij zij van niet.
 
 
