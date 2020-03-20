@@ -161,19 +161,19 @@ class LLVMVisitor(Visitor):
         string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @fstr,i32 0, i32 0), double " + reg + ")"
         self.print_to_file(string, comment)
 
-    # %X = trunc from_type value to to_type
+    # %X = trunc i32 235 to i1 (%X = 1)
     def generate_trunc(self, reg, from_type, to_type, value):
         comment = 'convert ' + from_type + ' ' + value + ' to ' + to_type
         string = reg + ' = trunc ' + from_type + ' ' + value + ' to ' + to_type
         self.print_to_file(string, comment)
 
-    # %X = zext from_type value to to_type (zero extent)
+    # %X = zext i1 1 to i32 (%X = 00000..1)
     def generate_zext(self, reg, from_type, to_type, value):
         comment = 'zero extent ' + from_type + ' ' + value + ' to ' + to_type
         string = reg + ' = zext ' + from_type + ' ' + value + ' to ' + to_type
         self.print_to_file(string, comment)
 
-    # %X = fpext float 3.125 to double         ; yields double:3.125000e+00
+    # %X = fpext float 3.125 to double (%X = 3.125000e+00)
     def generate_fpext(self, reg, from_type, to_type, value):
         comment = 'fp zero extent ' + from_type + ' ' + value + ' to ' + to_type
         string = reg + ' = fpext ' + from_type + ' ' + value + ' to ' + to_type
