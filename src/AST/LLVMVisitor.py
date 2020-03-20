@@ -80,7 +80,7 @@ def to_llvm_type(node) -> str:
     if node_type == 'int':
         return 'i32'
     elif node_type == 'float':
-        return 'i1'
+        return 'float'
     elif node_type == 'char':
         return 'i8'
     elif node_type == 'bool':
@@ -96,7 +96,9 @@ class LLVMVisitor(Visitor):
 
     def __init__(self, file):
         self.file = file
-        self.file.write("declare i32 @printf(i8*, ...)\n@str = private constant [4 x i8] c\"%d\\0A\\00\"")
+        self.file.write("declare i32 @printf(i8*, ...)")
+        self.file.write("\n@istr = private constant [4 x i8] c\"%d\\0A\\00\"")
+        self.file.write("\n@fstr = private constant [4 x i8] c\"%f\\0A\\00\"")
         self.file.write('\ndefine i32 @main() {\n\tstart:')
 
     # HELPER FUNCTIONS
@@ -149,9 +151,14 @@ class LLVMVisitor(Visitor):
         op_str, op_com = get_logic_instruction(op)
         self.generate_binary_instruction(res, lhs, rhs, type_of, op_str, op_com)
 
-    def generate_printf(self, reg, type):
+    def generate_int_printf(self, reg, type_of):
         comment = 'print ' + reg
-        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @str,i32 0, i32 0)," + type + " " + reg + ")"
+        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @istr,i32 0, i32 0)," + type_of + " " + reg + ")"
+        self.print_to_file(string, comment)
+
+    def generate_float_printf(self, reg):
+        comment = 'print ' + reg
+        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @fstr,i32 0, i32 0), double " + reg + ")"
         self.print_to_file(string, comment)
 
     # %X = trunc from_type value to to_type
@@ -164,6 +171,12 @@ class LLVMVisitor(Visitor):
     def generate_zext(self, reg, from_type, to_type, value):
         comment = 'zero extent ' + from_type + ' ' + value + ' to ' + to_type
         string = reg + ' = zext ' + from_type + ' ' + value + ' to ' + to_type
+        self.print_to_file(string, comment)
+
+    # %X = fpext float 3.125 to double         ; yields double:3.125000e+00
+    def generate_fpext(self, reg, from_type, to_type, value):
+        comment = 'fp zero extent ' + from_type + ' ' + value + ' to ' + to_type
+        string = reg + ' = fpext ' + from_type + ' ' + value + ' to ' + to_type
         self.print_to_file(string, comment)
 
     # VISITOR FUNCTIONS
@@ -198,11 +211,15 @@ class LLVMVisitor(Visitor):
 
     def visitPrintf(self, ast: AST.Printf):  #
         self.visitChildren(ast)
-        if isinstance(ast.get_child(0), AST.Variable):
-            reg = self.generate_load(ast.get_child(0))
+        reg = self.get_reg(ast.get_child(0))
+
+        if to_llvm_type(ast.get_child(0)) != 'float':
+            self.generate_int_printf(reg, to_llvm_type(ast.get_child(0)))
         else:
-            reg = ast.get_child(0).get_register()
-        self.generate_printf(reg, to_llvm_type(ast.get_child(0)))
+            # we first need to convert the float for a double (because reasons)
+            c_reg = self.get_rname()
+            self.generate_fpext(c_reg, 'float', 'double', reg)
+            self.generate_float_printf(c_reg)
 
     def visitIncrPre(self, ast: AST.IncrPre):
         self.visitChildren(ast)

@@ -1,4 +1,4 @@
-int a = (4>3) && (1>2);
-int b = (4>3) || (1>2);
+int a = 5;
+float b = 5.0;
 printf(a);
 printf(b);
