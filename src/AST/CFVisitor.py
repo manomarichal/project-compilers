@@ -2,6 +2,9 @@ from src.AST import AST
 from src.AST.Visitor import Visitor
 from src.utility.TypeClass import TypeClass
 
+# WARNING - DEPRECATED
+
+
 def create_literal(value, lhs: AST.Literal, rhs:AST.Literal):
     lit = AST.Literal()
 

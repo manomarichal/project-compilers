@@ -8,6 +8,7 @@
 
 from src.utility.SymbolTable import SymbolTable
 from src.utility import TypeClass
+from enum import Enum
 
 
 # Component
@@ -211,14 +212,14 @@ class Adress(UnaryOp):
 
 
 # cast from get_child(0).get_type() to get_type()
-from enum import Enum
 class conv_type(Enum):
-     BOOL_TO_INT = 1
-     BOOL_TO_FLOAT = 2
-     INT_TO_BOOL = 3
-     INT_TO_FLOAT = 4
-     FLOAT_TO_INT = 5
-     FLOAT_TO_BOOL = 6
+    BOOL_TO_INT = 1
+    BOOL_TO_FLOAT = 2
+    INT_TO_BOOL = 3
+    INT_TO_FLOAT = 4
+    FLOAT_TO_INT = 5
+    FLOAT_TO_BOOL = 6
+
 
 class CastOp(UnaryOp):
     def __init__(self, to_type, dummy=None):
