@@ -18,6 +18,8 @@ class TypeVisitor (Visitor):
         raise error
 
     def implicit_conversion_warning(self, node, from_type: TypeClass, to_type: TypeClass):
+        if from_type == TypeClass([TypeComponents.INT]) and to_type == TypeClass([TypeComponents.BOOL]):
+            return
         self.add_warning(ImplicitConversionWarning(node, from_type, to_type))
 
     def no_conversion_error(self, node, a_type, b_type, bi_dir):
