@@ -18,6 +18,10 @@ First, open a terminal where you'd like to clone the repository, then run:
     
 Then navigate to the repository with `cd ./compilers-2020`.
  
+#### Install **LLVM** 
+
+    sudo apt-get install llvm
+    
 #### Install **pip** 
 
     sudo apt-get install python3-pip
