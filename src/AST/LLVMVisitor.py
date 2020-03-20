@@ -61,6 +61,20 @@ def get_comp_instruction(op:AST.CompOp, floating: bool):
 
     return op_str, op_com
 
+def get_logic_instruction(op:AST.LogicOp):
+
+    op_com = 'error in get_logic_instruction'
+    op_str = ''
+
+    if isinstance(op, AST.And):
+        op_str += ' and '
+        op_com = ' and '
+    elif isinstance(op, AST.Or):
+        op_str += ' or '
+        op_com = ' or '
+
+    return op_str, op_com
+
 def to_llvm_type(node) -> str:
     node_type = node.get_type().__repr__()
     if node_type == 'int':
@@ -74,7 +88,6 @@ def to_llvm_type(node) -> str:
     else:
         print('invalid type')
         exit(0)
-
 
 class LLVMVisitor(Visitor):
     file = None
@@ -118,17 +131,22 @@ class LLVMVisitor(Visitor):
         string = 'store ' + to_llvm_type(var) + ' ' + org + ', ' + to_llvm_type(var) + '* ' + var.get_register()
         self.print_to_file(string, comment)
 
-    def generate_math_instr(self, res, lhs, rhs, type_of, op: AST.MathOp):
-        op_str, op_com = get_math_instruction(op, type_of == 'float')
+    def generate_binary_instruction(self, res, lhs, rhs, type_of, op_str, op_com):
         comment = res + ' = ' + str(lhs) + op_com + str(rhs)
         string = res + ' =' + op_str + type_of + ' ' + str(lhs) + ', ' + str(rhs)
         self.print_to_file(string, comment)
 
+    def generate_math_instr(self, res, lhs, rhs, type_of, op: AST.MathOp):
+        op_str, op_com = get_math_instruction(op, type_of == 'float')
+        self.generate_binary_instruction(res, lhs, rhs, type_of, op_str, op_com)
+
     def generate_comp_instr(self, res, lhs, rhs, type_of, op: AST.CompOp):
         op_str, op_com = get_comp_instruction(op, type_of == 'float')
-        comment = res + ' = ' + str(lhs) + op_com + str(rhs)
-        string = res + ' =' + op_str + type_of + ' ' + str(lhs) + ', ' + str(rhs)
-        self.print_to_file(string, comment)
+        self.generate_binary_instruction(res, lhs, rhs, type_of, op_str, op_com)
+
+    def generate_logic_instr(self, res, lhs, rhs, type_of, op: AST.LogicOp):
+        op_str, op_com = get_logic_instruction(op)
+        self.generate_binary_instruction(res, lhs, rhs, type_of, op_str, op_com)
 
     def generate_printf(self, reg, type):
         comment = 'print ' + reg
@@ -167,13 +185,6 @@ class LLVMVisitor(Visitor):
             var: AST.Variable = ast.get_child(0)
 
         self.generate_store(var, ast.get_child(1).get_register())
-
-    def visitMathOp(self, ast: AST.MathOp):
-        self.visitChildren(ast)
-        reg = self.get_rname()
-        ast.set_register(reg)
-        lhs, rhs = self.get_reg(ast.get_child(0)), self.get_reg(ast.get_child(1))
-        self.generate_math_instr(reg, lhs, rhs, to_llvm_type(ast), ast)
 
     def visitLiteral(self, ast: AST.Literal):
         reg = self.get_rname()
@@ -248,11 +259,18 @@ class LLVMVisitor(Visitor):
             self.generate_zext(reg, 'i1', 'i32', var_reg)
         #TODO conversions from and to floats
 
-    def visitCompOp(self, ast: AST.CompOp):
+    def visitBinaryOp(self, ast: AST.BinaryOp):
         self.visitChildren(ast)
         reg = self.get_rname()
         ast.set_register(reg)
         lhs, rhs = self.get_reg(ast.get_child(0)), self.get_reg(ast.get_child(1))
-        self.generate_comp_instr(reg, lhs, rhs, 'i32', ast)
+
+        if isinstance(ast, AST.LogicOp):
+            self.generate_logic_instr(reg, lhs, rhs, to_llvm_type(ast), ast)
+        elif isinstance(ast, AST.MathOp):
+            self.generate_math_instr(reg, lhs, rhs, to_llvm_type(ast), ast)
+        elif isinstance(ast, AST.CompOp):
+            self.generate_comp_instr(reg, lhs, rhs, 'i32', ast)
+
 
 
