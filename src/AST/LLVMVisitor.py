@@ -26,7 +26,8 @@ def get_math_instruction(op:AST.MathOp, floating: bool):
         else: op_str += 'sdiv '
         op_com = ' / '
     elif isinstance(op, AST.Mod):
-        op_str += 'mod '
+        if op_str == ' f': op_str = ' frem '
+        else: op_str += 'srem '
         op_com = ' % '
 
     return op_str, op_com
@@ -347,6 +348,18 @@ class LLVMVisitor(Visitor):
             self.generate_fptoui(reg, 'float', 'i1', var_reg)
         elif ast.get_conversion_type() == AST.conv_type.FLOAT_TO_INT:
             self.generate_fptosi(reg, 'float', 'i32', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.FLOAT_TO_CHAR:
+            self.generate_fptosi(reg, 'float', 'i8', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.INT_TO_CHAR:
+            self.generate_trunc(reg, 'i32', 'i8', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.BOOL_TO_CHAR:
+            self.generate_zext(reg, 'i1', 'i8', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.CHAR_TO_FLOAT:
+            self.generate_sitofp(reg, 'i8', 'float', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.CHAR_TO_BOOL:
+            self.generate_trunc(reg, 'i8', 'i1', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.CHAR_TO_INT:
+            self.generate_zext(reg, 'i8', 'i32', var_reg)
 
     def visitBinaryOp(self, ast: AST.BinaryOp):
         self.visitChildren(ast)

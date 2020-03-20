@@ -213,13 +213,19 @@ class Adress(UnaryOp):
 
 # cast from get_child(0).get_type() to get_type()
 class conv_type(Enum):
+    #TODO automatiseren
     BOOL_TO_INT = 1
     BOOL_TO_FLOAT = 2
     INT_TO_BOOL = 3
     INT_TO_FLOAT = 4
     FLOAT_TO_INT = 5
     FLOAT_TO_BOOL = 6
-
+    FLOAT_TO_CHAR = 7
+    INT_TO_CHAR = 8
+    BOOL_TO_CHAR = 9
+    CHAR_TO_BOOL = 10
+    CHAR_TO_FLOAT = 11
+    CHAR_TO_INT = 12
 
 class CastOp(UnaryOp):
     def __init__(self, to_type, dummy=None):
@@ -239,6 +245,18 @@ class CastOp(UnaryOp):
             return conv_type.FLOAT_TO_INT
         elif self.get_child(0).get_type().__repr__() == 'float' and self.get_type().__repr__() == 'bool':
             return conv_type.FLOAT_TO_BOOL
+        elif self.get_child(0).get_type().__repr__() == 'float' and self.get_type().__repr__() == 'char':
+            return conv_type.FLOAT_TO_CHAR
+        elif self.get_child(0).get_type().__repr__() == 'int' and self.get_type().__repr__() == 'char':
+            return conv_type.INT_TO_CHAR
+        elif self.get_child(0).get_type().__repr__() == 'bool' and self.get_type().__repr__() == 'char':
+            return conv_type.BOOL_TO_CHAR
+        elif self.get_child(0).get_type().__repr__() == 'char' and self.get_type().__repr__() == 'bool':
+            return conv_type.CHAR_TO_BOOL
+        elif self.get_child(0).get_type().__repr__() == 'char' and self.get_type().__repr__() == 'int':
+            return conv_type.CHAR_TO_INT
+        elif self.get_child(0).get_type().__repr__() == 'char' and self.get_type().__repr__() == 'float':
+            return conv_type.CHAR_TO_FLOAT
 
 
 class LogicOp(BinaryOp):
