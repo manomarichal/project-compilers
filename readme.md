@@ -1,6 +1,40 @@
 # Project Compilers 2020
 ## Mano Marichal & Joren Van Borm
 
+### Installing:
+
+## Clone git repository   
+    
+    git clone https://github.com/shano19/compilers-2020.git
+ 
+## Install **pip** 
+
+    sudo apt-get install python3-pip
+
+## Install **virtualenv** using pip3
+
+    sudo pip3 install virtualenv 
+
+## Create virtual environment 
+
+    virtualenv venv 
+  
+## Active virtual environment:    
+    
+    source venv/bin/activate
+
+## Install prerequisites:    
+    
+    pip3 install -r requirements.txt    
+    
+## Run the test files  
+    
+    python3 run.py
+    
+ ## Active your virtual environment:    
+    
+    source venv/bin/activate
+ 
 ### Status:
 #### Project 1)
 - 2.1 Grammar:
