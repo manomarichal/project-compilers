@@ -1,6 +1,12 @@
 import sys
+import os.path
 import copy
 from antlr4 import *
+
+run_from = os.path.abspath("./")
+if run_from not in sys.path:
+    sys.path.append(run_from)
+
 
 from src.antlr.GrammarLexer import GrammarLexer
 from src.antlr.GrammarParser import GrammarParser
