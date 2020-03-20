@@ -93,6 +93,24 @@ def get_logic_instruction(op:AST.LogicOp):
 
     return op_str, op_com
 
+def to_pointer(node_type):
+    if node_type[0:3] == 'int':
+        base = 'i32'
+        ptr_depth = len(node_type[3:])/2
+    elif node_type[0:5] == 'float':
+        base = 'float'
+        ptr_depth = len(node_type[5:])/2
+    elif node_type[0:4] == 'bool':
+        base = 'i1'
+        ptr_depth = len(node_type[4:])/2
+    elif node_type[0:4] == 'char':
+        base = 'i8'
+        ptr_depth = len(node_type[4:]) / 2
+
+    for i in range(int(ptr_depth)):
+        base += '*'
+    return base
+
 def to_llvm_type(node) -> str:
     node_type = node.get_type().__repr__()
     if node_type == 'int':
@@ -103,11 +121,8 @@ def to_llvm_type(node) -> str:
         return 'i8'
     elif node_type == 'bool':
         return 'i1'
-    elif node_type == 'int *':
-        return 'i32*'
     else:
-        print('invalid type')
-        exit(0)
+        return to_pointer(node_type)
 
 
 class LLVMVisitor(Visitor):

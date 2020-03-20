@@ -15,29 +15,41 @@ define i32 @main() {
 		%t2 = add i32 5, 0
 	; assign %t2 to %b
 		store i32 %t2, i32* %b
-	; init %p as p
-		%p = alloca i32*
+	; init %p1 as p1
+		%p1 = alloca i32*
 	; get adress of %a
 		%t3 = getelementptr i32, i32* %a
-	; assign %t3 to %p
-		store i32* %t3, i32** %p
-	; load %p in %t4
-		%t4 = load i32*, i32** %p
-	; load %b in %t5
-		%t5 = load i32, i32* %b
-	; assign %t5 to %t4
-		store i32 %t5, i32* %t4
-	; init %c as c
-		%c = alloca i32
-	; load %p in %t6
-		%t6 = load i32*, i32** %p
+	; assign %t3 to %p1
+		store i32* %t3, i32** %p1
+	; init %p2 as p2
+		%p2 = alloca i32**
+	; get adress of %p1
+		%t4 = getelementptr i32*, i32** %p1
+	; assign %t4 to %p2
+		store i32** %t4, i32*** %p2
+	; init %p3 as p3
+		%p3 = alloca i32***
+	; get adress of %p2
+		%t5 = getelementptr i32**, i32*** %p2
+	; assign %t5 to %p3
+		store i32*** %t5, i32**** %p3
+	; load %p3 in %t6
+		%t6 = load i32***, i32**** %p3
 	; load %t6 in %t7
-		%t7 = load i32, i32* %t6
-	; assign %t7 to %c
-		store i32 %t7, i32* %c
-	; load %c in %t8
-		%t8 = load i32, i32* %c
-	; print %t8
-		%t9 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @istr,i32 0, i32 0),i32 %t8)
+		%t7 = load i32**, i32*** %t6
+	; load %t7 in %t8
+		%t8 = load i32*, i32** %t7
+	; load %b in %t9
+		%t9 = load i32, i32* %b
+	; assign %t9 to %t8
+		store i32 %t9, i32* %t8
+	; load %a in %t10
+		%t10 = load i32, i32* %a
+	; print %t10
+		%t11 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @istr,i32 0, i32 0),i32 %t10)
+	; load %b in %t12
+		%t12 = load i32, i32* %b
+	; print %t12
+		%t13 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @istr,i32 0, i32 0),i32 %t12)
 	ret i32 0
 }
