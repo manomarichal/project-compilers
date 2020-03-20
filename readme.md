@@ -37,9 +37,6 @@ clean.py verwijdert alle gegenereerde files uit test_IO/working_examples/.
     
     python3 run.py
     
- #### Active your virtual environment:    
-    
-    source venv/bin/activate
  
 #### Compiling a file  
     
