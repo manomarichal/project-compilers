@@ -1,1 +1,1 @@
-Alle info over ons project vind u in de readme.md op github, inclusief verslag en hoe je onze testfiles runt.
+Alle info over ons project vind u in de readme.md van github, inclusief verslag en hoe je onze testfiles runt.
