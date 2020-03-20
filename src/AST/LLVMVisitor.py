@@ -41,22 +41,40 @@ def get_comp_instruction(op:AST.CompOp, floating: bool):
     op_com = 'error in get_comp_instruction'
 
     if isinstance(op, AST.More):
-        op_str += 'sgt '
+        if floating:
+            op_str += 'ogt '
+        else:
+            op_str += 'sgt '
         op_com = ' > '
     elif isinstance(op, AST.MoreE):
-        op_str += 'sge '
+        if floating:
+            op_str += 'oge '
+        else:
+            op_str += 'sge '
         op_com = ' >= '
     elif isinstance(op, AST.Less):
-        op_str += 'slt '
+        if floating:
+            op_str += 'olt '
+        else:
+            op_str += 'slt '
         op_com = ' < '
     elif isinstance(op, AST.LessE):
-        op_str += 'sle '
+        if floating:
+            op_str += 'ole '
+        else:
+            op_str += 'sle '
         op_com = ' <= '
     elif isinstance(op, AST.Equal):
-        op_str += 'eq '
+        if floating:
+            op_str += 'oeq '
+        else:
+            op_str += 'eq '
         op_com = ' == '
     elif isinstance(op, AST.NotEqual):
-        op_str += 'ne '
+        if floating:
+            op_str += 'one '
+        else:
+            op_str += 'ne '
         op_com = ' != '
 
     return op_str, op_com
@@ -314,11 +332,11 @@ class LLVMVisitor(Visitor):
         lhs, rhs = self.get_reg(ast.get_child(0)), self.get_reg(ast.get_child(1))
 
         if isinstance(ast, AST.LogicOp):
-            self.generate_logic_instr(reg, lhs, rhs, to_llvm_type(ast), ast)
+            self.generate_logic_instr(reg, lhs, rhs, to_llvm_type(ast.get_child(0)), ast)
         elif isinstance(ast, AST.MathOp):
             self.generate_math_instr(reg, lhs, rhs, to_llvm_type(ast), ast)
         elif isinstance(ast, AST.CompOp):
-            self.generate_comp_instr(reg, lhs, rhs, 'i32', ast)
+            self.generate_comp_instr(reg, lhs, rhs, to_llvm_type(ast.get_child(0)), ast)
 
 
 
