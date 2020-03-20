@@ -60,6 +60,8 @@ def main(argv):
     parser = GrammarParser(stream)
     tree = parser.doc()
 
+    fname = argv[1][0:(len(argv[1]) - 1)]
+
     if parser.getNumberOfSyntaxErrors() != 0:
         exit(1)
 
@@ -72,14 +74,11 @@ def main(argv):
 
     ast_error_pass(TypedSemanticsVisitor(), ast)
 
-    ast_visualise(ast, "./test_IO/typed", label_style)
+    if len(argv) == 3:
+        if argv[2] == '-cf':
+            ast_pass(ConstantFoldingVisitor(), ast)
 
-    ast_pass(ConstantFoldingVisitor(), ast)
-
-    ast_visualise(ast, "./test_IO/folded", label_style)
-
-    fname = argv[1][0:(len(argv[1]) - 1)]
-
+    ast_visualise(ast, fname, label_style)
     tfile = open(fname + 'll', 'w+')
     llvm = LLVMVisitor(tfile)
     llvm.visit(ast)

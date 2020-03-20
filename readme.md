@@ -7,8 +7,7 @@ We hebben alle mandatory dingen afgewerkt. Onderaan de readme kan je een overzic
 Voor elk feature hebben we een testfile, in test_IO/working_examples/. Je kan voor al deze de llvm ir, dotfiles en ast visualization genereren met run.py.
 clean.py verwijdert alle gegenereerde files uit test_IO/working_examples/. 
 
-
-### Running the project:
+### Installing and running:
 
 #### Clone git repository   
     
@@ -42,6 +41,12 @@ clean.py verwijdert alle gegenereerde files uit test_IO/working_examples/.
     
     source venv/bin/activate
  
+#### Compiling a file  
+    
+    python3 ./src/main.py <filename> 
+
+you can add the -c flag to indicate that constant folding should be used
+    
 ### Status:
 #### Project 1)
 - 2.1 Grammar:
