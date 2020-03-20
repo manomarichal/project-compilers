@@ -1,8 +1,9 @@
 # Project Compilers 2020
 ## Mano Marichal & Joren Van Borm
 
-### Overview
+**Werkt met Python 3.6+**
 
+### Overview
 We hebben alle mandatory dingen afgewerkt. Onderaan de readme kan je een overzicht zien van wat we allemaal gemaakt hebben.
 Voor elk feature hebben we een testfile, in test_IO/working_examples Je kan voor al deze de llvm ir en ast dot / png files genereren met run.py.
 clean.py Verwijdert alle gegenereerde files uit test_IO/working_examples. 
