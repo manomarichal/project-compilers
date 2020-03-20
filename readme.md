@@ -11,8 +11,12 @@ clean.py Verwijdert alle gegenereerde files uit test_IO/working_examples.
 (assuming a linux-based system)
 
 #### Clone git repository   
+
+First, open a terminal where you'd like to clone the repository, then run:
     
     git clone https://github.com/shano19/compilers-2020.git
+    
+Then navigate to the repository with `cd ./compilers-2020`.
  
 #### Install **pip** 
 
