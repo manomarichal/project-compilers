@@ -131,3 +131,9 @@ Meer hierover op de LLVM documentatie: https://llvm.org/docs/LangRef.html#simple
 We hebben een mail gestuurt naar Brent of we hier rekening mee moesten houden, en hij zij van niet.
 
 
+### Remarks + extras
+
+- We hebben een assignment operator
+- We supporten operators * en & voor pointers, en pointers naar pointers naar pointers etc..
+
+**huge_test.c** combineert zo een beetje alles, dus ik raad aan om deze zeker te bekijken.
