@@ -207,8 +207,11 @@ class Adress(UnaryOp):
 from enum import Enum
 class conv_type(Enum):
      BOOL_TO_INT = 1
-     INT_TO_BOOL = 2
-     INT_TO_FLOAT = 3
+     BOOL_TO_FLOAT = 2
+     INT_TO_BOOL = 3
+     INT_TO_FLOAT = 4
+     FLOAT_TO_INT = 5
+     FLOAT_TO_BOOL = 6
 
 class CastOp(UnaryOp):
     def __init__(self, to_type, dummy=None):
@@ -218,11 +221,16 @@ class CastOp(UnaryOp):
     def get_conversion_type(self) -> conv_type:
         if self.get_child(0).get_type().__repr__() == 'bool' and self.get_type().__repr__() == 'int':
             return conv_type.BOOL_TO_INT
+        if self.get_child(0).get_type().__repr__() == 'bool' and self.get_type().__repr__() == 'float':
+            return conv_type.BOOL_TO_FLOAT
         elif self.get_child(0).get_type().__repr__() == 'int' and self.get_type().__repr__() == 'bool':
             return conv_type.INT_TO_BOOL
         elif self.get_child(0).get_type().__repr__() == 'int' and self.get_type().__repr__() == 'float':
             return conv_type.INT_TO_FLOAT
-
+        elif self.get_child(0).get_type().__repr__() == 'float' and self.get_type().__repr__() == 'int':
+            return conv_type.FLOAT_TO_INT
+        elif self.get_child(0).get_type().__repr__() == 'float' and self.get_type().__repr__() == 'bool':
+            return conv_type.FLOAT_TO_BOOL
 
 
 class LogicOp(BinaryOp):
