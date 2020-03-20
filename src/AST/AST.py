@@ -78,7 +78,9 @@ class Composite(Component):
         return self._children[i]
 
     def replace_child(self, old_child: Component, new_child: Component):
-        self._children[self._children.index(old_child)] = new_child
+        index = self._children.index(old_child)
+        self._children[index] = new_child
+        self._children[index]._parent = self
 
     def get_child_count(self):
         return len(self._children)
@@ -103,8 +105,8 @@ class Composite(Component):
         for child in self._children:
             child._parent = self
 
-            for child in other._children:
-                child._parent = other
+        for child in other._children:
+            child._parent = other
 
 
 class Scope(Composite):
@@ -199,6 +201,28 @@ class Indir(UnaryOp):
 class Adress(UnaryOp):
     def is_lval(self):
         return True
+
+
+# cast from get_child(0).get_type() to get_type()
+from enum import Enum
+class conv_type(Enum):
+     BOOL_TO_INT = 1
+     INT_TO_BOOL = 2
+     INT_TO_FLOAT = 3
+
+class CastOp(UnaryOp):
+    def __init__(self, to_type, dummy=None):
+        super().__init__(dummy)
+        self.set_type(to_type)
+
+    def get_conversion_type(self) -> conv_type:
+        if self.get_child(0).get_type().__repr__() == 'bool' and self.get_type().__repr__() == 'int':
+            return conv_type.BOOL_TO_INT
+        elif self.get_child(0).get_type().__repr__() == 'int' and self.get_type().__repr__() == 'bool':
+            return conv_type.INT_TO_BOOL
+        elif self.get_child(0).get_type().__repr__() == 'int' and self.get_type().__repr__() == 'float':
+            return conv_type.INT_TO_FLOAT
+
 
 
 class LogicOp(BinaryOp):

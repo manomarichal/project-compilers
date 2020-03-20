@@ -31,17 +31,50 @@ def get_math_instruction(op:AST.MathOp, floating: bool):
 
     return op_str, op_com
 
-def to_llvm_type(var) -> str:
-    var_type = var.get_type().__repr__()
-    if var_type == 'int':
+def get_comp_instruction(op:AST.CompOp, floating: bool):
+
+    if floating:
+        op_str = ' fcmp '
+    else:
+        op_str = ' icmp '
+
+    op_com = 'error in get_comp_instruction'
+
+    if isinstance(op, AST.More):
+        op_str += 'sgt '
+        op_com = ' > '
+    elif isinstance(op, AST.MoreE):
+        op_str += 'sge '
+        op_com = ' >= '
+    elif isinstance(op, AST.Less):
+        op_str += 'slt '
+        op_com = ' < '
+    elif isinstance(op, AST.LessE):
+        op_str += 'sle '
+        op_com = ' <= '
+    elif isinstance(op, AST.Equal):
+        op_str += 'eq '
+        op_com = ' == '
+    elif isinstance(op, AST.NotEqual):
+        op_str += 'ne '
+        op_com = ' != '
+
+    return op_str, op_com
+
+def to_llvm_type(node) -> str:
+    node_type = node.get_type().__repr__()
+    if node_type == 'int':
         return 'i32'
-    elif var_type == 'float':
-        return 'float'
-    elif var_type == 'char':
+    elif node_type == 'float':
+        return 'i1'
+    elif node_type == 'char':
         return 'i8'
+    elif node_type == 'bool':
+        return 'i1'
     else:
         print('invalid type')
         exit(0)
+
 
 class LLVMVisitor(Visitor):
     file = None
@@ -91,9 +124,27 @@ class LLVMVisitor(Visitor):
         string = res + ' =' + op_str + type_of + ' ' + str(lhs) + ', ' + str(rhs)
         self.print_to_file(string, comment)
 
+    def generate_comp_instr(self, res, lhs, rhs, type_of, op: AST.CompOp):
+        op_str, op_com = get_comp_instruction(op, type_of == 'float')
+        comment = res + ' = ' + str(lhs) + op_com + str(rhs)
+        string = res + ' =' + op_str + type_of + ' ' + str(lhs) + ', ' + str(rhs)
+        self.print_to_file(string, comment)
+
     def generate_printf(self, reg, type):
         comment = 'print ' + reg
         string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @str,i32 0, i32 0)," + type + " " + reg + ")"
+        self.print_to_file(string, comment)
+
+    # %X = trunc from_type value to to_type
+    def generate_trunc(self, reg, from_type, to_type, value):
+        comment = 'convert ' + from_type + ' ' + value + ' to ' + to_type
+        string = reg + ' = trunc ' + from_type + ' ' + value + ' to ' + to_type
+        self.print_to_file(string, comment)
+
+    # %X = zext from_type value to to_type (zero extent)
+    def generate_zext(self, reg, from_type, to_type, value):
+        comment = 'zero extent ' + from_type + ' ' + value + ' to ' + to_type
+        string = reg + ' = zext ' + from_type + ' ' + value + ' to ' + to_type
         self.print_to_file(string, comment)
 
     # VISITOR FUNCTIONS
@@ -184,4 +235,24 @@ class LLVMVisitor(Visitor):
         self.visitChildren(ast)
         reg = self.get_reg(ast.get_child(0))
         ast.set_register(reg)
+
+    def visitCastOp(self, ast: AST.CastOp):
+        self.visitChildren(ast)
+        reg = self.get_rname()
+        ast.set_register(reg)
+        var_reg = self.get_reg(ast.get_child(0))
+
+        if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
+            self.generate_trunc(reg, 'i32', 'i1', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.BOOL_TO_INT:
+            self.generate_zext(reg, 'i1', 'i32', var_reg)
+        #TODO conversions from and to floats
+
+    def visitCompOp(self, ast: AST.CompOp):
+        self.visitChildren(ast)
+        reg = self.get_rname()
+        ast.set_register(reg)
+        lhs, rhs = self.get_reg(ast.get_child(0)), self.get_reg(ast.get_child(1))
+        self.generate_comp_instr(reg, lhs, rhs, 'i32', ast)
+
 

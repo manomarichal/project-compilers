@@ -23,6 +23,14 @@ class TypeVisitor (Visitor):
     def no_conversion_error(self, node, a_type, b_type, bi_dir):
         self.add_error(NoConversionError(node, a_type, b_type, bi_dir))
 
+    def insert_conversion(self, node: Composite, child_nr: int, to_type: TypeClass, warn: bool = False):
+        old_child = node.get_child(child_nr)
+        conversion = CastOp(to_type)
+        node.replace_child(old_child, conversion)
+        conversion.add_child(old_child)
+        if warn:
+            self.implicit_conversion_warning(node, old_child.get_type(), to_type)
+
     def visit(self, node) -> TypeClass:
         return Visitor.visit(self, node)
 
@@ -54,18 +62,21 @@ class TypeVisitor (Visitor):
         a_type = self.visit(node.get_child(0))
         b_type = self.visit(node.get_child(1))
         own_type = None
+
         if a_type == b_type:
             own_type = a_type
         elif b_type.promotes_to(a_type):
             own_type = a_type
+            self.insert_conversion(node, 1, own_type)
         elif a_type.promotes_to(b_type):
             own_type = b_type
+            self.insert_conversion(node, 0, own_type)
         elif b_type.converts_to(a_type) and not a_type.converts_to(b_type):
-            self.implicit_conversion_warning(node, b_type, a_type)
             own_type = a_type
+            self.insert_conversion(node, 1, own_type, True)
         elif a_type.converts_to(b_type) and not b_type.converts_to(a_type):
-            self.implicit_conversion_warning(node, b_type, a_type)
             own_type = b_type
+            self.insert_conversion(node, 0, own_type, True)
         else:
             self.no_conversion_error(node, a_type, b_type, True)
         node.set_type(own_type)
@@ -79,9 +90,10 @@ class TypeVisitor (Visitor):
             own_type = a_type
         elif b_type.promotes_to(a_type):
             own_type = a_type
+            self.insert_conversion(node, 1, own_type, False)
         elif b_type.converts_to(a_type):
-            self.implicit_conversion_warning(node, b_type, a_type)
             own_type = a_type
+            self.insert_conversion(node, 1, own_type, True)
         else:
             self.no_conversion_error(node, a_type, b_type, True)
         node.set_type(own_type)
@@ -91,27 +103,18 @@ class TypeVisitor (Visitor):
         child_types = self.visitChildren(node)
         bool_type = TypeClass([TypeComponents.BOOL])
 
-        all_promote = True
-        all_convert = True
-        warnings = []
-        errors = []
+        index = -1
         for child_type in child_types:
-            if not child_type.promotes_to(bool_type):
-                all_promote = False
-            elif not child_type.converts_to(bool_type):
-                all_convert = False
-                warnings.append(child_type)
-            else:
-                errors.append(child_type)
-
-        if all_promote:
-            pass
-        else:
-            for child_type in warnings:
-                self.implicit_conversion_warning(node, child_type, bool_type)
-            if not all_convert:
-                for child_type in errors:
-                    self.no_conversion_error(node, child_type, bool_type, False)
+            index += 1
+            if child_type == bool_type:
+                continue
+            if child_type.promotes_to(bool_type):
+                self.insert_conversion(node, index, bool_type)
+                continue
+            if child_type.converts_to(bool_type):
+                self.insert_conversion(node, index, bool_type, True)
+                continue
+            self.no_conversion_error(node, child_type, bool_type, False)
 
         node.set_type(bool_type)
         return bool_type
@@ -124,13 +127,13 @@ class TypeVisitor (Visitor):
         if a_type == b_type:
             pass
         elif b_type.promotes_to(a_type):
-            pass
+            self.insert_conversion(node, 1, a_type)
         elif a_type.promotes_to(b_type):
-            pass
+            self.insert_conversion(node, 0, b_type)
         elif b_type.converts_to(a_type) and not a_type.converts_to(b_type):
-            self.implicit_conversion_warning(node, b_type, a_type)
+            self.insert_conversion(node, 1, a_type, True)
         elif a_type.converts_to(b_type) and not b_type.converts_to(a_type):
-            self.implicit_conversion_warning(node, b_type, a_type)
+            self.insert_conversion(node, 0, a_type, True)
         else:
             self.no_conversion_error(node, a_type, b_type, True)
 
