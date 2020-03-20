@@ -58,7 +58,7 @@ class TypeClass:
             return True
         if self_type == TypeComponents.CHAR and other_type in {TypeComponents.INT, TypeComponents.FLOAT}:
             return True
-        if self_type == TypeComponents.INT and other_type in {TypeComponents.BOOL, TypeComponents.FLOAT}:
+        if self_type == TypeComponents.INT and other_type in {TypeComponents.FLOAT}:
             return True
 
         self.pushType(TypeComponents.CONST)

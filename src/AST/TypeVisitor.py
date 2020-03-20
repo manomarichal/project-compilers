@@ -121,7 +121,7 @@ class TypeVisitor (Visitor):
 
     def visitCompOp(self, node: CompOp):
         a_type = self.visit(node.get_child(0))
-        b_type = self.visit(node.get_child(0))
+        b_type = self.visit(node.get_child(1))
         bool_type = TypeClass([TypeComponents.BOOL])
 
         if a_type == b_type:
