@@ -1,6 +1,12 @@
 # Project Compilers 2020
 ## Mano Marichal & Joren Van Borm
 
+### Overview
+
+We hebben alle mandatory dingen afgewerkt. Onderaan de readme kan je een overzicht zien van wat we allemaal gemaakt hebben.
+Voor elk feature hebben we een testfile, in test_IO/working_examples. Je kan voor al deze de llvm ir, dotfiles en ast visualization genereren met run.py.
+
+
 ### Installing:
 
 #### Clone git repository   
@@ -83,11 +89,13 @@
   -  [x] (mandatory) Unary operators + and -
   -  [x] (mandatory) Brackets to overwrite the order of operations
   -  [x] (mandatory) Printf
+  -  [x] (mandatory) Pointers + pointer operators
   -  [x] (optional) Identifier Operations ++ and --
   -  [x] (optional) Comments for each machine instruction
   -  [ ] (optional) Binary operator %
-  -  [ ] (optional) Comparison operators >= , <= , and !=
-  -  [ ] (optional) Logical operators && , || , and !
+  -  [x] (optional) Comparison operators >= , <= , and !=
+  -  [x] (optional) Logical operators && , || , and !
+  -  [x] (optional) Constant folding
 
 Overall everything went really good
 
