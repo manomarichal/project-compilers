@@ -103,6 +103,8 @@ def to_llvm_type(node) -> str:
         return 'i8'
     elif node_type == 'bool':
         return 'i1'
+    elif node_type == 'int *':
+        return 'i32*'
     else:
         print('invalid type')
         exit(0)
@@ -134,7 +136,7 @@ class LLVMVisitor(Visitor):
     
     def get_reg(self, ast: AST.Component):
         # variables have to be loaded in before being used
-        if isinstance(ast, AST.Variable):
+        if isinstance(ast, AST.Variable) or isinstance(ast, AST.Indir):
             return self.generate_load(ast)
         else:
             return ast.get_register()
@@ -142,14 +144,14 @@ class LLVMVisitor(Visitor):
     # GENERATOR FUNCTIONS
     def generate_load(self, var: AST.Variable):
         reg = self.get_rname()
-        comment = 'load ' + str(var.get_name()) + ' in ' + reg
+        comment = 'load ' + str(var.get_register()) + ' in ' + reg
         string = reg + ' = load ' + to_llvm_type(var) + ', ' + to_llvm_type(var) + '* ' + str(var.get_register())
         self.print_to_file(string, comment)
         return reg
 
-    def generate_store(self, var: AST.Variable, org: str):
-        comment = 'assign ' + org + ' to ' + var.get_register()
-        string = 'store ' + to_llvm_type(var) + ' ' + org + ', ' + to_llvm_type(var) + '* ' + var.get_register()
+    def generate_store(self, value, destination, type_of):
+        comment = 'assign ' + value + ' to ' + destination
+        string = 'store ' + type_of + ' ' + value + ', ' + type_of + '* ' + destination
         self.print_to_file(string, comment)
 
     def generate_binary_instruction(self, res, lhs, rhs, type_of, op_str, op_com):
@@ -220,6 +222,12 @@ class LLVMVisitor(Visitor):
         string = reg + ' = fptoui ' + from_type + ' ' + value + ' to ' + to_type
         self.print_to_file(string, comment)
 
+    # <result> = getelementptr <ty>, <ty>* <ptrval>{, [inrange] <ty> <idx>}*
+    def generate_getelementptr(self, reg, type_of, base_ptr):
+        comment = 'get adress of ' + base_ptr
+        string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr
+        self.print_to_file(string, comment)
+
     # VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
         self.visitChildren(ast)
@@ -239,7 +247,7 @@ class LLVMVisitor(Visitor):
         else:
             var: AST.Variable = ast.get_child(0)
 
-        self.generate_store(var, ast.get_child(1).get_register())
+        self.generate_store(self.get_reg(ast.get_child(1)), var.get_register(), to_llvm_type(var))
 
     def visitLiteral(self, ast: AST.Literal):
         reg = self.get_rname()
@@ -268,7 +276,7 @@ class LLVMVisitor(Visitor):
         ast.set_register(reg)
         var_reg = self.generate_load(ast.get_child(0))                      # load child variable in var_reg
         self.generate_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())  # increase by 1
-        self.generate_store(ast.get_child(0), reg)                          # store variable
+        self.generate_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
 
     def visitIncrPost(self, ast: AST.IncrPost):
         self.visitChildren(ast)
@@ -276,7 +284,7 @@ class LLVMVisitor(Visitor):
         ast.set_register(reg)
         var_reg = self.get_rname()
         self.generate_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())
-        self.generate_store(ast.get_child(0), var_reg)
+        self.generate_store(var_reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
 
     def visitDecrPre(self, ast: AST.DecrPre):
         self.visitChildren(ast)
@@ -284,7 +292,7 @@ class LLVMVisitor(Visitor):
         ast.set_register(reg)
         var_reg = self.generate_load(ast.get_child(0))
         self.generate_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
-        self.generate_store(ast.get_child(0), reg)
+        self.generate_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
 
     def visitDecrPost(self, ast: AST.DecrPost):
         self.visitChildren(ast)
@@ -292,7 +300,7 @@ class LLVMVisitor(Visitor):
         ast.set_register(reg)
         var_reg = self.get_rname()
         self.generate_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
-        self.generate_store(ast.get_child(0), var_reg)
+        self.generate_store(var_reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
 
     def visitNeg(self, ast: AST.Neg):
         self.visitChildren(ast)
@@ -338,6 +346,15 @@ class LLVMVisitor(Visitor):
         elif isinstance(ast, AST.CompOp):
             self.generate_comp_instr(reg, lhs, rhs, to_llvm_type(ast.get_child(0)), ast)
 
+    def visitAdress(self, ast: AST.Adress):
+        self.visitChildren(ast)
+        reg = self.get_rname()
+        ast.set_register(reg)
+        self.generate_getelementptr(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register())
 
+    def visitIndir(self, ast: AST.Indir):
+        self.visitChildren(ast)
+        adress_of_pointee = self.generate_load(ast.get_child(0))
+        ast.set_register(adress_of_pointee)
 
 
