@@ -62,11 +62,11 @@ def main(argv):
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
-    ast_error_pass(UntypedSemanticVisitor(), ast)
-
+    # ast_error_pass(UntypedSemanticVisitor(), ast)
+    #
     ast_error_pass(TypeVisitor(), ast)
-
-    ast_error_pass(TypedSemanticsVisitor(), ast)
+    #
+    # ast_error_pass(TypedSemanticsVisitor(), ast)
 
     ast_visualise(ast, "./test_IO/typed", label_style)
 

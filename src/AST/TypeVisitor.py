@@ -62,6 +62,7 @@ class TypeVisitor (Visitor):
         a_type = self.visit(node.get_child(0))
         b_type = self.visit(node.get_child(1))
         own_type = None
+
         if a_type == b_type:
             own_type = a_type
         elif b_type.promotes_to(a_type):
