@@ -17,11 +17,10 @@ def label_small(ast: AST.Component, name=None):
 
 
 class DotVisitor(Visitor):
-    graph = pydot.Dot(graph_type='graph')
-    counter = 0
-
     def __init__(self, label_strategy=label_small):
         self.label_strategy = label_strategy
+        self.graph = pydot.Dot(graph_type='graph')
+        self.counter = 0
 
     def visitComposite(self, ast: AST.Composite):
         self.counter += 1

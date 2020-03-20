@@ -86,3 +86,9 @@ class TypeClass:
         for component in self.getType():
             result += TypeComponents.translations[component] + " "
         return result[0:len(result)-1]
+
+
+bool_type = TypeClass([TypeComponents.BOOL])
+char_type = TypeClass([TypeComponents.CHAR])
+int_type = TypeClass([TypeComponents.INT])
+float_type = TypeClass([TypeComponents.FLOAT])

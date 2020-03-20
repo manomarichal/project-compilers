@@ -9,7 +9,7 @@ from src.AST.Visitor import Visitor as ASTVisitor
 from src.AST.AST import Component
 from src.utility.SemanticExceptions import SemanticError, SemanticWarning
 
-from src.AST.CFVisitor import CFVisitor
+from src.AST.ConstantFoldingVisitor import ConstantFoldingVisitor
 from src.CST.Visitor import Visitor as CSTVisitor
 from src.AST.DotVisitor import DotVisitor
 from src.AST.LLVMVisitor import LLVMVisitor
@@ -17,15 +17,14 @@ from src.AST.TypeVisitor import TypeVisitor
 from src.AST.SemanticVisitor import UntypedSemanticVisitor, TypedSemanticsVisitor
 
 from src.AST.DotVisitor import label_big as label_style
-from src.utility.SemanticExceptions import ImplicitConversionWarning
 
 # LLVM
-#TODO comparison operators
-#TODO boolean operators
-#TODO floating points afprinten
-#TODO pointer types
-#TODO constant propagation
-#TODO constants
+# TODO comparison operators
+# TODO boolean operators
+# TODO floating points afprinten
+# TODO pointer types
+# TODO constant propagation
+# TODO constants
 
 
 def ast_pass(visitor: ASTVisitor, tree: Component):
@@ -57,8 +56,13 @@ def main(argv):
     input_stream = FileStream(argv[1])
     lexer = GrammarLexer(input_stream)
     stream = CommonTokenStream(lexer)
+
     parser = GrammarParser(stream)
     tree = parser.doc()
+
+    if parser.getNumberOfSyntaxErrors() != 0:
+        exit(1)
+
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
@@ -70,11 +74,11 @@ def main(argv):
 
     ast_visualise(ast, "./test_IO/typed", label_style)
 
-    # ast_pass(CFVisitor(), ast)
+    ast_pass(ConstantFoldingVisitor(), ast)
+
+    ast_visualise(ast, "./test_IO/folded", label_style)
 
     fname = argv[1][0:(len(argv[1]) - 1)]
-
-    ast_visualise(ast, fname, label_style)
 
     tfile = open(fname + 'll', 'w+')
     llvm = LLVMVisitor(tfile)
