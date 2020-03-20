@@ -54,7 +54,7 @@ class TypeClass:
     def promotes_to(self, other):
         self_type = self.get_top_type(TypeComponents.CONST)
         other_type = other.get_top_type(TypeComponents.CONST)
-        if self_type == TypeComponents.BOOL and other_type in {TypeComponents.INT}:
+        if self_type == TypeComponents.BOOL and other_type in {TypeComponents.CHAR, TypeComponents.INT, TypeComponents.FLOAT}:
             return True
         if self_type == TypeComponents.CHAR and other_type in {TypeComponents.INT, TypeComponents.FLOAT}:
             return True
