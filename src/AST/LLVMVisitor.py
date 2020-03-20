@@ -41,22 +41,40 @@ def get_comp_instruction(op:AST.CompOp, floating: bool):
     op_com = 'error in get_comp_instruction'
 
     if isinstance(op, AST.More):
-        op_str += 'sgt '
+        if floating:
+            op_str += 'ogt '
+        else:
+            op_str += 'sgt '
         op_com = ' > '
     elif isinstance(op, AST.MoreE):
-        op_str += 'sge '
+        if floating:
+            op_str += 'oge '
+        else:
+            op_str += 'sge '
         op_com = ' >= '
     elif isinstance(op, AST.Less):
-        op_str += 'slt '
+        if floating:
+            op_str += 'olt '
+        else:
+            op_str += 'slt '
         op_com = ' < '
     elif isinstance(op, AST.LessE):
-        op_str += 'sle '
+        if floating:
+            op_str += 'ole '
+        else:
+            op_str += 'sle '
         op_com = ' <= '
     elif isinstance(op, AST.Equal):
-        op_str += 'eq '
+        if floating:
+            op_str += 'oeq '
+        else:
+            op_str += 'eq '
         op_com = ' == '
     elif isinstance(op, AST.NotEqual):
-        op_str += 'ne '
+        if floating:
+            op_str += 'one '
+        else:
+            op_str += 'ne '
         op_com = ' != '
 
     return op_str, op_com
@@ -173,10 +191,33 @@ class LLVMVisitor(Visitor):
         string = reg + ' = zext ' + from_type + ' ' + value + ' to ' + to_type
         self.print_to_file(string, comment)
 
-    # %X = fpext float 3.125 to double (%X = 3.125000e+00)
+    # %X = fpext float 3.125 to double     ; yields double: 3.125000e+00)
     def generate_fpext(self, reg, from_type, to_type, value):
         comment = 'fp zero extent ' + from_type + ' ' + value + ' to ' + to_type
         string = reg + ' = fpext ' + from_type + ' ' + value + ' to ' + to_type
+        self.print_to_file(string, comment)
+
+    # %X = sitofp i32 257 to float         ; yields float:257.0
+    def generate_sitofp(self, reg, from_type, to_type, value):
+        comment = 'signed int ' + from_type + ' ' + value + ' to ' + to_type
+        string = reg + ' = sitofp ' + from_type + ' ' + value + ' to ' + to_type
+        self.print_to_file(string, comment)
+    # %X = uitofp i32 257 to float         ; yields float:257.0
+    def generate_uitofp(self, reg, from_type, to_type, value):
+        comment = 'unsigned int ' + from_type + ' ' + value + ' to ' + to_type
+        string = reg + ' = uitofp ' + from_type + ' ' + value + ' to ' + to_type
+        self.print_to_file(string, comment)
+
+    # %X = fptosi double -123.0 to i32      ; yields i32:-123
+    def generate_fptosi(self, reg, from_type, to_type, value):
+        comment = 'float ' + from_type + ' ' + value + ' to signed ' + to_type
+        string = reg + ' = fptosi ' + from_type + ' ' + value + ' to ' + to_type
+        self.print_to_file(string, comment)
+
+    # %X = fptoui double 123.0 to i32      ; yields i32:123
+    def generate_fptoui(self, reg, from_type, to_type, value):
+        comment = 'float ' + from_type + ' ' + value + ' to unsigned ' + to_type
+        string = reg + ' = fptoui ' + from_type + ' ' + value + ' to ' + to_type
         self.print_to_file(string, comment)
 
     # VISITOR FUNCTIONS
@@ -273,9 +314,16 @@ class LLVMVisitor(Visitor):
 
         if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
             self.generate_trunc(reg, 'i32', 'i1', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.INT_TO_FLOAT:
+            self.generate_sitofp(reg, 'i32', 'float', var_reg)
         elif ast.get_conversion_type() == AST.conv_type.BOOL_TO_INT:
             self.generate_zext(reg, 'i1', 'i32', var_reg)
-        #TODO conversions from and to floats
+        elif ast.get_conversion_type() == AST.conv_type.BOOL_TO_FLOAT:
+            self.generate_uitofp(reg, 'i1', 'float', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.FLOAT_TO_BOOL:
+            self.generate_fptoui(reg, 'float', 'i1', var_reg)
+        elif ast.get_conversion_type() == AST.conv_type.FLOAT_TO_INT:
+            self.generate_fptosi(reg, 'float', 'i32', var_reg)
 
     def visitBinaryOp(self, ast: AST.BinaryOp):
         self.visitChildren(ast)
@@ -284,11 +332,12 @@ class LLVMVisitor(Visitor):
         lhs, rhs = self.get_reg(ast.get_child(0)), self.get_reg(ast.get_child(1))
 
         if isinstance(ast, AST.LogicOp):
-            self.generate_logic_instr(reg, lhs, rhs, to_llvm_type(ast), ast)
+            self.generate_logic_instr(reg, lhs, rhs, to_llvm_type(ast.get_child(0)), ast)
         elif isinstance(ast, AST.MathOp):
             self.generate_math_instr(reg, lhs, rhs, to_llvm_type(ast), ast)
         elif isinstance(ast, AST.CompOp):
-            self.generate_comp_instr(reg, lhs, rhs, 'i32', ast)
+            self.generate_comp_instr(reg, lhs, rhs, to_llvm_type(ast.get_child(0)), ast)
+
 
 
 
