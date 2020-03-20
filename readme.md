@@ -104,7 +104,6 @@ The `-cf` flag can be added after `<filename>` to enable constant folding.
       - [x] (mandatory) Binary operations + , - , * , and /
       - [x] (mandatory) Binary operations > , < , and ==
       - [x] (mandatory) Unary operators + and -
-      - [x] (mandatory) Brackets to overwrite the order of operations
       - [x] (mandatory) Printf
       - [x] (mandatory) Pointers + pointer operators
       - [x] (optional) Identifier Operations ++ and --
@@ -112,9 +111,18 @@ The `-cf` flag can be added after `<filename>` to enable constant folding.
       - [x] (optional) Comparison operators >= , <= , and !=
       - [x] (optional) Logical operators && , || , and !
       - [x] (optional) Conversions (bool <> char <> int <> float)
-      - [ ] (optional) Binary operator %
+      - [x] (optional) Binary operator %
       - [ ] (optional) Include comments in compiled LLVM
 
+Note: soms als je met floats werkt crashed het in assembly met een: 
+    
+    error: floating point constant invalid for type
+ 
+dit komt wanneer je een floating point constant wil inladen dat een repeating decimal is in binary, bevoorbeeld
 
+    float a = 1.3;
+
+Meer hierover op de LLVM documentatie: https://llvm.org/docs/LangRef.html#simple-constants
+We hebben een mail gestuurt naar Brent of we hier rekening mee moesten houden, en hij zij van niet.
 
 
