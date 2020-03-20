@@ -74,7 +74,7 @@ The `-cf` flag can be added after `<filename>` to enable constant folding.
             - [x] char
             - [x] int
             - [x] float
-            - [x] pointer
+            - [x] pointer (no pointer arithmetic)
         - (mandatory) Reserved words
             - [x] const
             - [x] int
