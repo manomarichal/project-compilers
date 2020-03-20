@@ -202,12 +202,12 @@ class Pos(UnaryOp):
 
 
 class Indir(UnaryOp):
-    pass
+    def is_lval(self):
+        return True
 
 
 class Adress(UnaryOp):
-    def is_lval(self):
-        return True
+    pass
 
 
 # cast from get_child(0).get_type() to get_type()
