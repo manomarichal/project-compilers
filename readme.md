@@ -4,10 +4,11 @@
 ### Overview
 
 We hebben alle mandatory dingen afgewerkt. Onderaan de readme kan je een overzicht zien van wat we allemaal gemaakt hebben.
-Voor elk feature hebben we een testfile, in test_IO/working_examples. Je kan voor al deze de llvm ir, dotfiles en ast visualization genereren met run.py.
+Voor elk feature hebben we een testfile, in test_IO/working_examples/. Je kan voor al deze de llvm ir, dotfiles en ast visualization genereren met run.py.
+clean.py verwijdert alle gegenereerde files uit test_IO/working_examples/. 
 
 
-### Installing:
+### Running the project:
 
 #### Clone git repository   
     
@@ -52,8 +53,8 @@ Voor elk feature hebben we een testfile, in test_IO/working_examples. Je kan voo
   -  [x] (optional) Comparison operators >= , <= , and !=
   -  [x] (optional) Logical operators && , || , and !
 - [x] 2.2 (mandatory) AST
-- [x] 2.3 (mandatory) Visualization: AST/DotVisitor.py genereert een png met de AST
-- [x] 2.4 (optional) Constant folding: We hebben constant folding geïmplementeerd.
+- [x] 2.3 (mandatory) Visualization
+- [x] 2.4 (optional) Constant folding
 
 #### Project 2)
 - 1.1 Grammar:
@@ -69,7 +70,7 @@ Voor elk feature hebben we een testfile, in test_IO/working_examples. Je kan voo
         - [x] char
     - [x] (mandatory) Variables
     - [x] (optional) Identifier Operations ++ and --
-    - [ ] (optional) Conversions
+    - [x] (optional) Implicit Conversions
 - [x] 1.2 (mandatory) AST
 - [x] 1.3 (mandatory) Visualization
 - [x] 1.4 (optional) Constant Propagation
@@ -96,8 +97,8 @@ Voor elk feature hebben we een testfile, in test_IO/working_examples. Je kan voo
   -  [x] (optional) Comparison operators >= , <= , and !=
   -  [x] (optional) Logical operators && , || , and !
   -  [x] (optional) Constant folding
+  -  [x] (optional) Implicit conversions (bool <> char <> int <> float)
 
-Overall everything went really good
 
 
 
