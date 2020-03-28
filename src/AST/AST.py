@@ -144,6 +144,24 @@ class Scope(Composite):
         return self.get_parent().get_scope().symbol_remove(symbol)
 
 
+class IfStatement (Composite):  # child 0 is condition, 1 is then, (2 is else)
+    def set_condition(self, condition):
+        if len(self._children) == 0:
+            self._children.append(condition)
+        else:
+            self._children[0] = condition
+
+    def set_then(self, effect):
+        while len(self._children) < 1:
+            self._children.append(None)
+        self._children[1] = effect
+
+    def set_else(self, effect):
+        while len(self._children) == 0:
+            self._children.append(None)
+        self._children[2] = effect
+
+
 class DummyNode(Composite):
     def __init__(self, children):
         Composite.__init__(self)
@@ -171,6 +189,15 @@ class BinaryOp(Composite):
 
 
 class UnaryOp(Composite):
+    pass
+
+
+class Decl(Composite):
+    def is_lval(self):
+        return True
+
+
+class Printf(Composite):
     pass
 
 
@@ -377,12 +404,13 @@ class Variable(Leaf):
         return '%' + self.get_name()
 
 
-class Decl(Composite):
-    def is_lval(self):
-        return True
-
-
-class Printf(Composite):
+class ControlWord (Leaf):
     pass
 
 
+class Break (Leaf):
+    pass
+
+
+class Continue (Leaf):
+    pass

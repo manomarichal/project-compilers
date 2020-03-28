@@ -19,7 +19,17 @@ def source_from_ctx(ctx):
 
 
 class Visitor (GrammarVisitor):
-    _current_scope = None
+    _current_sym_table = None
+
+    def enter_scope(self, ast: AST.Scope):
+        ast.set_symbol_table(SymbolTable())
+        self._current_sym_table = ast.get_symbol_table()
+
+    def exit_scope(self, ast: AST.Scope):
+        if ast.get_parent() is not None:
+            self._current_sym_table = ast.get_parent().get_scope().get_symbol_table()
+        else:
+            _current_sym_table = SymbolTable()
 
     def aggregateResult(self, aggregate, nextResult):
         if nextResult is None:
@@ -31,9 +41,26 @@ class Visitor (GrammarVisitor):
 
     def visitDoc(self, ctx):
         my_ast = AST.Doc()
-        my_ast.set_symbol_table(SymbolTable())
-        self._current_scope = my_ast.get_symbol_table()
+        self.enter_scope(my_ast)
         my_ast.swap_children(self.visitChildren(ctx))
+        my_ast.set_source_loc(source_from_ctx(ctx))
+        self.exit_scope(my_ast)
+        return my_ast
+
+    def visitScopeConstr(self, ctx: GrammarParser.ScopeConstrContext):
+        my_ast = AST.Scope()
+        self.enter_scope(my_ast)
+        my_ast.swap_children(self.visitChildren(ctx))
+        my_ast.set_source_loc(source_from_ctx(ctx))
+        self.enter_scope(my_ast)
+        return my_ast
+
+    def visitIfConstr(self, ctx: GrammarParser.IfConstrContext):
+        my_ast = AST.IfStatement()
+        my_ast.set_condition(self.visit(ctx.parenCond()))
+        my_ast.set_then(self.visit(ctx.stateOrScope(0)))
+        if len(ctx.stateOrScope()) > 1:
+            my_ast.set_then(self.visit(ctx.stateOrScope(1)))
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
@@ -173,7 +200,7 @@ class Visitor (GrammarVisitor):
         var = AST.Variable(ctx.getChild(1).getText())
         my_ast.add_child(var)
 
-        self._current_scope[ctx.getChild(1).getText()] = VarEntry(self.visitTypeObject(ctx.getChild(0)), None)
+        self._current_sym_table[ctx.getChild(1).getText()] = VarEntry(self.visitTypeObject(ctx.getChild(0)), None)
 
         if ctx.getChildCount() == 4:
             assign = AST.AssignOp()
@@ -197,3 +224,12 @@ class Visitor (GrammarVisitor):
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
+    def visitControl(self, ctx: GrammarParser.ControlContext):
+        my_ast = None
+        token_type = ctx.getChild(0).getSymbol().type
+        if token_type == GrammarParser.BREAK_KW:
+            my_ast = AST.Break
+        if token_type == GrammarParser.CONT_KW:
+            my_ast = AST.Continue
+        my_ast.set_source_loc(source_from_ctx(ctx))
+        return my_ast

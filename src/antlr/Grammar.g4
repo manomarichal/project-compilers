@@ -1,13 +1,22 @@
 grammar Grammar;
 
-CHAR: '\''[ -~] '\'';
+CHAR : '\''[ -~] '\'';
 INT : [0-9]+;
 FLOAT : [0-9]+'.'[0-9]+;
-INT_TYPE: 'int';
-FLOAT_TYPE: 'float';
-CHAR_TYPE: 'char';
-CONST: 'const';
-ASSIGN_OP: '=';
+INT_TYPE : 'int';
+FLOAT_TYPE : 'float';
+CHAR_TYPE : 'char';
+CONST : 'const';
+IF_KW : 'if';
+ELSE_KW : 'else';
+SWITCH_KW : 'switch';
+CASE_BRANCH : 'case';
+DEFAULT_BRANCH : 'default';
+FOR_KW : 'for';
+WHILE_KW : 'while';
+BREAK_KW : 'break';
+CONT_KW : 'continue';
+ASSIGN_OP : '=';
 PLUS : '+' ;
 AMP : '&' ;
 MINUS : '-';
@@ -16,7 +25,10 @@ SLASH : '/';
 PERCENT : '%';
 LEFT_PAREN : '(';
 RIGHT_PAREN : ')';
+LEFT_C_BRACE : '{' ;
+RIGHT_C_BRACE: '}';
 SEMICOLON : ';';
+COLON : ':';
 SMALLER_OP : '<';
 GREATER_OP : '>';
 EQUAL_OP : '==';
@@ -35,11 +47,41 @@ COMMENT_SINGLE: '//'~('\r'|'\n')* -> skip;
 COMMENT_MULTI: '/*' .*? '*/' -> skip;
 
 
-doc : ((decl | expr | printf) SEMICOLON)* EOF;
+doc : block EOF;
+
+block: statement*;
 
 typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
 identifier: ID;
+
+statement: (general_expr | control) SEMICOLON | construct;
+
+control: BREAK_KW | CONT_KW;
+
+parenCond: LEFT_PAREN general_expr RIGHT_PAREN;
+
+stateOrScope: statement | scopeConstr;
+
+
+construct: ifConstr | switchConstr | forConstr | whileConstr | scopeConstr;
+
+scopeConstr: LEFT_C_BRACE block RIGHT_C_BRACE;
+
+ifConstr: IF_KW parenCond stateOrScope (ELSE_KW stateOrScope)?;
+
+switchConstr: SWITCH_KW parenCond LEFT_C_BRACE caseBranch* defaultBranch? RIGHT_C_BRACE; // TODO below this point
+
+caseBranch: CASE_BRANCH literal COLON (stateOrScope | block);
+
+defaultBranch: DEFAULT_BRANCH COLON (stateOrScope | block);
+
+forConstr: FOR_KW LEFT_PAREN general_expr SEMICOLON general_expr SEMICOLON general_expr RIGHT_PAREN stateOrScope;
+
+whileConstr: WHILE_KW parenCond  stateOrScope;
+
+
+general_expr: decl | expr | printf; // TODO: fix naming (this should be the simpler name)
 
 decl:  typeObj identifier ASSIGN_OP expr |
     typeObj identifier;
@@ -63,4 +105,4 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     identifier |
     literal;
 
-printf : PRINT LEFT_PAREN (literal | identifier) RIGHT_PAREN;
+printf : PRINT LEFT_PAREN (literal | identifier) RIGHT_PAREN; // TODO: print any (general) expression
