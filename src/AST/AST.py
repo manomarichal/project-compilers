@@ -116,6 +116,18 @@ class Composite(Component):
         for child in other._children:
             child._parent = other
 
+    def set_positional_child(self, index: int, child: Component):
+        while len(self._children) < index+1:
+            self._children.append(None)
+        self._children[index] = child
+        child._parent = self
+
+    def add_positional_child(self, index: int, child: Component):
+        while len(self._children) < index:
+            self._children.append(None)
+        self._children.append(child)
+        child._parent = self
+
 
 class Scope(Composite):
     _symbol_table = None
@@ -144,22 +156,61 @@ class Scope(Composite):
         return self.get_parent().get_scope().symbol_remove(symbol)
 
 
-class IfStatement (Composite):  # child 0 is condition, 1 is then, (2 is else)
+# if, for, while are scopes themselves for vars declared in their conditions
+class IfStatement (Scope):  # child 0 is condition, 1 is then, (2 is else)
     def set_condition(self, condition):
-        if len(self._children) == 0:
-            self._children.append(condition)
-        else:
-            self._children[0] = condition
+        self.set_positional_child(0, condition)
 
     def set_then(self, effect):
-        while len(self._children) < 1:
-            self._children.append(None)
-        self._children[1] = effect
+        self.set_positional_child(1, effect)
 
     def set_else(self, effect):
-        while len(self._children) == 0:
-            self._children.append(None)
-        self._children[2] = effect
+        self.set_positional_child(2, effect)
+
+
+# TODO: maybe simplify AST represtentation of switch/case/default (but then it's less uniform)
+class SwitchStatement (Scope):  # 0=cond >1=branch(incl. default)
+    def set_condition(self, condition):
+        self.set_positional_child(0, condition)
+
+    def add_branch(self, branch):
+        self.add_positional_child(1, branch)
+
+
+class CaseBranch (Composite):  # 0=cst >1=code
+    def set_constant(self, constant):
+        self.set_positional_child(0, constant)
+
+    def add_effect(self, effect):
+        self.add_positional_child(1, effect)
+
+
+class DefaultBranch (Composite):  # >0=code # only here for consistency w/ specific case
+    def add_effect(self, effect):
+        self.add_positional_child(0, effect)
+
+
+# for loops could also be translated to while loops in the ast if desired
+class ForStatement (Scope):
+    def set_init(self, init):
+        self.set_positional_child(0, init)
+
+    def set_check(self, check):
+        self.set_positional_child(1, check)
+
+    def set_advance(self, advance):
+        self.set_positional_child(2, advance)
+
+    def set_contents(self, content):
+        self.set_positional_child(3, content)
+
+
+class WhileStatement (Scope):
+    def set_check(self, check):
+        self.set_positional_child(0, check)
+
+    def set_contents(self, content):
+        self.set_positional_child(1, content)
 
 
 class DummyNode(Composite):

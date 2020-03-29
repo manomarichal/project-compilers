@@ -31,12 +31,15 @@ class Visitor (GrammarVisitor):
         else:
             _current_sym_table = SymbolTable()
 
-    def aggregateResult(self, aggregate, nextResult):
+    def aggregateResult(self, aggregate: AST.DummyNode, nextResult):
         if nextResult is None:
             return aggregate
-        if aggregate is None:
-            return AST.DummyNode(nextResult)
-        aggregate.add_child(nextResult)
+        elif aggregate is None:
+            return nextResult
+        elif not isinstance(aggregate, AST.DummyNode):
+            aggregate = AST.DummyNode([aggregate, nextResult])
+        else:
+            aggregate.add_child(nextResult)
         return aggregate
 
     def visitDoc(self, ctx):
@@ -52,16 +55,78 @@ class Visitor (GrammarVisitor):
         self.enter_scope(my_ast)
         my_ast.swap_children(self.visitChildren(ctx))
         my_ast.set_source_loc(source_from_ctx(ctx))
-        self.enter_scope(my_ast)
+        self.exit_scope(my_ast)
         return my_ast
 
     def visitIfConstr(self, ctx: GrammarParser.IfConstrContext):
         my_ast = AST.IfStatement()
+        self.enter_scope(my_ast)
         my_ast.set_condition(self.visit(ctx.parenCond()))
         my_ast.set_then(self.visit(ctx.stateOrScope(0)))
-        if len(ctx.stateOrScope()) > 1:
-            my_ast.set_then(self.visit(ctx.stateOrScope(1)))
+        if len(ctx.stateOrScope()) == 2:
+            my_ast.set_else(self.visit(ctx.stateOrScope(1)))
         my_ast.set_source_loc(source_from_ctx(ctx))
+        self.exit_scope(my_ast)
+        return my_ast
+
+    def visitSwitchConstr(self, ctx: GrammarParser.SwitchConstrContext):
+        my_ast = AST.SwitchStatement()
+        self.enter_scope(my_ast)
+        my_ast.set_condition(self.visit(ctx.parenCond()))
+        for branch_ctx in ctx.caseBranch():
+            my_ast.add_branch(self.visit(branch_ctx))
+        if ctx.defaultBranch():
+            my_ast.add_branch(self.visit(ctx.defaultBranch()))
+        my_ast.set_source_loc(source_from_ctx(ctx))
+        self.exit_scope(my_ast)
+        return my_ast
+
+    def visitCaseBranch(self, ctx: GrammarParser.CaseBranchContext):
+        my_ast = AST.CaseBranch()
+        my_ast.set_constant(self.visit(ctx.literal()))
+
+        block_ast = self.visit(ctx.block())
+        if isinstance(block_ast, AST.DummyNode):
+            for i in range(block_ast.get_child_count()):
+                my_ast.add_effect(block_ast.get_child(i))
+        else:
+            my_ast.add_effect(block_ast)
+
+        my_ast.set_source_loc(source_from_ctx(ctx))
+        return my_ast
+
+    def visitDefaultBranch(self, ctx: GrammarParser.DefaultBranchContext):
+        my_ast = AST.CaseBranch()
+
+        block_ast = self.visit(ctx.block())
+        if isinstance(block_ast, AST.DummyNode):
+            for i in range(block_ast.get_child_count()):
+                my_ast.add_effect(block_ast.get_child(i))
+        else:
+            my_ast.add_effect(block_ast)
+
+        my_ast.set_source_loc(source_from_ctx(ctx))
+        return my_ast
+
+    def visitForConstr(self, ctx: GrammarParser.ForConstrContext):
+        my_ast = AST.ForStatement()
+        self.enter_scope(my_ast)
+        params = [self.visit(ctx.general_expr(i)) for i in range(3)]
+        my_ast.set_init(params[0])
+        my_ast.set_check(params[1])
+        my_ast.set_advance(params[2])
+        my_ast.set_contents(self.visit(ctx.stateOrScope()))
+        my_ast.set_source_loc(source_from_ctx(ctx))
+        self.exit_scope(my_ast)
+        return my_ast
+
+    def visitWhileConstr(self, ctx: GrammarParser.WhileConstrContext):
+        my_ast = AST.WhileStatement()
+        self.enter_scope(my_ast)
+        my_ast.set_check(self.visit(ctx.parenCond()))
+        my_ast.set_contents(self.visit(ctx.stateOrScope()))
+        my_ast.set_source_loc(source_from_ctx(ctx))
+        self.exit_scope(my_ast)
         return my_ast
 
     def visitExpr(self, ctx):
@@ -228,8 +293,8 @@ class Visitor (GrammarVisitor):
         my_ast = None
         token_type = ctx.getChild(0).getSymbol().type
         if token_type == GrammarParser.BREAK_KW:
-            my_ast = AST.Break
+            my_ast = AST.Break()
         if token_type == GrammarParser.CONT_KW:
-            my_ast = AST.Continue
+            my_ast = AST.Continue()
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast

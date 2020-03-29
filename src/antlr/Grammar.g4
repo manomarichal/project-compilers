@@ -47,9 +47,9 @@ COMMENT_SINGLE: '//'~('\r'|'\n')* -> skip;
 COMMENT_MULTI: '/*' .*? '*/' -> skip;
 
 
-doc : block EOF;
+doc : block? EOF;
 
-block: statement*;
+block: statement+;
 
 typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
@@ -59,6 +59,7 @@ statement: (general_expr | control) SEMICOLON | construct;
 
 control: BREAK_KW | CONT_KW;
 
+// TODO: I don't really know the rules here (eg. for(int a=0; ...) allowed but not if(int a=0) or while(int a=0) according to online compiler)
 parenCond: LEFT_PAREN general_expr RIGHT_PAREN;
 
 stateOrScope: statement | scopeConstr;
@@ -70,11 +71,11 @@ scopeConstr: LEFT_C_BRACE block RIGHT_C_BRACE;
 
 ifConstr: IF_KW parenCond stateOrScope (ELSE_KW stateOrScope)?;
 
-switchConstr: SWITCH_KW parenCond LEFT_C_BRACE caseBranch* defaultBranch? RIGHT_C_BRACE; // TODO below this point
+switchConstr: SWITCH_KW parenCond LEFT_C_BRACE caseBranch* defaultBranch? RIGHT_C_BRACE;
 
-caseBranch: CASE_BRANCH literal COLON (stateOrScope | block);
+caseBranch: CASE_BRANCH literal COLON block;
 
-defaultBranch: DEFAULT_BRANCH COLON (stateOrScope | block);
+defaultBranch: DEFAULT_BRANCH COLON block;
 
 forConstr: FOR_KW LEFT_PAREN general_expr SEMICOLON general_expr SEMICOLON general_expr RIGHT_PAREN stateOrScope;
 

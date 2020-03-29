@@ -33,17 +33,23 @@ class DotVisitor(Visitor):
 
         return name
 
+    def visitLeaf(self, ast: AST.Leaf):
+        self.counter += 1
+        name = self.counter
+        self.graph.add_node(pydot.Node(name, label=self.label_strategy(ast)))
+        return name
+
     def visitLiteral(self, ast: AST.Literal):
         self.counter += 1
-        self.graph.add_node(pydot.Node(self.counter, label=self.label_strategy(ast, ast.get_value())))
-
-        return self.counter
+        name = self.counter
+        self.graph.add_node(pydot.Node(name, label=self.label_strategy(ast, ast.get_value())))
+        return name
 
     def visitVariable(self, ast: AST.Variable):
         self.counter += 1
-        self.graph.add_node(pydot.Node(self.counter, label=self.label_strategy(ast, ast.get_name())))
-
-        return self.counter
+        name = self.counter
+        self.graph.add_node(pydot.Node(name, label=self.label_strategy(ast, ast.get_name())))
+        return name
 
 
 

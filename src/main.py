@@ -52,7 +52,7 @@ def ast_error_pass(visitor: ASTVisitor, tree: Component):
             exit(1)
 
 
-def ast_visualise(ast: Component, filename: str, style):
+def ast_visualise(ast: Component, filename: str, style=label_style):
     graph = ast_pass(DotVisitor(style), ast)[0].graph
     graph.write(filename + ".dot")
     graph.write_png(filename + ".png")
