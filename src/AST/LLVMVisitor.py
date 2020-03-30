@@ -424,9 +424,29 @@ class LLVMVisitor(Visitor):
         self.visit(ast.get_child(2))
         self.generate_branch_uncon(label_end)
 
-        self.print_label(label_end, 'after if statement')
+        self.print_label(label_end, 'exit')
 
     def visitScope(self, ast: AST.Scope):
         self.visitChildren(ast)
 
+    def visitWhileConstr(self, ast: AST.WhileConstr):
+        # counter = self.get_rname()
+        # op_str, op_com = get_logic_instruction(AST.And())
+        # # set counter to zero
+        # self.generate_binary_instruction(counter, 0, 0, 'i1', op_str, op_com)
 
+        loop_check = self.get_lname()
+        loop_body = self.get_lname()
+        loop_end = self.get_lname()
+
+        self.generate_branch_uncon(loop_check)
+
+        self.print_label(loop_check, 'while header')
+        self.visit(ast.get_child(0))
+        self.generate_branch_con(loop_body, loop_end, self.get_reg(ast.get_child(0)))
+
+        self.print_label(loop_body, 'while body')
+        self.visit(ast.get_child(1))
+        self.generate_branch_uncon(loop_check)
+
+        self.print_label(loop_end, 'exit')

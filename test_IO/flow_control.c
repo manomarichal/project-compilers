@@ -1,11 +1,7 @@
 int a = 0;
-int result = -1;
-if (a < 4)
+a++;
+while (a < 4)
 {
-    result = 1;
+    a++;
 }
-else
-{
-    result = 0;
-}
-printf(result);
+printf(a);

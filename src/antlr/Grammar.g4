@@ -16,6 +16,9 @@ FOR_KW : 'for';
 WHILE_KW : 'while';
 BREAK_KW : 'break';
 CONT_KW : 'continue';
+VOID_KW : 'void';
+RETURN_KW: 'return';
+COMMA: ',';
 ASSIGN_OP : '=';
 PLUS : '+' ;
 AMP : '&' ;
@@ -55,15 +58,18 @@ typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
 identifier: ID;
 
-statement: (general_expr | control) SEMICOLON | construct;
+statement: functionDecl | (general_expr | control) SEMICOLON | construct;
 
 control: BREAK_KW | CONT_KW;
+
+functionDecl: typeObj identifier LEFT_PAREN ( (typeObj identifier) (COMMA typeObj identifier)* )? RIGHT_PAREN stateOrScope;
+
+functionCall: identifier LEFT_PAREN ( (general_expr) (COMMA general_expr)* )? RIGHT_PAREN;
 
 // TODO: I don't really know the rules here (eg. for(int a=0; ...) allowed but not if(int a=0) or while(int a=0) according to online compiler)
 parenCond: LEFT_PAREN general_expr RIGHT_PAREN;
 
 stateOrScope: statement | scopeConstr;
-
 
 construct: ifConstr | switchConstr | forConstr | whileConstr | scopeConstr;
 
@@ -82,7 +88,7 @@ forConstr: FOR_KW LEFT_PAREN general_expr SEMICOLON general_expr SEMICOLON gener
 whileConstr: WHILE_KW parenCond  stateOrScope;
 
 
-general_expr: decl | expr | printf; // TODO: fix naming (this should be the simpler name)
+general_expr: (RETURN_KW)? (decl | expr | printf | functionCall); // TODO: fix naming (this should be the simpler name)
 
 decl:  typeObj identifier ASSIGN_OP expr |
     typeObj identifier;
@@ -104,6 +110,7 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     expr OR_OP expr |
     <assoc=right> expr ASSIGN_OP expr |
     identifier |
-    literal;
+    literal |
+    functionCall;
 
 printf : PRINT LEFT_PAREN (literal | identifier) RIGHT_PAREN; // TODO: print any (general) expression
