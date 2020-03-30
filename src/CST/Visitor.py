@@ -53,7 +53,7 @@ class Visitor (GrammarVisitor):
     def visitScopeConstr(self, ctx: GrammarParser.ScopeConstrContext):
         my_ast = AST.Scope()
         self.enter_scope(my_ast)
-        my_ast.swap_children(self.visitChildren(ctx))
+        my_ast.add_child(self.visitChildren(ctx))
         my_ast.set_source_loc(source_from_ctx(ctx))
         self.exit_scope(my_ast)
         return my_ast
@@ -131,6 +131,10 @@ class Visitor (GrammarVisitor):
 
     def visitExpr(self, ctx):
         # skip
+        if ctx.functionCall():
+            a = self.visit(ctx.getChild(0))
+            return a
+
         if ctx.LEFT_PAREN() and ctx.RIGHT_PAREN():
             return self.visit(ctx.getChild(1))
 
@@ -304,3 +308,33 @@ class Visitor (GrammarVisitor):
         my_ast.add_child(self.visit(ctx.getChild(1)))
         my_ast.add_child(self.visit(ctx.getChild(2)))
         return my_ast
+
+    def visitFunctionArgument(self, ctx:GrammarParser.FunctionArgumentContext):
+        my_ast = AST.FunctionArgument()
+        my_ast.add_child(self.visit(ctx.getChild(0)))
+        return my_ast
+
+    def visitFunctionCall(self, ctx:GrammarParser.FunctionCallContext):
+        my_ast = AST.FunctionCall(ctx.getChild(0))
+        for a in range(1, len(ctx.children)):
+            if isinstance(ctx.getChild(a), GrammarParser.FunctionArgumentContext):
+                my_ast.add_child(self.visit(ctx.getChild(a)))
+
+        return my_ast
+
+    def visitFunctionDecl(self, ctx:GrammarParser.FunctionDeclContext):
+        my_ast = AST.FunctionDefinition(ctx.getChild(1).getText())
+
+        #  add variables within the scope for each argument
+        self.enter_scope(my_ast)
+        for a in range(1, len(ctx.children)):
+            if isinstance(ctx.getChild(a), GrammarParser.TypeObjContext):
+                var = AST.Variable(ctx.getChild(a+1).getText())
+                self._current_sym_table[var.get_name()] = VarEntry(self.visitTypeObject(ctx.getChild(0)),
+                                                                              None)
+                my_ast.add_child(var)
+
+        # make function body
+        my_ast.add_child(self.visit(ctx.getChild(len(ctx.children)-1)))
+        return my_ast
+

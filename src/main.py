@@ -74,11 +74,11 @@ def main(argv):
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
-    ast_error_pass(UntypedSemanticVisitor(), ast)
+    # ast_error_pass(UntypedSemanticVisitor(), ast)
 
     ast_error_pass(TypeVisitor(), ast)
 
-    ast_error_pass(TypedSemanticsVisitor(), ast)
+    # ast_error_pass(TypedSemanticsVisitor(), ast)
 
     if len(argv) == 3:
         if argv[2] == '-cf':

@@ -49,6 +49,11 @@ class GrammarVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by GrammarParser#functionArgument.
+    def visitFunctionArgument(self, ctx:GrammarParser.FunctionArgumentContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by GrammarParser#parenCond.
     def visitParenCond(self, ctx:GrammarParser.ParenCondContext):
         return self.visitChildren(ctx)

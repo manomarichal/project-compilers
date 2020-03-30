@@ -468,3 +468,30 @@ class Continue (Leaf):
 
 class WhileConstr(Composite):
     pass
+
+# Functions:
+class FunctionCall(Composite):
+    _name: str
+
+    def __init__(self, name):
+        super().__init__()
+        self._name = name
+
+    def get_name(self):
+        return self._name
+
+class FunctionDefinition(Scope):
+    _name: str
+
+    def __init__(self, name):
+        super().__init__()
+        self._name = name
+
+    def get_name(self):
+        return self._name
+
+    pass
+
+class FunctionArgument(Composite):
+    pass
+

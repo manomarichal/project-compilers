@@ -64,7 +64,9 @@ control: BREAK_KW | CONT_KW;
 
 functionDecl: typeObj identifier LEFT_PAREN ( (typeObj identifier) (COMMA typeObj identifier)* )? RIGHT_PAREN stateOrScope;
 
-functionCall: identifier LEFT_PAREN ( (general_expr) (COMMA general_expr)* )? RIGHT_PAREN;
+functionCall: identifier LEFT_PAREN ( (functionArgument) (COMMA functionArgument)* )? RIGHT_PAREN;
+
+functionArgument: general_expr;
 
 // TODO: I don't really know the rules here (eg. for(int a=0; ...) allowed but not if(int a=0) or while(int a=0) according to online compiler)
 parenCond: LEFT_PAREN general_expr RIGHT_PAREN;
