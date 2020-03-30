@@ -298,3 +298,9 @@ class Visitor (GrammarVisitor):
             my_ast = AST.Continue()
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
+
+    def visitWhileConstr(self, ctx: GrammarParser.whileConstr):
+        my_ast = AST.WhileConstr()
+        my_ast.add_child(self.visit(ctx.getChild(1)))
+        my_ast.add_child(self.visit(ctx.getChild(2)))
+        return my_ast

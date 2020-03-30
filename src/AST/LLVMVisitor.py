@@ -128,14 +128,15 @@ def to_llvm_type(node) -> str:
 
 class LLVMVisitor(Visitor):
     file = None
-    _rcounter = 0
+    _rcounter = 0 # counter to keep track of registers used
+    _lcounter = 0 # counter to keep track of labels used
 
     def __init__(self, file):
         self.file = file
         self.file.write("declare i32 @printf(i8*, ...)")
         self.file.write("\n@istr = private constant [4 x i8] c\"%d\\0A\\00\"")
         self.file.write("\n@fstr = private constant [4 x i8] c\"%f\\0A\\00\"")
-        self.file.write('\ndefine i32 @main() {\n\tstart:')
+        self.file.write('\ndefine i32 @main() {\n\nstart:')
 
     # HELPER FUNCTIONS
     def print_to_file(self, string, comment=None):
@@ -149,7 +150,11 @@ class LLVMVisitor(Visitor):
     def get_rname(self) -> str:
         self._rcounter += 1
         return '%t' + str(self._rcounter)
-    
+
+    def get_lname(self) -> str:
+        self._lcounter += 1
+        return 'l' + str(self._lcounter)
+
     def get_reg(self, ast: AST.Component):
         # variables have to be loaded in before being used
         if isinstance(ast, AST.Variable) or isinstance(ast, AST.Indir):
@@ -158,6 +163,11 @@ class LLVMVisitor(Visitor):
             return ast.get_register()
 
     # GENERATOR FUNCTIONS
+    def print_label(self, label, label_comment):
+        self.file.write('\n\n; ' + label_comment)
+        self.file.write('\n' + label + ':')
+        return label
+
     def generate_load(self, var: AST.Variable):
         reg = self.get_rname()
         comment = 'load ' + str(var.get_register()) + ' in ' + reg
@@ -243,6 +253,18 @@ class LLVMVisitor(Visitor):
         comment = 'get adress of ' + base_ptr
         string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr
         self.print_to_file(string, comment)
+
+    def generate_branch_uncon(self, label1): # unconditional branch
+        comment = 'branch to ' + label1
+        string = 'br label %' + label1
+        self.print_to_file(string, comment)
+
+    def generate_branch_con(self, label1, label2, reg): # conditional branch
+        comment = 'branch to ' + label1 + ' if ' + reg + ' is true, else branch to ' + label2
+        string = 'br i1 ' + reg + ', label %' + label1 + ', label %' + label2
+        self.print_to_file(string, comment)
+
+
 
     # VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
@@ -361,6 +383,7 @@ class LLVMVisitor(Visitor):
         elif ast.get_conversion_type() == AST.conv_type.CHAR_TO_INT:
             self.generate_zext(reg, 'i8', 'i32', var_reg)
 
+
     def visitBinaryOp(self, ast: AST.BinaryOp):
         self.visitChildren(ast)
         reg = self.get_rname()
@@ -384,5 +407,26 @@ class LLVMVisitor(Visitor):
         self.visitChildren(ast)
         adress_of_pointee = self.generate_load(ast.get_child(0))
         ast.set_register(adress_of_pointee)
+
+    def visitIfStatement(self, ast: AST.IfStatement):
+        label_true = self.get_lname()
+        label_false = self.get_lname()
+        label_end = self.get_lname()
+
+        self.visit(ast.get_child(0))
+        self.generate_branch_con(label_true, label_false, self.get_reg(ast.get_child(0)))
+
+        self.print_label(label_true, 'if ' + ast.get_child(0).get_register() + ' is true')
+        self.visit(ast.get_child(1))
+        self.generate_branch_uncon(label_end)
+
+        self.print_label(label_false, 'if ' + ast.get_child(0).get_register() + ' is false')
+        self.visit(ast.get_child(2))
+        self.generate_branch_uncon(label_end)
+
+        self.print_label(label_end, 'after if statement')
+
+    def visitScope(self, ast: AST.Scope):
+        self.visitChildren(ast)
 
 

@@ -1,24 +1,11 @@
 int a = 0;
-for (int b = 0; b<10; b++)
+int result = -1;
+if (a < 4)
 {
-    a++;
-    if (a==4)
-        continue;
-    if(a==4 || a==5)
-        break;
-}
-if (a==0)
-{
-    printf('a');
+    result = 1;
 }
 else
 {
-    switch (a)
-    {
-        case 1:
-            break;
-        case 5:
-            printf(a);
-            break;
-    }
+    result = 0;
 }
+printf(result);

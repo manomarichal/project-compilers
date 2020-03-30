@@ -159,3 +159,11 @@ class TypeVisitor (Visitor):
             self.add_error(InvalidTypeError(node, child_type))
         node.set_type(own_type)
         return own_type
+
+    def visitIfStatement(self, node: IfStatement):
+        bool_type = TypeClass([TypeComponents.BOOL])
+        if self.visit(node.get_child(0)) != bool_type:
+            self.insert_conversion(node, 0, bool_type)
+        node.set_type(bool_type)
+        return bool_type
+

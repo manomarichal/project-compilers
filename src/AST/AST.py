@@ -465,3 +465,6 @@ class Break (Leaf):
 
 class Continue (Leaf):
     pass
+
+class WhileConstr(Composite):
+    pass
