@@ -1757,7 +1757,7 @@ class GrammarParser ( Parser ):
         def getRuleIndex(self):
             return GrammarParser.RULE_expr
 
-        def accept(self, visitor:ParseTreeVisitor):
+        def accept(self, visitor: ParseTreeVisitor):
             if hasattr( visitor, "visitExpr" ):
                 return visitor.visitExpr(self)
             else:

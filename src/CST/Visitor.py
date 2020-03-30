@@ -42,10 +42,20 @@ class Visitor (GrammarVisitor):
             aggregate.add_child(nextResult)
         return aggregate
 
+    def add_child_block(self, ast: AST.Composite, block_ctx, index=None):
+        if index is None:
+            index = ast.get_child_count()
+        children = self.visit(block_ctx)
+        if isinstance(children, AST.DummyNode):
+            for i in range(children.get_child_count(), -1, -1):
+                ast.add_positional_child(index, children.get_child(i))
+        else:
+            ast.add_positional_child(index, children)
+
     def visitDoc(self, ctx):
         my_ast = AST.Doc()
         self.enter_scope(my_ast)
-        my_ast.swap_children(self.visitChildren(ctx))
+        self.add_child_block(my_ast, ctx.block())
         my_ast.set_source_loc(source_from_ctx(ctx))
         self.exit_scope(my_ast)
         return my_ast
@@ -53,7 +63,7 @@ class Visitor (GrammarVisitor):
     def visitScopeConstr(self, ctx: GrammarParser.ScopeConstrContext):
         my_ast = AST.Scope()
         self.enter_scope(my_ast)
-        my_ast.add_child(self.visitChildren(ctx))
+        self.add_child_block(my_ast, ctx.block())
         my_ast.set_source_loc(source_from_ctx(ctx))
         self.exit_scope(my_ast)
         return my_ast
@@ -84,27 +94,13 @@ class Visitor (GrammarVisitor):
     def visitCaseBranch(self, ctx: GrammarParser.CaseBranchContext):
         my_ast = AST.CaseBranch()
         my_ast.set_constant(self.visit(ctx.literal()))
-
-        block_ast = self.visit(ctx.block())
-        if isinstance(block_ast, AST.DummyNode):
-            for i in range(block_ast.get_child_count()):
-                my_ast.add_effect(block_ast.get_child(i))
-        else:
-            my_ast.add_effect(block_ast)
-
+        self.add_child_block(my_ast, ctx.block())
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
     def visitDefaultBranch(self, ctx: GrammarParser.DefaultBranchContext):
         my_ast = AST.CaseBranch()
-
-        block_ast = self.visit(ctx.block())
-        if isinstance(block_ast, AST.DummyNode):
-            for i in range(block_ast.get_child_count()):
-                my_ast.add_effect(block_ast.get_child(i))
-        else:
-            my_ast.add_effect(block_ast)
-
+        self.add_child_block(my_ast, ctx.block())
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
@@ -303,12 +299,6 @@ class Visitor (GrammarVisitor):
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
-    def visitWhileConstr(self, ctx: GrammarParser.whileConstr):
-        my_ast = AST.WhileConstr()
-        my_ast.add_child(self.visit(ctx.getChild(1)))
-        my_ast.add_child(self.visit(ctx.getChild(2)))
-        return my_ast
-
     def visitFunctionArgument(self, ctx:GrammarParser.FunctionArgumentContext):
         my_ast = AST.FunctionArgument()
         my_ast.add_child(self.visit(ctx.getChild(0)))
@@ -330,8 +320,7 @@ class Visitor (GrammarVisitor):
         for a in range(1, len(ctx.children)):
             if isinstance(ctx.getChild(a), GrammarParser.TypeObjContext):
                 var = AST.Variable(ctx.getChild(a+1).getText())
-                self._current_sym_table[var.get_name()] = VarEntry(self.visitTypeObject(ctx.getChild(0)),
-                                                                              None)
+                self._current_sym_table[var.get_name()] = VarEntry(self.visitTypeObject(ctx.getChild(0)), None)
                 my_ast.add_child(var)
 
         # make function body

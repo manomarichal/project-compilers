@@ -74,6 +74,8 @@ def main(argv):
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
 
+    ast_visualise(ast, "no_passes")
+
     # ast_error_pass(UntypedSemanticVisitor(), ast)
 
     ast_error_pass(TypeVisitor(), ast)
