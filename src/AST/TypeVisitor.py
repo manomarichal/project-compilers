@@ -167,3 +167,9 @@ class TypeVisitor (Visitor):
         node.set_type(bool_type)
         return bool_type
 
+    def visitFunctionDefinition(self, node:FunctionDefinition):
+        self.visitChildren(node)
+        own_type = node.get_type()
+        node.set_type(own_type)
+        return own_type
+

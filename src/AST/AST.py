@@ -490,7 +490,17 @@ class FunctionDefinition(Scope):
     def get_name(self):
         return self._name
 
-    pass
+    def get_st_entry(self):
+        scope = self.get_scope()
+        if scope is None:
+            return None
+        return scope.symbol_find(self.get_name())
+
+    def get_type(self):
+        entry = self.get_st_entry()
+        if entry is None:
+            return None
+        return entry.type_obj
 
 class FunctionArgument(Composite):
     pass

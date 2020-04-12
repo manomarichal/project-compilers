@@ -2,6 +2,7 @@ from src.AST import AST
 from src.AST.Visitor import Visitor
 from termcolor import colored, cprint
 from src.utility.TypeClass import TypeClass
+from io import StringIO
 
 def get_math_instruction(op:AST.MathOp, floating: bool):
 
@@ -132,19 +133,19 @@ class LLVMVisitor(Visitor):
     _lcounter = 0 # counter to keep track of labels used
 
     def __init__(self, file):
+        self.headBuf = StringIO()
         self.file = file
-        self.file.write("declare i32 @printf(i8*, ...)")
-        self.file.write("\n@istr = private constant [4 x i8] c\"%d\\0A\\00\"")
-        self.file.write("\n@fstr = private constant [4 x i8] c\"%f\\0A\\00\"")
-        self.file.write('\ndefine i32 @main() {\n\nstart:')
+        self.headBuf.write("declare i32 @printf(i8*, ...)")
+        self.headBuf.write("\n@istr = private constant [4 x i8] c\"%d\\0A\\00\"")
+        self.headBuf.write("\n@fstr = private constant [4 x i8] c\"%f\\0A\\00\"")
+        self.file.write(self.headBuf.getvalue() + '\n')
 
     # HELPER FUNCTIONS
-    def print_to_file(self, string, comment=None):
-        self.file.write('\n\t; ' + comment)
-        self.file.write('\n\t\t' + string)
+    def print_to_file(self, string, comment=None, ws_str ='\n', ws_comment='\n\n\t'):
+        self.file.write(ws_comment + '; ' + comment)
+        self.file.write(ws_str + string)
 
     def close(self):
-        self.file.write('\n\t' + 'ret i32 0\n}\n')
         self.file.close()
 
     def get_rname(self) -> str:
@@ -264,7 +265,15 @@ class LLVMVisitor(Visitor):
         string = 'br i1 ' + reg + ', label %' + label1 + ', label %' + label2
         self.print_to_file(string, comment)
 
-
+    def generate_function_def(self, rtype, name, arguments):
+        comment = 'define function ' + name
+        string = "define " + rtype + ' @' + name + '('
+        for a in range(len(arguments)):
+            if a != 0:
+                string += ', '
+            string += arguments[a][0] + ' %' + arguments[a][1]
+        string += ') {'
+        self.print_to_file(string, comment)
 
     # VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
@@ -450,3 +459,13 @@ class LLVMVisitor(Visitor):
         self.generate_branch_uncon(loop_check)
 
         self.print_label(loop_end, 'exit')
+
+    def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
+        args = []
+
+        for a in range(1, ast.get_child_count()):
+            arg = [to_llvm_type(ast.get_child(a)), ast.get_child(a).get_name()]
+            args.append(arg)
+        self.generate_function_def(to_llvm_type(ast), ast.get_name(), args)
+        self.visitChildren(ast)
+        self.file.write('\n}')
