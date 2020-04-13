@@ -114,6 +114,11 @@ class GrammarVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by GrammarParser#returnStatement.
+    def visitReturnStatement(self, ctx:GrammarParser.ReturnStatementContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by GrammarParser#literal.
     def visitLiteral(self, ctx:GrammarParser.LiteralContext):
         return self.visitChildren(ctx)

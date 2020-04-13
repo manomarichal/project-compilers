@@ -38,6 +38,8 @@ class TypeVisitor (Visitor):
 
     def visitComposite(self, node: Composite):
         result = self.visitChildren(node)
+        if result is None:
+            return None
         if len(result) == 0:
             return None
         if len(result) == 1:
@@ -173,3 +175,8 @@ class TypeVisitor (Visitor):
         node.set_type(own_type)
         return own_type
 
+    def visitFunctionCall(self,node:FunctionCall):
+        self.visitChildren(node)
+        own_type = node.get_scope().symbol_find(node.get_name()).type_obj
+        node.set_type(own_type)
+        return own_type

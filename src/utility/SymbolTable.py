@@ -13,17 +13,17 @@ class SymbolTable(dict):
         else:
             return self.parent_table
 
-
-class VarEntry:
-    value = None
-    type_obj = None
-
-    def __init__(self, type_obj, value):
-        self.value = value
-        self.type_obj = type_obj
-
-class FuncEntry:
+class SymEntry:
+    register = None
     type_obj = None
 
     def __init__(self, type_obj):
         self.type_obj = type_obj
+
+class VarEntry(SymEntry):
+    def __init__(self, type_obj, value):
+        super().__init__(type_obj)
+        self.value = value
+
+class FuncEntry(SymEntry):
+    pass

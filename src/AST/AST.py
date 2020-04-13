@@ -101,6 +101,11 @@ class Composite(Component):
 
         new_child._parent = self
 
+    def add_childs(self, new_children):
+        for child in new_children:
+            child._parent = self
+            self._children.append(child)
+
     def swap_children(self, other):
         assert isinstance(other, Composite)
 
@@ -452,7 +457,10 @@ class Variable(Leaf):
         return self._name
 
     def get_register(self):
-        return '%' + self.get_name()
+        return self.get_st_entry().register
+
+    def set_register(self, register):
+        self.get_st_entry().register = register
 
 
 class ControlWord (Leaf):
@@ -503,5 +511,32 @@ class FunctionDefinition(Scope):
         return entry.type_obj
 
 class FunctionArgument(Composite):
+    def __init__(self, name):
+        super().__init__()
+        self._name = name
+
+    def get_st_entry(self):
+        scope = self.get_scope()
+        if scope is None:
+            return None
+        return scope.symbol_find(self.get_name())
+
+    def get_type(self):
+        entry = self.get_st_entry()
+        if entry is None:
+            return None
+        return entry.type_obj
+
+    def get_name(self):
+        return self._name
+
+    def get_register(self):
+        return self.get_st_entry().register
+
+    def set_register(self, register):
+        self.get_st_entry().register = register
+
     pass
 
+class ReturnStatement(Composite):
+    pass

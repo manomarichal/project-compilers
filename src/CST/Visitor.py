@@ -2,7 +2,7 @@ from src.antlr.GrammarVisitor import GrammarVisitor
 from src.antlr.GrammarParser import GrammarParser
 from src.AST import AST
 from src.utility.TypeClass import TypeClass, TypeComponents
-from src.utility.SymbolTable import SymbolTable, VarEntry, FuncEntry
+from src.utility.SymbolTable import SymbolTable, VarEntry, FuncEntry, SymEntry
 
 
 # to check a token's "type" (hopefully):
@@ -42,20 +42,16 @@ class Visitor (GrammarVisitor):
             aggregate.add_child(nextResult)
         return aggregate
 
-    def add_child_block(self, ast: AST.Composite, block_ctx, index=None):
-        if index is None:
-            index = ast.get_child_count()
-        children = self.visit(block_ctx)
-        if isinstance(children, AST.DummyNode):
-            for i in range(0, children.get_child_count(), +1):
-                ast.add_positional_child(index, children.get_child(i))
-        else:
-            ast.add_positional_child(index, children)
+    def visitBlock(self, ctx:GrammarParser.BlockContext):
+        statements = []
+        for a in range(ctx.getChildCount()):
+            statements.append(self.visit(ctx.getChild(a)))
+        return statements
 
     def visitDoc(self, ctx):
         my_ast = AST.Doc()
         self.enter_scope(my_ast)
-        self.add_child_block(my_ast, ctx.block())
+        my_ast.add_childs(self.visitBlock(ctx.block()))
         my_ast.set_source_loc(source_from_ctx(ctx))
         self.exit_scope(my_ast)
         return my_ast
@@ -63,7 +59,7 @@ class Visitor (GrammarVisitor):
     def visitScopeConstr(self, ctx: GrammarParser.ScopeConstrContext):
         my_ast = AST.Scope()
         my_ast.set_symbol_table(self._current_sym_table)
-        self.add_child_block(my_ast, ctx.block())
+        my_ast.add_childs(self.visitBlock(ctx.block()))
         return my_ast
 
     def visitIfConstr(self, ctx: GrammarParser.IfConstrContext):
@@ -297,17 +293,11 @@ class Visitor (GrammarVisitor):
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
-    def visitFunctionArgument(self, ctx:GrammarParser.FunctionArgumentContext):
-        my_ast = AST.FunctionArgument()
-        my_ast.add_child(self.visit(ctx.getChild(0)))
-        return my_ast
-
     def visitFunctionCall(self, ctx:GrammarParser.FunctionCallContext):
-        my_ast = AST.FunctionCall(ctx.getChild(0))
+        my_ast = AST.FunctionCall(ctx.getChild(0).getText())
         for a in range(1, len(ctx.children)):
             if isinstance(ctx.getChild(a), GrammarParser.FunctionArgumentContext):
                 my_ast.add_child(self.visit(ctx.getChild(a)))
-
         return my_ast
 
     def visitFunctionDecl(self, ctx:GrammarParser.FunctionDeclContext):
@@ -323,11 +313,16 @@ class Visitor (GrammarVisitor):
         #  add variables within the scope for each argument
         for a in range(1, len(ctx.children)-1):
             if isinstance(ctx.getChild(a), GrammarParser.TypeObjContext):
-                var = AST.Variable(ctx.getChild(a+1).getText())
-                self._current_sym_table[var.get_name()] = VarEntry(self.visitTypeObject(ctx.getChild(a)), None)
-                my_ast.add_child(var)
+                arg = AST.Variable(ctx.getChild(a+1).getText())
+                self._current_sym_table[arg.get_name()] = SymEntry(self.visitTypeObject(ctx.getChild(a)))
+                my_ast.add_child(arg)
 
         self.exit_scope(my_ast)
+        return my_ast
+
+    def visitReturnStatement(self, ctx:GrammarParser.ReturnStatementContext):
+        my_ast = AST.ReturnStatement()
+        my_ast.add_child(self.visit(ctx.getChild(1)))
         return my_ast
 
 

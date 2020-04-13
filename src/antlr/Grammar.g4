@@ -89,11 +89,12 @@ forConstr: FOR_KW LEFT_PAREN general_expr SEMICOLON general_expr SEMICOLON gener
 
 whileConstr: WHILE_KW parenCond  stateOrScope;
 
-
-general_expr: (RETURN_KW)? (decl | expr | printf | functionCall); // TODO: fix naming (this should be the simpler name)
+general_expr: (returnStatement) | (decl | expr | printf | functionCall); // TODO: fix naming (this should be the simpler name)
 
 decl:  typeObj identifier ASSIGN_OP expr |
     typeObj identifier;
+
+returnStatement: RETURN_KW (decl | expr | printf | functionCall);
 
 literal: INT | FLOAT | CHAR;
 

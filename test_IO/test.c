@@ -1,11 +1,11 @@
-int d = 1;
-
-int* testfunction(int a1, char a2) {
-char b = a1;
+int test()
+{
+    int a = 10;
+    printf(a);
+    return a;
 }
 
 int main()
 {
-    int c = 1+1;
-    return c;
+    test();
 }
