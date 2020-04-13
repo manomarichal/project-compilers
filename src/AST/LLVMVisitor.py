@@ -153,7 +153,7 @@ class LLVMVisitor(Visitor):
 
     def get_rname(self) -> str:
         self._rcounter += 1
-        return '%' + str(self._rcounter)
+        return '%t' + str(self._rcounter)
 
     def get_lname(self) -> str:
         self._lcounter += 1
@@ -287,7 +287,7 @@ class LLVMVisitor(Visitor):
 
         for a in range(len(args)):
             # allocate a register for the function argument
-            arg_reg = '%' + str(a)
+            arg_reg = '%a' + str(a)
             self.gen_alloca(arg_reg, to_llvm_type(args[a]))
 
             # update the symbol table entry for that function argument
