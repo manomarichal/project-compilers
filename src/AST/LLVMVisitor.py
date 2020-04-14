@@ -460,27 +460,26 @@ class LLVMVisitor(Visitor):
         label_end = self.get_lname()
 
         self.visit(ast.get_child(0))
-        self.gen_branch_con(label_true, label_false, self.get_reg(ast.get_child(0)))
+        if ast.get_child_count() == 3:
+            self.gen_branch_con(label_true, label_false, self.get_reg(ast.get_child(0)))
+        else:
+            self.gen_branch_con(label_true, label_end, self.get_reg(ast.get_child(0)))
 
         self.print_label(label_true, 'if ' + ast.get_child(0).get_register() + ' is true')
         self.visit(ast.get_child(1))
         self.gen_branch_uncon(label_end)
 
-        self.print_label(label_false, 'if ' + ast.get_child(0).get_register() + ' is false')
-        self.visit(ast.get_child(2))
-        self.gen_branch_uncon(label_end)
+        if ast.get_child_count() == 3:
+            self.print_label(label_false, 'if ' + ast.get_child(0).get_register() + ' is false')
+            self.visit(ast.get_child(2))
+            self.gen_branch_uncon(label_end)
 
         self.print_label(label_end, 'exit')
 
     def visitScope(self, ast: AST.Scope):
         self.visitChildren(ast)
 
-    def visitWhileConstr(self, ast: AST.WhileConstr):
-        # counter = self.get_rname()
-        # op_str, op_com = get_logic_instruction(AST.And())
-        # # set counter to zero
-        # self.gen_binary_instruction(counter, 0, 0, 'i1', op_str, op_com)
-
+    def visitWhileStatement(self, ast: AST.WhileStatement):
         loop_check = self.get_lname()
         loop_body = self.get_lname()
         loop_end = self.get_lname()
@@ -516,3 +515,4 @@ class LLVMVisitor(Visitor):
         for a in range(ast.get_child_count()):
             args.append(ast.get_child(a))
         self.gen_function_call(ast.get_register(), to_llvm_type(ast), ast.get_name() ,args)
+

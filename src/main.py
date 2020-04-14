@@ -24,8 +24,9 @@ from src.AST.SemanticVisitor import UntypedSemanticVisitor, TypedSemanticsVisito
 
 from src.AST.DotVisitor import label_big as label_style
 
-# LLVM
 # TODO implicit conversions bij return statements
+# TODO variables out of scope deftige error geve
+# TODO {1, var1, var2} hale
 
 
 def ast_pass(visitor: ASTVisitor, tree: Component):
