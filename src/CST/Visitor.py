@@ -42,7 +42,7 @@ class Visitor (GrammarVisitor):
             aggregate.add_child(nextResult)
         return aggregate
 
-    def visitBlock(self, ctx:GrammarParser.BlockContext):
+    def visitBlock(self, ctx: GrammarParser.BlockContext):
         statements = []
         for a in range(ctx.getChildCount()):
             statements.append(self.visit(ctx.getChild(a)))
@@ -145,12 +145,15 @@ class Visitor (GrammarVisitor):
                 my_ast = AST.Adress()
             elif ctx.STAR():
                 my_ast = AST.Indir()
-            elif isinstance(ctx.getChild(0), GrammarParser.ExprContext):
-                if ctx.getChild(1).getSymbol().type == GrammarParser.DECR:
+            elif isinstance(ctx.getChild(0), GrammarParser.ExprContext):  # postfix operators go here
+                if ctx.DECR():
                     my_ast = AST.DecrPost()
-                elif ctx.getChild(1).getSymbol().type == GrammarParser.INCR:
+                elif ctx.INCR():
                     my_ast = AST.IncrPost()
-                my_ast.add_child(self.visit(ctx.getChild(0)))
+                elif ctx.arrayIndex():
+                    my_ast = AST.Index()
+                    my_ast.set_index(self.visit(ctx.arrayIndex()))
+                my_ast.set_positional_child(0, self.visit(ctx.getChild(0)))
                 my_ast.set_source_loc(source_from_ctx(ctx))
                 return my_ast
             elif ctx.getChild(0).getSymbol().type == GrammarParser.INCR:
@@ -259,12 +262,15 @@ class Visitor (GrammarVisitor):
         var = AST.Variable(ctx.getChild(1).getText())
         my_ast.add_child(var)
 
-        self._current_sym_table[ctx.getChild(1).getText()] = VarEntry(self.visitTypeObject(ctx.getChild(0)), None)
+        var_type = self.visitTypeObject(ctx.getChild(0))
+        if ctx.arrayIndex():
+            var_type.pushType(TypeComponents.ARR, self.visit(ctx.arrayIndex()).get_value())
+        self._current_sym_table[ctx.getChild(1).getText()] = VarEntry(var_type, None)
 
-        if ctx.getChildCount() == 4:
+        if ctx.ASSIGN_OP() is not None:
             assign = AST.AssignOp()
             assign.add_child(my_ast)
-            assign.add_child(self.visit(ctx.getChild(3)))
+            assign.add_child(self.visit(ctx.expr()))
             assign.set_source_loc(source_from_ctx(ctx))
             return assign
 
@@ -325,4 +331,6 @@ class Visitor (GrammarVisitor):
         my_ast.add_child(self.visit(ctx.getChild(1)))
         return my_ast
 
+    def visitArrayIndex(self, ctx: GrammarParser.ArrayIndexContext) -> AST.Literal:
+        return AST.Literal(value=int(ctx.INT().getText()))
 

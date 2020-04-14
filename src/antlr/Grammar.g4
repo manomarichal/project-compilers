@@ -30,6 +30,8 @@ LEFT_PAREN : '(';
 RIGHT_PAREN : ')';
 LEFT_C_BRACE : '{' ;
 RIGHT_C_BRACE: '}';
+LEFT_S_BRACE: '[';
+RIGHT_S_BRACE: ']';
 SEMICOLON : ';';
 COLON : ':';
 SMALLER_OP : '<';
@@ -55,6 +57,10 @@ doc : block? EOF;
 block: statement+;
 
 typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
+
+arrayIndex: LEFT_S_BRACE INT RIGHT_S_BRACE;
+
+arrayLit: LEFT_C_BRACE INT (COMMA INT)* RIGHT_C_BRACE;
 
 identifier: ID;
 
@@ -91,15 +97,17 @@ whileConstr: WHILE_KW parenCond  stateOrScope;
 
 general_expr: (returnStatement) | (decl | expr | printf | functionCall); // TODO: fix naming (this should be the simpler name)
 
-decl:  typeObj identifier ASSIGN_OP expr |
-    typeObj identifier;
+decl:  typeObj identifier (arrayIndex)? ASSIGN_OP expr |
+    typeObj identifier (arrayIndex)?;
 
 returnStatement: RETURN_KW (decl | expr | printf | functionCall);
 
-literal: INT | FLOAT | CHAR;
+literal: INT | FLOAT | CHAR | arrayLit;
 
 expr : LEFT_PAREN expr RIGHT_PAREN |
     expr (DECR | INCR) |
+    functionCall |
+    expr arrayIndex |
     (DECR | INCR) expr |
     (MINUS | PLUS) expr |
     (AMP | STAR) expr |
@@ -113,7 +121,6 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     expr OR_OP expr |
     <assoc=right> expr ASSIGN_OP expr |
     identifier |
-    literal |
-    functionCall;
+    literal;
 
 printf : PRINT LEFT_PAREN (literal | identifier) RIGHT_PAREN; // TODO: print any (general) expression

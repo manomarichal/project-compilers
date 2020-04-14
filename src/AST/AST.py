@@ -257,6 +257,16 @@ class Printf(Composite):
     pass
 
 
+class Index(UnaryOp):
+    def set_object(self, obj: Component):
+        self.set_positional_child(0, obj)
+
+    def set_index(self, index):
+        if isinstance(index, int):
+            index = Literal(index)
+        self.set_positional_child(1, index)
+
+
 class MathOp(BinaryOp):
     pass
 
@@ -476,8 +486,10 @@ class Break (Leaf):
 class Continue (Leaf):
     pass
 
+
 class WhileConstr(Composite):
     pass
+
 
 # Functions:
 class FunctionCall(Composite):
@@ -489,6 +501,7 @@ class FunctionCall(Composite):
 
     def get_name(self):
         return self._name
+
 
 class FunctionDefinition(Scope):
     _name: str
@@ -511,6 +524,7 @@ class FunctionDefinition(Scope):
         if entry is None:
             return None
         return entry.type_obj
+
 
 class FunctionArgument(Composite):
     def __init__(self, name):
@@ -539,6 +553,7 @@ class FunctionArgument(Composite):
         self.get_st_entry().register = register
 
     pass
+
 
 class ReturnStatement(Composite):
     pass
