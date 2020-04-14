@@ -4,6 +4,8 @@ from src.AST import AST
 from src.utility.TypeClass import TypeClass, TypeComponents
 from src.utility.SymbolTable import SymbolTable, VarEntry, FuncEntry, SymEntry
 
+from copy import deepcopy
+
 
 # to check a token's "type" (hopefully):
 # <token_obj>.getSymbol().getType() == <parser>.<token_name>
@@ -219,6 +221,22 @@ class Visitor (GrammarVisitor):
         if ctx.FLOAT():
             my_ast.val = float(ctx.getText())
             my_ast.set_type(TypeClass([TypeComponents.FLOAT]))
+        if ctx.arrayLit():
+            my_ast = self.visit(ctx.arrayLit())
+
+        my_ast.set_source_loc(source_from_ctx(ctx))
+        return my_ast
+
+    def visitArrayLit(self, ctx: GrammarParser.ArrayLitContext):  # not very type-safe at all
+        my_ast = AST.Literal(value=[])
+
+        element = None
+        for child in ctx.literal():
+            element = self.visit(child)
+            my_ast.get_value().append(element.get_value())
+        my_type: TypeClass = deepcopy(element.get_type())
+        my_type.pushType(TypeComponents.ARR, len(ctx.literal()))
+        my_ast.set_type(my_type)
 
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast

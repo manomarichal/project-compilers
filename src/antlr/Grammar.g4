@@ -60,7 +60,7 @@ typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
 arrayIndex: LEFT_S_BRACE INT RIGHT_S_BRACE;
 
-arrayLit: LEFT_C_BRACE INT (COMMA INT)* RIGHT_C_BRACE;
+arrayLit: LEFT_C_BRACE literal (COMMA literal)* RIGHT_C_BRACE;
 
 identifier: ID;
 

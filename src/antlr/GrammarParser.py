@@ -58,16 +58,16 @@ def serializedATN():
         buf.write("FH\7\t\2\2GF\3\2\2\2GH\3\2\2\2HI\3\2\2\2IK\7\32\2\2JG")
         buf.write("\3\2\2\2KN\3\2\2\2LJ\3\2\2\2LM\3\2\2\2MP\3\2\2\2NL\3\2")
         buf.write("\2\2OQ\7\t\2\2PO\3\2\2\2PQ\3\2\2\2Q\7\3\2\2\2RS\7!\2\2")
-        buf.write("ST\7\4\2\2TU\7\"\2\2U\t\3\2\2\2VW\7\37\2\2W\\\7\4\2\2")
-        buf.write("XY\7\25\2\2Y[\7\4\2\2ZX\3\2\2\2[^\3\2\2\2\\Z\3\2\2\2\\")
-        buf.write("]\3\2\2\2]_\3\2\2\2^\\\3\2\2\2_`\7 \2\2`\13\3\2\2\2ab")
-        buf.write("\7\61\2\2b\r\3\2\2\2cl\5\22\n\2dg\5,\27\2eg\5\20\t\2f")
-        buf.write("d\3\2\2\2fe\3\2\2\2gh\3\2\2\2hi\7#\2\2il\3\2\2\2jl\5\34")
-        buf.write("\17\2kc\3\2\2\2kf\3\2\2\2kj\3\2\2\2l\17\3\2\2\2mn\t\3")
-        buf.write("\2\2n\21\3\2\2\2op\5\6\4\2pq\5\f\7\2q~\7\35\2\2rs\5\6")
-        buf.write("\4\2st\5\f\7\2t{\3\2\2\2uv\7\25\2\2vw\5\6\4\2wx\5\f\7")
-        buf.write("\2xz\3\2\2\2yu\3\2\2\2z}\3\2\2\2{y\3\2\2\2{|\3\2\2\2|")
-        buf.write("\177\3\2\2\2}{\3\2\2\2~r\3\2\2\2~\177\3\2\2\2\177\u0080")
+        buf.write("ST\7\4\2\2TU\7\"\2\2U\t\3\2\2\2VW\7\37\2\2W\\\5\62\32")
+        buf.write("\2XY\7\25\2\2Y[\5\62\32\2ZX\3\2\2\2[^\3\2\2\2\\Z\3\2\2")
+        buf.write("\2\\]\3\2\2\2]_\3\2\2\2^\\\3\2\2\2_`\7 \2\2`\13\3\2\2")
+        buf.write("\2ab\7\61\2\2b\r\3\2\2\2cl\5\22\n\2dg\5,\27\2eg\5\20\t")
+        buf.write("\2fd\3\2\2\2fe\3\2\2\2gh\3\2\2\2hi\7#\2\2il\3\2\2\2jl")
+        buf.write("\5\34\17\2kc\3\2\2\2kf\3\2\2\2kj\3\2\2\2l\17\3\2\2\2m")
+        buf.write("n\t\3\2\2n\21\3\2\2\2op\5\6\4\2pq\5\f\7\2q~\7\35\2\2r")
+        buf.write("s\5\6\4\2st\5\f\7\2t{\3\2\2\2uv\7\25\2\2vw\5\6\4\2wx\5")
+        buf.write("\f\7\2xz\3\2\2\2yu\3\2\2\2z}\3\2\2\2{y\3\2\2\2{|\3\2\2")
+        buf.write("\2|\177\3\2\2\2}{\3\2\2\2~r\3\2\2\2~\177\3\2\2\2\177\u0080")
         buf.write("\3\2\2\2\u0080\u0081\7\36\2\2\u0081\u0082\5\32\16\2\u0082")
         buf.write("\23\3\2\2\2\u0083\u0084\5\f\7\2\u0084\u008d\7\35\2\2\u0085")
         buf.write("\u008a\5\26\f\2\u0086\u0087\7\25\2\2\u0087\u0089\5\26")
@@ -540,11 +540,12 @@ class GrammarParser ( Parser ):
         def LEFT_C_BRACE(self):
             return self.getToken(GrammarParser.LEFT_C_BRACE, 0)
 
-        def INT(self, i:int=None):
+        def literal(self, i:int=None):
             if i is None:
-                return self.getTokens(GrammarParser.INT)
+                return self.getTypedRuleContexts(GrammarParser.LiteralContext)
             else:
-                return self.getToken(GrammarParser.INT, i)
+                return self.getTypedRuleContext(GrammarParser.LiteralContext,i)
+
 
         def RIGHT_C_BRACE(self):
             return self.getToken(GrammarParser.RIGHT_C_BRACE, 0)
@@ -577,7 +578,7 @@ class GrammarParser ( Parser ):
             self.state = 84
             self.match(GrammarParser.LEFT_C_BRACE)
             self.state = 85
-            self.match(GrammarParser.INT)
+            self.literal()
             self.state = 90
             self._errHandler.sync(self)
             _la = self._input.LA(1)
@@ -585,7 +586,7 @@ class GrammarParser ( Parser ):
                 self.state = 86
                 self.match(GrammarParser.COMMA)
                 self.state = 87
-                self.match(GrammarParser.INT)
+                self.literal()
                 self.state = 92
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
@@ -1723,7 +1724,7 @@ class GrammarParser ( Parser ):
 
 
         def arrayIndex(self):
-            return self.getTypedRuleContext(GrammarParser.ArrayIndexContext, 0)
+            return self.getTypedRuleContext(GrammarParser.ArrayIndexContext,0)
 
 
         def getRuleIndex(self):
