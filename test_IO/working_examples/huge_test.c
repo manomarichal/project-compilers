@@ -1,3 +1,5 @@
+int main()
+{
 char a = 1.25;
 char b = 4;
 // a random comment
@@ -17,3 +19,5 @@ printf(test); // expected 13.OOOO
 corona sucks
 
 */
+return res;
+}

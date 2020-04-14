@@ -153,6 +153,8 @@ class LLVMVisitor(Visitor):
 
     def get_rname(self) -> str:
         self._rcounter += 1
+        if (self._rcounter == 11):
+            print("test")
         return '%t' + str(self._rcounter)
 
     def get_lname(self) -> str:

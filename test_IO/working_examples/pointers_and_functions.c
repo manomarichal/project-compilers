@@ -3,7 +3,7 @@ int swap_ptrs_values(char* a, char* b)
     char temp = *b;
     *b = *a;
     *a = temp;
-    return 0;  
+    return 0;
 }
 
 int swap_ptrs(char** a, char** b)
@@ -11,7 +11,7 @@ int swap_ptrs(char** a, char** b)
     char* temp = *b;
     *b = *a;
     *a = temp;
-    return 0;  
+    return 0;
 }
 
 int power_of(char* a)
@@ -32,7 +32,7 @@ int main()
     char * c_ptr = &c;
     char * d_ptr = &d;
     char * e_ptr = &e;
-    
+
     power_of(&a);
     power_of(a_ptr);
     printf(a); // expectd 16

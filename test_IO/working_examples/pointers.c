@@ -1,3 +1,5 @@
+int main()
+{
 int a = 1;
 int b = 5;
 int * p1 = &a;
@@ -8,4 +10,6 @@ int * * * p3 = &p2;
 printf(a);
 printf(b);
 
+return a;
+}
 // expected output: 5, 5

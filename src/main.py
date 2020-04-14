@@ -25,12 +25,7 @@ from src.AST.SemanticVisitor import UntypedSemanticVisitor, TypedSemanticsVisito
 from src.AST.DotVisitor import label_big as label_style
 
 # LLVM
-# TODO comparison operators
-# TODO boolean operators
-# TODO floating points afprinten
-# TODO pointer types
-# TODO constant propagation
-# TODO constants
+# TODO implicit conversions bij return statements
 
 
 def ast_pass(visitor: ASTVisitor, tree: Component):

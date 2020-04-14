@@ -340,6 +340,8 @@ class CastOp(UnaryOp):
             return conv_type.CHAR_TO_INT
         elif self.get_child(0).get_type().__repr__() == 'char' and self.get_type().__repr__() == 'float':
             return conv_type.CHAR_TO_FLOAT
+        else:
+            print('unknown conversion happened')
 
 
 class LogicOp(BinaryOp):
