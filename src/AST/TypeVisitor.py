@@ -162,6 +162,17 @@ class TypeVisitor (Visitor):
         node.set_type(own_type)
         return own_type
 
+    def visitIndex(self, node: Index):
+        child_type = self.visit(node.get_child(0))
+        own_type = None
+        if child_type.is_array():
+            own_type = deepcopy(child_type)
+            own_type.popType()
+        else:
+            self.add_error(InvalidTypeError(node, child_type))
+        node.set_type(own_type)
+        return own_type
+
     def visitIfStatement(self, node: IfStatement):
         bool_type = TypeClass([TypeComponents.BOOL])
         if self.visit(node.get_child(0)) != bool_type:
@@ -169,13 +180,13 @@ class TypeVisitor (Visitor):
         node.set_type(bool_type)
         return bool_type
 
-    def visitFunctionDefinition(self, node:FunctionDefinition):
+    def visitFunctionDefinition(self, node: FunctionDefinition):
         self.visitChildren(node)
         own_type = node.get_type()
         node.set_type(own_type)
         return own_type
 
-    def visitFunctionCall(self,node:FunctionCall):
+    def visitFunctionCall(self, node: FunctionCall):
         self.visitChildren(node)
         own_type = node.get_scope().symbol_find(node.get_name()).type_obj
         node.set_type(own_type)

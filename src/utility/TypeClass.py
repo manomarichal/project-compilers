@@ -60,6 +60,9 @@ class TypeClass:
     def is_ptr(self) -> bool:
         return self.get_top_type(TypeComponents.CONST) == TypeComponents.PTR
 
+    def is_array(self) -> bool:
+        return self.get_top_type() == TypeComponents.ARR
+
     def promotes_to(self, other):
         self_type = self.get_top_type(TypeComponents.CONST)
         other_type = other.get_top_type(TypeComponents.CONST)

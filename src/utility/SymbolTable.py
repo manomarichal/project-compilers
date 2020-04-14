@@ -13,6 +13,7 @@ class SymbolTable(dict):
         else:
             return self.parent_table
 
+
 class SymEntry:
     register = None
     type_obj = None
@@ -20,10 +21,12 @@ class SymEntry:
     def __init__(self, type_obj):
         self.type_obj = type_obj
 
+
 class VarEntry(SymEntry):
     def __init__(self, type_obj, value):
         super().__init__(type_obj)
         self.value = value
+
 
 class FuncEntry(SymEntry):
     pass

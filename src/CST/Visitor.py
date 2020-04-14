@@ -267,15 +267,14 @@ class Visitor (GrammarVisitor):
             var_type.pushType(TypeComponents.ARR, self.visit(ctx.arrayIndex()).get_value())
         self._current_sym_table[ctx.getChild(1).getText()] = VarEntry(var_type, None)
 
+        my_ast.set_source_loc(source_from_ctx(ctx))
         if ctx.ASSIGN_OP() is not None:
             assign = AST.AssignOp()
             assign.add_child(my_ast)
             assign.add_child(self.visit(ctx.expr()))
             assign.set_source_loc(source_from_ctx(ctx))
             return assign
-
         else:
-            my_ast.set_source_loc(source_from_ctx(ctx))
             return my_ast
 
     def visitIdentifier(self, ctx):
@@ -331,6 +330,8 @@ class Visitor (GrammarVisitor):
         my_ast.add_child(self.visit(ctx.getChild(1)))
         return my_ast
 
-    def visitArrayIndex(self, ctx: GrammarParser.ArrayIndexContext) -> AST.Literal:
-        return AST.Literal(value=int(ctx.INT().getText()))
+    def visitArrayIndex(self, ctx: GrammarParser.ArrayIndexContext):
+        index = AST.Literal(value=int(ctx.INT().getText()))
+        index.set_type(TypeClass([TypeComponents.INT]))
+        return index
 
