@@ -174,6 +174,7 @@ class TypeVisitor (Visitor):
         return own_type
 
     def visitIfStatement(self, node: IfStatement):
+        self.visitChildren(node)
         bool_type = TypeClass([TypeComponents.BOOL])
         if self.visit(node.get_child(0)) != bool_type:
             self.insert_conversion(node, 0, bool_type)
