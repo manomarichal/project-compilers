@@ -27,11 +27,11 @@ from src.AST.DotVisitor import label_big as label_style
 # TODO implicit conversions bij return statements
 # TODO variables out of scope deftige error geve
 # TODO {1, var1, var2} hale
-
+# TODO int * * * a wordt als func def gezien;
+# TODO ++ -- werke niet
 
 def ast_pass(visitor: ASTVisitor, tree: Component):
     return visitor, visitor.visit(tree)
-
 
 def ast_error_pass(visitor: ASTVisitor, tree: Component):
     try:

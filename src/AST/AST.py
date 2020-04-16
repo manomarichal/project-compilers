@@ -443,6 +443,8 @@ class Literal(Leaf):
     def get_value(self):
         return self.val
 
+    def get_register(self):
+        return self.val
 
 class Variable(Leaf):
     _name: str
@@ -479,6 +481,9 @@ class Variable(Leaf):
 
     def set_register(self, register):
         self.get_st_entry().register = register
+
+    def is_array(self):
+        return self.get_type().__repr__()[0] == '['
 
 
 class ControlWord (Leaf):
