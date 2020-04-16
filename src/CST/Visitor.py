@@ -316,14 +316,14 @@ class Visitor (GrammarVisitor):
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
-    def visitFunctionCall(self, ctx:GrammarParser.FunctionCallContext):
+    def visitFunctionCall(self, ctx: GrammarParser.FunctionCallContext):
         my_ast = AST.FunctionCall(ctx.getChild(0).getText())
         for a in range(1, len(ctx.children)):
             if isinstance(ctx.getChild(a), GrammarParser.FunctionArgumentContext):
                 my_ast.add_child(self.visit(ctx.getChild(a)))
         return my_ast
 
-    def visitFunctionDecl(self, ctx:GrammarParser.FunctionDeclContext):
+    def visitFunctionDecl(self, ctx: GrammarParser.FunctionDeclContext):
         my_ast = AST.FunctionDefinition(ctx.getChild(1).getText())
 
         # set type of function
@@ -338,7 +338,9 @@ class Visitor (GrammarVisitor):
             if isinstance(ctx.getChild(a), GrammarParser.TypeObjContext):
                 arg = AST.Variable(ctx.getChild(a+1).getText())
                 self._current_sym_table[arg.get_name()] = SymEntry(self.visitTypeObject(ctx.getChild(a)))
-                my_ast.add_child(arg)
+                decl = AST.Decl()
+                decl.add_child(arg)
+                my_ast.add_child(decl)
 
         self.exit_scope(my_ast)
         return my_ast
