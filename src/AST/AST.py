@@ -272,6 +272,9 @@ class Index(UnaryOp):
             index = Literal(index)
         self.set_positional_child(1, index)
 
+    def is_lval(self):
+        return True
+
 
 class MathOp(BinaryOp):
     pass
@@ -325,6 +328,7 @@ class conv_type(Enum):
     CHAR_TO_BOOL = 10
     CHAR_TO_FLOAT = 11
     CHAR_TO_INT = 12
+
 
 class CastOp(UnaryOp):
     def __init__(self, to_type, dummy=None):
@@ -445,6 +449,7 @@ class Literal(Leaf):
 
     def get_register(self):
         return self.val
+
 
 class Variable(Leaf):
     _name: str
