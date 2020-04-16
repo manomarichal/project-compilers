@@ -278,6 +278,7 @@ class Visitor (GrammarVisitor):
     def visitDecl(self, ctx):
         my_ast = AST.Decl()
         var = AST.Variable(ctx.getChild(1).getText())
+        var.set_source_loc(source_from_ctx(ctx))
         my_ast.add_child(var)
 
         var_type = self.visitTypeObject(ctx.getChild(0))
@@ -321,32 +322,44 @@ class Visitor (GrammarVisitor):
         for a in range(1, len(ctx.children)):
             if isinstance(ctx.getChild(a), GrammarParser.FunctionArgumentContext):
                 my_ast.add_child(self.visit(ctx.getChild(a)))
+        my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
     def visitFunctionDecl(self, ctx: GrammarParser.FunctionDeclContext):
         my_ast = AST.FunctionDefinition(ctx.getChild(1).getText())
+        my_ast.set_source_loc(source_from_ctx(ctx))
 
-        # set type of function
-        self._current_sym_table[ctx.getChild(1).getText()] = FuncEntry(self.visitTypeObject(ctx.getChild(0)))
+        # set type & arg_count of function
+        my_st_entry = FuncEntry(self.visitTypeObject(ctx.getChild(0)))
+        my_st_entry.arg_count = len(ctx.typeObj())-1
+
         self.enter_scope(my_ast)
 
         # make function body
         my_ast.add_child(self.visit(ctx.getChild(len(ctx.children) - 1)))
 
-        #  add variables within the scope for each argument
+        # add variables within the scope for each argument & add argument info to function's st entry
         for a in range(1, len(ctx.children)-1):
             if isinstance(ctx.getChild(a), GrammarParser.TypeObjContext):
                 arg = AST.Variable(ctx.getChild(a+1).getText())
-                self._current_sym_table[arg.get_name()] = SymEntry(self.visitTypeObject(ctx.getChild(a)))
+                arg.set_source_loc(ctx.getChild(a+1))
                 decl = AST.Decl()
+                decl.set_source_loc(ctx.getChild(a + 1))
                 decl.add_child(arg)
                 my_ast.add_child(decl)
+                arg_type = self.visitTypeObject(ctx.getChild(a))
+                self._current_sym_table[arg.get_name()] = VarEntry(arg_type)
+                my_st_entry.arg_types.append(arg_type)
 
         self.exit_scope(my_ast)
+
+        # save function's st entry
+        self._current_sym_table[ctx.getChild(1).getText()] = my_st_entry
         return my_ast
 
     def visitReturnStatement(self, ctx:GrammarParser.ReturnStatementContext):
         my_ast = AST.ReturnStatement()
+        my_ast.set_source_loc(source_from_ctx(ctx))
         my_ast.add_child(self.visit(ctx.getChild(1)))
         return my_ast
 

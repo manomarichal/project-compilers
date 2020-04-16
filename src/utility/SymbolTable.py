@@ -15,18 +15,19 @@ class SymbolTable(dict):
 
 
 class SymEntry:
-    register = None
-    type_obj = None
-
-    def __init__(self, type_obj):
+    def __init__(self, type_obj: TypeClass):
+        self.register = None
         self.type_obj = type_obj
 
 
 class VarEntry(SymEntry):
-    def __init__(self, type_obj, value):
+    def __init__(self, type_obj: TypeClass, value=None):
         super().__init__(type_obj)
         self.value = value
 
 
 class FuncEntry(SymEntry):
-    pass
+    def __init__(self, type_obj: TypeClass):
+        super().__init__(type_obj)
+        self.arg_count = 0
+        self.arg_types = []

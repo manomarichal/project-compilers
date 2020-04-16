@@ -49,7 +49,7 @@ class TypeClass:
         return other.getType() == self.getType()
 
     def __ne__(self, other):
-        return not self == other
+        return not self.__eq__(other)
 
     def getType(self):
         return self._type_stack

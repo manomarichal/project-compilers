@@ -2,6 +2,7 @@ from src.utility.SemanticExceptions import *
 from src.AST.AST import *
 from src.AST.Visitor import Visitor
 from src.utility.TypeClass import TypeClass, TypeComponents
+from src.utility import SymbolTable
 from copy import deepcopy
 
 
@@ -32,6 +33,39 @@ class TypeVisitor (Visitor):
         conversion.add_child(old_child)
         if warn:
             self.implicit_conversion_warning(node, old_child.get_type(), to_type)
+
+    def assume_mono_conversion(self, node: Composite, child_nr: int, supposed_type: TypeClass):
+        given_type: TypeClass = node.get_child(child_nr).get_type()
+        if given_type == supposed_type:
+            pass
+        elif given_type.promotes_to(supposed_type):
+            self.insert_conversion(node, child_nr, supposed_type)
+        elif given_type.converts_to(supposed_type):
+            self.insert_conversion(node, child_nr, supposed_type, True)
+        else:
+            self.no_conversion_error(node, given_type, supposed_type, False)
+        return supposed_type
+
+    # TODO: warn / error amibiguous conversions
+    def assume_bi_conversion(self, node: Composite, child_nr_a: int, child_nr_b: int):
+        a_type: TypeClass = node.get_child(child_nr_a)
+        b_type: TypeClass = node.get_child(child_nr_b)
+        if a_type == b_type:
+            return a_type
+        elif b_type.promotes_to(a_type):
+            self.insert_conversion(node, child_nr_b, a_type)
+            return a_type
+        elif a_type.promotes_to(b_type):
+            self.insert_conversion(node, child_nr_a, b_type)
+            return b_type
+        elif b_type.converts_to(a_type):
+            self.insert_conversion(node, child_nr_b, a_type, True)
+            return a_type
+        elif a_type.converts_to(b_type):
+            self.insert_conversion(node, child_nr_a, b_type, True)
+            return b_type
+        else:
+            self.no_conversion_error(node, a_type, b_type, True)
 
     def visit(self, node) -> TypeClass:
         return Visitor.visit(self, node)
@@ -70,7 +104,7 @@ class TypeVisitor (Visitor):
     def visitMathOp(self, node: MathOp):
         a_type = self.visit(node.get_child(0))
         b_type = self.visit(node.get_child(1))
-        own_type = None
+        own_type = self.assume_bi_conversion(node, 0, 1)
 
         if a_type == b_type:
             own_type = a_type
@@ -88,6 +122,7 @@ class TypeVisitor (Visitor):
             self.insert_conversion(node, 0, own_type, True)
         else:
             self.no_conversion_error(node, a_type, b_type, True)
+
         node.set_type(own_type)
         return own_type
 
@@ -181,10 +216,9 @@ class TypeVisitor (Visitor):
     def visitIfStatement(self, node: IfStatement):
         self.visitChildren(node)
         bool_type = TypeClass([TypeComponents.BOOL])
-        if self.visit(node.get_child(0)) != bool_type:
-            self.insert_conversion(node, 0, bool_type)
-        node.set_type(bool_type)
-        return bool_type
+        self.assume_mono_conversion(node, 0, bool_type)
+        node.set_type(None)
+        return None
 
     def visitFunctionDefinition(self, node: FunctionDefinition):
         self.visitChildren(node)
@@ -194,6 +228,16 @@ class TypeVisitor (Visitor):
 
     def visitFunctionCall(self, node: FunctionCall):
         self.visitChildren(node)
-        own_type = node.get_scope().symbol_find(node.get_name()).type_obj
+        own_entry: SymbolTable.FuncEntry = node.get_scope().symbol_find(node.get_name())
+        own_type = own_entry.type_obj
+        for argNr in range(node.get_child_count()):
+            supposed_type: TypeClass = own_entry.arg_types[argNr]
+            self.assume_mono_conversion(node, argNr, supposed_type)
+
         node.set_type(own_type)
         return own_type
+
+    def visitReturnStatement(self, node: ReturnStatement):
+        self.visitChildren(node)
+        function_type = node.get_enclosing(FunctionDefinition).get_type()
+        self.assume_mono_conversion(node, 0, function_type)

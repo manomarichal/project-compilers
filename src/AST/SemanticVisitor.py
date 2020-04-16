@@ -1,6 +1,7 @@
 from src.AST import AST
 from src.AST.Visitor import Visitor
 from src.utility.SemanticExceptions import *
+from src.utility import SymbolTable
 
 
 class UntypedSemanticVisitor(Visitor):
@@ -70,16 +71,35 @@ class UntypedSemanticVisitor(Visitor):
         self.visit(node.get_child(0))
 
     def visitFunctionDefinition(self, node: AST.FunctionDefinition):
+        entry = node.get_scope().symbol_find(node.get_name())
+        if entry in self.defined_st_entries:
+            self.error(RedeclaredError(node))
+        else:
+            self.defined_st_entries.add(entry)
+
         for argNr in range(1, node.get_child_count()):
             self.visitFunctionArg(node.get_child(argNr))
         self.visit(node.get_child(0))
 
     def visitFunctionArg(self, node: AST.Decl):
-        entry = node.get_scope().symbol_find(node.get_child(0).get_name())
+        entry: SymbolTable.FuncEntry = node.get_scope().symbol_find(node.get_child(0).get_name())
         if entry in self.defined_st_entries:
             self.error(RedeclaredError(node.get_child(0)))
         else:
             self.defined_st_entries.add(entry)
+
+    def visitFunctionCall(self, node: AST.FunctionCall):
+        entry: SymbolTable.FuncEntry = node.get_scope().symbol_find(node.get_name())
+        if entry is None or entry not in self.defined_st_entries:
+            self.error(UndeclaredError(node))
+        if entry.arg_count != node.get_child_count():
+            self.error(ArgCountMismatchError(node, entry.arg_count, node.get_child_count()))
+
+    def visitReturnStatement(self, node: AST.ReturnStatement):
+        function = node.get_enclosing(AST.FunctionDefinition)
+        if function is None:
+            self.error(IllegalStatementError(node, "no enclosing function definition"))
+        self.visitChildren(node)
 
 
 class TypedSemanticsVisitor(Visitor):

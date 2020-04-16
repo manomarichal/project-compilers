@@ -22,6 +22,21 @@ class DotVisitor(Visitor):
         self.graph = pydot.Dot(graph_type='graph')
         self.counter = 0
 
+    def named_leaf_visit(self, ast: AST.Component):
+        self.counter += 1
+        name = self.counter
+        self.graph.add_node(pydot.Node(name, label=self.label_strategy(ast, ast.get_name())))
+        return name
+
+    def named_composite_visit(self, ast: AST.Composite):
+        name = self.named_leaf_visit(ast)
+
+        for index in range(0, ast.get_child_count()):
+            child_name = self.visit(ast.get_child(index))
+            self.graph.add_edge(pydot.Edge(name, child_name))
+
+        return name
+
     def visitComposite(self, ast: AST.Composite):
         self.counter += 1
         name = self.counter
@@ -46,10 +61,14 @@ class DotVisitor(Visitor):
         return name
 
     def visitVariable(self, ast: AST.Variable):
-        self.counter += 1
-        name = self.counter
-        self.graph.add_node(pydot.Node(name, label=self.label_strategy(ast, ast.get_name())))
-        return name
+        return self.named_leaf_visit(ast)
+
+    def visitFunctionCall(self, ast: AST.FunctionCall):
+        return self.named_composite_visit(ast)
+
+    def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
+        return self.named_composite_visit(ast)
+
 
 
 

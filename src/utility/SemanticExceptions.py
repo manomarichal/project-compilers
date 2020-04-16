@@ -93,3 +93,18 @@ class ConstAssignmentError (SemanticError, StatementException):
     def __init__(self, node: AssignOp):
         self.node = node
         self.message = "assigning to constant of type \"" + node.get_child(0).get_type().__repr__() + "\""
+
+
+class ArgCountMismatchError (SemanticError, StatementException):
+    def __init__(self, node: FunctionCall, expected, actual):
+        self.node = node
+        self.message = "attempting to call function \"" + node.get_name() + "\" with " + str(actual) + " arguments, " \
+            + str(expected) + " expected"
+
+        self.expected = expected
+
+
+class IllegalStatementError (SemanticError, StatementException):
+    def __init__(self, node: Component, context: str):
+        self.node = node
+        self.message = "illegal statement " + self.repr_node(node) + " in context " + context
