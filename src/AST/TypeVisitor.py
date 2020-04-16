@@ -53,6 +53,11 @@ class TypeVisitor (Visitor):
         except StatementException:
             pass
 
+    def visitScope(self, node):
+        self.visitChildren(node)
+        node.set_type = None
+        return None
+
     def visitDoc(self, node: Doc):
         for child_nr in range(node.get_child_count()):
             self.visit_outside_statement(node.get_child(child_nr))

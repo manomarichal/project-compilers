@@ -69,6 +69,18 @@ class UntypedSemanticVisitor(Visitor):
         self.visit(node.get_child(1))
         self.visit(node.get_child(0))
 
+    def visitFunctionDefinition(self, node: AST.FunctionDefinition):
+        for argNr in range(1, node.get_child_count()):
+            self.visitFunctionArg(node.get_child(argNr))
+        self.visit(node.get_child(0))
+
+    def visitFunctionArg(self, node: AST.Decl):
+        entry = node.get_scope().symbol_find(node.get_child(0).get_name())
+        if entry in self.defined_st_entries:
+            self.error(RedeclaredError(node.get_child(0)))
+        else:
+            self.defined_st_entries.add(entry)
+
 
 class TypedSemanticsVisitor(Visitor):
     warnings: list
