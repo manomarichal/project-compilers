@@ -164,19 +164,27 @@ class LLVMVisitor(Visitor):
         self._lcounter += 1
         return 'l' + str(self._lcounter)
 
-    def get_reg(self, ast: AST.Component):
+    def get_register_of(self, ast: AST.Component):
+        if isinstance(ast, AST.Index):
+            reg = self.get_rname()
+            self.gen_getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
+            return reg
+        return ast.get_register()
+
+    def get_value_of(self, ast: AST.Component):
         # variables have to be loaded in before being used
         if isinstance(ast, AST.Variable) or isinstance(ast, AST.Indir):
             reg = self.get_rname()
             self.gen_load(reg, ast.get_register(), to_llvm_type(ast))
             return reg
         elif isinstance(ast, AST.Index):
-            reg = self.get_rname()
-            self.gen_getelementptr(reg, to_llvm_type(ast), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
-            return reg
+            reg1 = self.get_rname()
+            reg2 = self.get_rname()
+            self.gen_getelemntptr_array(reg1, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
+            self.gen_load(reg2, reg1, to_llvm_type(ast))
+            return reg2
         else:
             return ast.get_register()
-    #   %4 = getelementptr inbounds [4 x i32], [4 x i32]* %1, i64 0, i64 3
 
     # GENERATOR FUNCTIONS
     def print_label(self, label, label_comment):
@@ -274,7 +282,7 @@ class LLVMVisitor(Visitor):
         string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr
         self.print_to_file(string, comment)
 
-    def gen_elemntptr_array(self, reg, type_of, base_ptr, base = None, offset=None):
+    def gen_getelemntptr_array(self, reg, type_of, base_ptr, base = None, offset=None):
         comment = 'get value stored at ' + base_ptr + ' at base ' + str(base) + ' + offset' + str(offset)
         string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr + ', i64 ' + str(base) + ', i64 ' + str(offset)
         self.print_to_file(string, comment)
@@ -317,7 +325,7 @@ class LLVMVisitor(Visitor):
         for a in range(len(args)):
             if a != 0:
                 string += ', '
-            string += to_llvm_type(args[a]) + ' ' + str(self.get_reg(args[a]))
+            string += to_llvm_type(args[a]) + ' ' + str(self.get_value_of(args[a]))
         string += ')'
         self.print_to_file(string, comment)
 
@@ -348,11 +356,11 @@ class LLVMVisitor(Visitor):
         else:
             var: AST.Variable = ast.get_child(0)
 
-        self.gen_store(self.get_reg(ast.get_child(1)), var.get_register(), to_llvm_type(var))
+        self.gen_store(self.get_value_of(ast.get_child(1)), self.get_register_of(var), to_llvm_type(var))
 
     def visitPrintf(self, ast: AST.Printf):  #
         self.visitChildren(ast)
-        reg = self.get_reg(ast.get_child(0))
+        reg = self.get_value_of(ast.get_child(0))
 
         if to_llvm_type(ast.get_child(0)) != 'float':
             self.gen_int_printf(reg, to_llvm_type(ast.get_child(0)))
@@ -367,14 +375,14 @@ class LLVMVisitor(Visitor):
         reg = self.get_rname()                                              # reserve register
         ast.set_register(reg)
         var_reg = self.get_rname()
-        self.gen_load(var_reg, self.get_reg(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
+        self.gen_load(var_reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
         self.gen_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())  # increase by 1
         self.gen_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
 
     def visitIncrPost(self, ast: AST.IncrPost):
         self.visitChildren(ast)
         reg = self.get_rname()
-        self.gen_load(reg, self.get_reg(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
+        self.gen_load(reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
         ast.set_register(reg)
         var_reg = self.get_rname()
         self.gen_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())
@@ -385,14 +393,14 @@ class LLVMVisitor(Visitor):
         reg = self.get_rname()
         ast.set_register(reg)
         var_reg = self.get_rname()
-        self.gen_load(var_reg, self.get_reg(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
+        self.gen_load(var_reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
         self.gen_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
         self.gen_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
 
     def visitDecrPost(self, ast: AST.DecrPost):
         self.visitChildren(ast)
         reg = self.get_rname()
-        self.gen_load(reg, self.get_reg(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
+        self.gen_load(reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
         ast.set_register(reg)
         var_reg = self.get_rname()
         self.gen_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
@@ -400,21 +408,21 @@ class LLVMVisitor(Visitor):
 
     def visitNeg(self, ast: AST.Neg):
         self.visitChildren(ast)
-        var_reg = self.get_reg(ast.get_child(0))
+        var_reg = self.get_value_of(ast.get_child(0))
         reg = self.get_rname()
         ast.set_register(reg)
         self.gen_math_instr(reg, var_reg, -1, to_llvm_type(ast.get_child(0)), AST.Prod())
 
     def visitPos(self, ast: AST.Neg):
         self.visitChildren(ast)
-        reg = self.get_reg(ast.get_child(0))
+        reg = self.get_value_of(ast.get_child(0))
         ast.set_register(reg)
 
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
         reg = self.get_rname()
         ast.set_register(reg)
-        var_reg = self.get_reg(ast.get_child(0))
+        var_reg = self.get_value_of(ast.get_child(0))
 
         if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
             self.gen_trunc(reg, 'i32', 'i1', var_reg)
@@ -446,7 +454,7 @@ class LLVMVisitor(Visitor):
         self.visitChildren(ast)
         reg = self.get_rname()
         ast.set_register(reg)
-        lhs, rhs = self.get_reg(ast.get_child(0)), self.get_reg(ast.get_child(1))
+        lhs, rhs = self.get_value_of(ast.get_child(0)), self.get_value_of(ast.get_child(1))
 
         if isinstance(ast, AST.LogicOp):
             self.gen_logic_instr(reg, lhs, rhs, to_llvm_type(ast.get_child(0)), ast)
@@ -475,9 +483,9 @@ class LLVMVisitor(Visitor):
 
         self.visit(ast.get_child(0))
         if ast.get_child_count() == 3:
-            self.gen_branch_con(label_true, label_false, self.get_reg(ast.get_child(0)))
+            self.gen_branch_con(label_true, label_false, self.get_value_of(ast.get_child(0)))
         else:
-            self.gen_branch_con(label_true, label_end, self.get_reg(ast.get_child(0)))
+            self.gen_branch_con(label_true, label_end, self.get_value_of(ast.get_child(0)))
 
         self.print_label(label_true, 'if ' + ast.get_child(0).get_register() + ' is true')
         self.visit(ast.get_child(1))
@@ -502,7 +510,7 @@ class LLVMVisitor(Visitor):
 
         self.print_label(loop_check, 'while header')
         self.visit(ast.get_child(0))
-        self.gen_branch_con(loop_body, loop_end, self.get_reg(ast.get_child(0)))
+        self.gen_branch_con(loop_body, loop_end, self.get_value_of(ast.get_child(0)))
 
         self.print_label(loop_body, 'while body')
         self.visit(ast.get_child(1))
@@ -521,7 +529,7 @@ class LLVMVisitor(Visitor):
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
         self.visitChildren(ast)
-        self.gen_return_statement(to_llvm_type(ast), self.get_reg(ast.get_child(0)))
+        self.gen_return_statement(to_llvm_type(ast), self.get_value_of(ast.get_child(0)))
 
     def visitFunctionCall(self, ast:AST.FunctionCall):
         self.visitChildren(ast)
@@ -542,7 +550,7 @@ class LLVMVisitor(Visitor):
 
         self.print_label(loop_check, 'for header')
         self.visit(ast.get_child(1))
-        self.gen_branch_con(loop_update, loop_end, self.get_reg(ast.get_child(1)))
+        self.gen_branch_con(loop_update, loop_end, self.get_value_of(ast.get_child(1)))
 
         self.print_label(loop_update, 'for update')
         self.visit(ast.get_child(2))

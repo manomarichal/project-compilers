@@ -33,7 +33,6 @@ from src.AST.DotVisitor import label_big as label_style
 def ast_pass(visitor: ASTVisitor, tree: Component):
     return visitor, visitor.visit(tree)
 
-
 def ast_error_pass(visitor: ASTVisitor, tree: Component):
     try:
         visitor.visit(tree)
