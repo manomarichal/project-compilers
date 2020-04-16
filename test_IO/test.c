@@ -1,12 +1,8 @@
+
 int main() {
-    int x = 1;
-    while (x < 10) {
-        int result = x * 2;
-        if ( x > 5) {
-            result = result * x;
-            }
-        printf(result); //show the resultx = x + 1;
-        x++;
-    }
-    return 0;
+    int c = 1;
+    int *p = &c;
+    int **p2 = &p;
+    **p2 = 10;
+    return c;
 }
