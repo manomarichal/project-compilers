@@ -77,7 +77,7 @@ def main(argv):
     ast_error_pass(TypeVisitor(), ast)
     ast_visualise(ast, "test_IO/typed")
 
-    # ast_error_pass(TypedSemanticsVisitor(), ast)
+    ast_error_pass(TypedSemanticsVisitor(), ast)
 
     if len(argv) == 3:
         if argv[2] == '-cf':

@@ -99,7 +99,7 @@ class ArgCountMismatchError (SemanticError, StatementException):
     def __init__(self, node: FunctionCall, expected, actual):
         self.node = node
         self.message = "attempting to call function \"" + node.get_name() + "\" with " + str(actual) + " arguments, " \
-            + str(expected) + " expected"
+                       + str(expected) + " expected"
 
         self.expected = expected
 
@@ -108,3 +108,10 @@ class IllegalStatementError (SemanticError, StatementException):
     def __init__(self, node: Component, context: str):
         self.node = node
         self.message = "illegal statement " + self.repr_node(node) + " in context " + context
+
+
+class MissingReturnError (SemanticError, StatementException):
+    def __init__(self, node: FunctionDefinition):
+        self.node = node
+        self.message = "function \"" + node.get_name() + "\" missing a return statement (with non-void type " \
+                       + node.get_type().__repr__() + ")"

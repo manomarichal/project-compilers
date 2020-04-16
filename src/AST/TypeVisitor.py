@@ -48,8 +48,8 @@ class TypeVisitor (Visitor):
 
     # TODO: warn / error amibiguous conversions
     def assume_bi_conversion(self, node: Composite, child_nr_a: int, child_nr_b: int):
-        a_type: TypeClass = node.get_child(child_nr_a)
-        b_type: TypeClass = node.get_child(child_nr_b)
+        a_type: TypeClass = node.get_child(child_nr_a).get_type()
+        b_type: TypeClass = node.get_child(child_nr_b).get_type()
         if a_type == b_type:
             return a_type
         elif b_type.promotes_to(a_type):
@@ -67,7 +67,17 @@ class TypeVisitor (Visitor):
         else:
             self.no_conversion_error(node, a_type, b_type, True)
 
-    def visit(self, node) -> TypeClass:
+    def visit_outside_statement(self, node):
+        try:
+            return self.visit(node)
+        except StatementException:
+            pass
+
+    def visit_children_outside_statement(self, node):
+        for child_nr in range(node.get_child_count()):
+            self.visit_outside_statement(node.get_child(child_nr))
+
+    def visit(self, node: Component) -> TypeClass:
         return Visitor.visit(self, node)
 
     def visitComposite(self, node: Composite):
@@ -81,20 +91,11 @@ class TypeVisitor (Visitor):
             return result[0]
         return result
 
-    def visit_outside_statement(self, node):
-        try:
-            return self.visit(node)
-        except StatementException:
-            pass
-
     def visitScope(self, node):
-        self.visitChildren(node)
-        node.set_type = None
-        return None
+        self.visit_children_outside_statement(node)
 
     def visitDoc(self, node: Doc):
-        for child_nr in range(node.get_child_count()):
-            self.visit_outside_statement(node.get_child(child_nr))
+        self.visit_children_outside_statement(node)
 
     def visitLeaf(self, node: Leaf):
         own_type = node.get_type()
@@ -102,85 +103,29 @@ class TypeVisitor (Visitor):
         return own_type
 
     def visitMathOp(self, node: MathOp):
-        a_type = self.visit(node.get_child(0))
-        b_type = self.visit(node.get_child(1))
+        self.visitChildren(node)
         own_type = self.assume_bi_conversion(node, 0, 1)
-
-        if a_type == b_type:
-            own_type = a_type
-        elif b_type.promotes_to(a_type):
-            own_type = a_type
-            self.insert_conversion(node, 1, own_type)
-        elif a_type.promotes_to(b_type):
-            own_type = b_type
-            self.insert_conversion(node, 0, own_type)
-        elif b_type.converts_to(a_type) and not a_type.converts_to(b_type):
-            own_type = a_type
-            self.insert_conversion(node, 1, own_type, True)
-        elif a_type.converts_to(b_type) and not b_type.converts_to(a_type):
-            own_type = b_type
-            self.insert_conversion(node, 0, own_type, True)
-        else:
-            self.no_conversion_error(node, a_type, b_type, True)
-
         node.set_type(own_type)
         return own_type
 
     def visitAssignOp(self, node):
-        a_type = self.visit(node.get_child(0))
-        b_type = self.visit(node.get_child(1))
-        own_type = None
-        if a_type == b_type:
-            own_type = a_type
-        elif b_type.promotes_to(a_type):
-            own_type = a_type
-            self.insert_conversion(node, 1, own_type, False)
-        elif b_type.converts_to(a_type):
-            own_type = a_type
-            self.insert_conversion(node, 1, own_type, True)
-        else:
-            self.no_conversion_error(node, a_type, b_type, True)
+        child_types = self.visitChildren(node)
+        own_type = self.assume_mono_conversion(node, 1, child_types[0])
         node.set_type(own_type)
         return own_type
 
     def visitLogicOp(self, node: LogicOp):
-        child_types = self.visitChildren(node)
+        self.visitChildren(node)
         bool_type = TypeClass([TypeComponents.BOOL])
-
-        index = -1
-        for child_type in child_types:
-            index += 1
-            if child_type == bool_type:
-                continue
-            if child_type.promotes_to(bool_type):
-                self.insert_conversion(node, index, bool_type)
-                continue
-            if child_type.converts_to(bool_type):
-                self.insert_conversion(node, index, bool_type, True)
-                continue
-            self.no_conversion_error(node, child_type, bool_type, False)
-
+        for child_nr in range(node.get_child_count()):
+            self.assume_mono_conversion(node, child_nr, bool_type)
         node.set_type(bool_type)
         return bool_type
 
     def visitCompOp(self, node: CompOp):
-        a_type = self.visit(node.get_child(0))
-        b_type = self.visit(node.get_child(1))
+        self.visitChildren(node)
         bool_type = TypeClass([TypeComponents.BOOL])
-
-        if a_type == b_type:
-            pass
-        elif b_type.promotes_to(a_type):
-            self.insert_conversion(node, 1, a_type)
-        elif a_type.promotes_to(b_type):
-            self.insert_conversion(node, 0, b_type)
-        elif b_type.converts_to(a_type) and not a_type.converts_to(b_type):
-            self.insert_conversion(node, 1, a_type, True)
-        elif a_type.converts_to(b_type) and not b_type.converts_to(a_type):
-            self.insert_conversion(node, 0, a_type, True)
-        else:
-            self.no_conversion_error(node, a_type, b_type, True)
-
+        self.assume_bi_conversion(node, 0, 1)
         node.set_type(bool_type)
         return bool_type
 
@@ -214,14 +159,14 @@ class TypeVisitor (Visitor):
         return own_type
 
     def visitIfStatement(self, node: IfStatement):
-        self.visitChildren(node)
+        self.visit_children_outside_statement(node)
         bool_type = TypeClass([TypeComponents.BOOL])
         self.assume_mono_conversion(node, 0, bool_type)
         node.set_type(None)
         return None
 
     def visitFunctionDefinition(self, node: FunctionDefinition):
-        self.visitChildren(node)
+        self.visit_children_outside_statement(node)
         own_type = node.get_type()
         node.set_type(own_type)
         return own_type
@@ -241,3 +186,5 @@ class TypeVisitor (Visitor):
         self.visitChildren(node)
         function_type = node.get_enclosing(FunctionDefinition).get_type()
         self.assume_mono_conversion(node, 0, function_type)
+        node.set_type(function_type)
+        return function_type
