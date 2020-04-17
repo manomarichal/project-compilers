@@ -161,14 +161,11 @@ class Visitor (GrammarVisitor):
                     my_ast = AST.DecrPost()
                 elif ctx.INCR():
                     my_ast = AST.IncrPost()
+                elif ctx.arrayIndex():
+                    my_ast = AST.Index()
+                    my_ast.set_index(self.visit(ctx.arrayIndex()))
                 my_ast.set_positional_child(0, self.visit(ctx.getChild(0)))
                 my_ast.set_source_loc(source_from_ctx(ctx))
-                return my_ast
-            elif ctx.arrayIndex():
-                my_ast = AST.Index()
-                index = self.visit(ctx.arrayIndex())
-                my_ast.add_child(self.visit(ctx.getChild(0)))
-                my_ast.set_index(index)
                 return my_ast
             elif ctx.INCR():
                 my_ast = AST.IncrPre()
