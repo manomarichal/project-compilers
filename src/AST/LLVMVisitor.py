@@ -124,7 +124,9 @@ def to_llvm_type(node) -> str:
     node_type = node.get_type().__repr__()
 
     base = ''
-    if node_type[0] == '[':
+    if node_type == 'void':
+        base = 'void'
+    elif node_type[0] == '[':
         base += to_array_type(node_type)
     else:
         base += to_base_type(node_type)
@@ -224,7 +226,7 @@ class LLVMVisitor(Visitor):
         self.gen_binary_instruction(res, lhs, rhs, type_of, op_str, op_com)
 
     def gen_int_printf(self, reg, type_of):
-        comment = 'print ' + reg
+        comment = 'print ' + str(reg)
         string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @istr,i32 0, i32 0)," + type_of + " " + str(reg) + ")"
         self.print_to_file(string, comment)
 
@@ -367,39 +369,33 @@ class LLVMVisitor(Visitor):
 
     def visitIncrPre(self, ast: AST.IncrPre):
         self.visitChildren(ast)
-        reg = self.get_rname()                                              # reserve register
+        reg = self.get_rname()
         ast.set_register(reg)
-        var_reg = self.get_rname()
-        self.gen_load(var_reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
-        self.gen_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())  # increase by 1
-        self.gen_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
+        self.gen_math_instr(reg, self.get_value_of(ast.get_child(0)), 1, to_llvm_type(ast), AST.Sum())
+        self.gen_store(reg,self.get_register_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
 
     def visitIncrPost(self, ast: AST.IncrPost):
         self.visitChildren(ast)
-        reg = self.get_rname()
-        self.gen_load(reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
+        reg = self.get_value_of(ast.get_child(0))
+        reg2 = self.get_rname()
         ast.set_register(reg)
-        var_reg = self.get_rname()
-        self.gen_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())
-        self.gen_store(var_reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
+        self.gen_math_instr(reg2, reg , 1, to_llvm_type(ast), AST.Sum())
+        self.gen_store(reg2, self.get_register_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))                        # store variable
 
     def visitDecrPre(self, ast: AST.DecrPre):
         self.visitChildren(ast)
         reg = self.get_rname()
         ast.set_register(reg)
-        var_reg = self.get_rname()
-        self.gen_load(var_reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
-        self.gen_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
-        self.gen_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
+        self.gen_math_instr(reg, self.get_value_of(ast.get_child(0)), 1, to_llvm_type(ast), AST.Sub())
+        self.gen_store(reg, self.get_register_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))                        # store variable
 
     def visitDecrPost(self, ast: AST.DecrPost):
         self.visitChildren(ast)
-        reg = self.get_rname()
-        self.gen_load(reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
+        reg = self.get_value_of(ast.get_child(0))
+        reg2 = self.get_rname()
         ast.set_register(reg)
-        var_reg = self.get_rname()
-        self.gen_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
-        self.gen_store(var_reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
+        self.gen_math_instr(reg2, reg, 1, to_llvm_type(ast), AST.Sub())
+        self.gen_store(reg2, self.get_register_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))                         # store variable
 
     def visitNeg(self, ast: AST.Neg):
         self.visitChildren(ast)
