@@ -521,7 +521,7 @@ class LLVMVisitor(Visitor):
     def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
         args = []
         for a in range(1, ast.get_child_count()):
-            args.append(ast.get_child(a))
+            args.append(ast.get_child(a).get_child(0))
         self.cur_func = ast.get_name() # for array definitions
         self.gen_function_def(to_llvm_type(ast), ast.get_name(), args)
         self.visitChildren(ast)

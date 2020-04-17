@@ -31,7 +31,6 @@ int printArray(int arr[10])
     return 0;
 }
 
-// Driver program to test above functions
 int main()
 {
     int arr[10];

@@ -161,11 +161,14 @@ class Visitor (GrammarVisitor):
                     my_ast = AST.DecrPost()
                 elif ctx.INCR():
                     my_ast = AST.IncrPost()
-                elif ctx.arrayIndex():
-                    my_ast = AST.Index()
-                    my_ast.set_index(self.visit(ctx.arrayIndex()))
                 my_ast.set_positional_child(0, self.visit(ctx.getChild(0)))
                 my_ast.set_source_loc(source_from_ctx(ctx))
+                return my_ast
+            elif ctx.arrayIndex():
+                my_ast = AST.Index()
+                index = self.visit(ctx.arrayIndex())
+                my_ast.add_child(self.visit(ctx.getChild(0)))
+                my_ast.set_index(index)
                 return my_ast
             elif ctx.INCR():
                 my_ast = AST.IncrPre()
@@ -367,7 +370,7 @@ class Visitor (GrammarVisitor):
         self._current_sym_table[decl_info_list[0][0]] = my_st_entry
         return my_ast
 
-    def visitReturnStatement(self, ctx:GrammarParser.ReturnStatementContext):
+    def visitReturnStatement(self, ctx: GrammarParser.ReturnStatementContext):
         my_ast = AST.ReturnStatement()
         my_ast.set_source_loc(source_from_ctx(ctx))
         my_ast.add_child(self.visit(ctx.getChild(1)))
