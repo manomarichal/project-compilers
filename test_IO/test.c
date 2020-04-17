@@ -1,20 +1,3 @@
-int main()
-{
-    for (int b=0;b<10;b = b +1)
-    {
-        if (b > 5)
-        {
-            continue;
-        }
-        printf(b);
-    }
-    return 0;
-}
-
-
-
-
-
 //int swap(int *xp, int *yp)
 //{
 //    int temp = *xp;

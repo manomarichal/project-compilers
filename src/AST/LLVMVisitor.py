@@ -544,23 +544,24 @@ class LLVMVisitor(Visitor):
         loop_body = self.get_lname()
         loop_update = self.get_lname()
         loop_end = self.get_lname()
-        self.begin_label_stack.append(loop_check)
+
+        self.begin_label_stack.append(loop_update)
         self.exit_label_stack.append(loop_end)
 
         self.visit(ast.get_child(0))
         self.gen_branch_uncon(loop_check)
 
-        self.print_label(loop_check, 'for header')
+        self.print_label(loop_check, 'for check')
         self.visit(ast.get_child(1))
-        self.gen_branch_con(loop_update, loop_end, self.get_value_of(ast.get_child(1)))
+        self.gen_branch_con(loop_body, loop_end, self.get_value_of(ast.get_child(1)))
 
         self.print_label(loop_update, 'for update')
         self.visit(ast.get_child(2))
-        self.gen_branch_uncon(loop_body)
+        self.gen_branch_uncon(loop_check)
 
         self.print_label(loop_body, 'for body')
         self.visit(ast.get_child(3))
-        self.gen_branch_uncon(loop_check)
+        self.gen_branch_uncon(loop_update)
 
         self.begin_label_stack.pop()
         self.exit_label_stack.pop()
