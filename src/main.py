@@ -26,9 +26,9 @@ from src.AST.DotVisitor import label_big as label_style
 
 # TODO implicit conversions bij return statements
 # TODO variables out of scope deftige error geve
-# TODO {1, var1, var2} hale
 # TODO int * * * a wordt als func def gezien;
 # TODO ++ -- werke niet
+# TODO void
 
 def ast_pass(visitor: ASTVisitor, tree: Component):
     return visitor, visitor.visit(tree)
@@ -88,7 +88,6 @@ def main(argv):
     llvm = LLVMVisitor(tfile)
     llvm.visit(ast)
     llvm.close()
-
 
 if __name__ == '__main__':
     main(sys.argv)
