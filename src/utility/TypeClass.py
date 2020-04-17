@@ -27,19 +27,33 @@ class TypeComponents:
 class TypeClass:
     # [0] = primitive type
     # [1:] = type modifier
-    _type_stack = []
+    _type_stack: list
 
     def __init__(self, type_stack):
         self._type_stack = type_stack
         self._array_lengths = []
 
-    def pushType(self, new_type):
+    def pushType(self, new_type, info=None):
         self._type_stack.append(new_type)
+        if new_type == TypeComponents.ARR:
+            self._array_lengths.append(info)
 
     def popType(self, ignore_const: bool = False):
         if ignore_const and self.get_top_type() == TypeComponents.CONST:
             self._type_stack.pop()
         self._type_stack.pop()
+
+    def get_array_len(self, index=None):
+        if index is None:
+            return self._array_lengths[len(self._array_lengths)-1]
+        return self._array_lengths[index]
+
+    def set_array_len(self, length, index=None):
+        if index is None:
+            self._array_lengths[len(self._array_lengths) - 1] = length
+            return
+        self._array_lengths[index] = length
+        return
 
     def __eq__(self, other):
         return other.getType() == self.getType()
@@ -100,10 +114,14 @@ class TypeClass:
 
     def __repr__(self):
         result = ""
+        array_nr = 0
         for component in self.getType():
             if component == TypeComponents.ARR:
-                result = result[0:len(result)-1]
-                result = "[" + result + "] "
+                result = "[" + result[0:len(result)-1]
+                if self._array_lengths[array_nr] is not None:
+                    result += " x" + str(self._array_lengths[array_nr])
+                result += "] "
+                array_nr += 1
                 continue
             result += TypeComponents.translations[component] + " "
         return result[0:len(result)-1]

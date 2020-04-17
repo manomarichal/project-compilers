@@ -4,8 +4,8 @@ from termcolor import colored, cprint
 from src.utility.TypeClass import TypeClass
 from io import StringIO
 
-def get_math_instruction(op:AST.MathOp, floating: bool):
 
+def get_math_instruction(op: AST.MathOp, floating: bool):
     if floating:
         op_str = ' f'
     else:
@@ -23,18 +23,22 @@ def get_math_instruction(op:AST.MathOp, floating: bool):
         op_str += 'mul '
         op_com = ' * '
     elif isinstance(op, AST.Div):
-        if op_str == ' f': op_str = ' fdiv '
-        else: op_str += 'sdiv '
+        if op_str == ' f':
+            op_str = ' fdiv '
+        else:
+            op_str += 'sdiv '
         op_com = ' / '
     elif isinstance(op, AST.Mod):
-        if op_str == ' f': op_str = ' frem '
-        else: op_str += 'srem '
+        if op_str == ' f':
+            op_str = ' frem '
+        else:
+            op_str += 'srem '
         op_com = ' % '
 
     return op_str, op_com
 
-def get_comp_instruction(op:AST.CompOp, floating: bool):
 
+def get_comp_instruction(op: AST.CompOp, floating: bool):
     if floating:
         op_str = ' fcmp '
     else:
@@ -81,8 +85,8 @@ def get_comp_instruction(op:AST.CompOp, floating: bool):
 
     return op_str, op_com
 
-def get_logic_instruction(op:AST.LogicOp):
 
+def get_logic_instruction(op: AST.LogicOp):
     op_com = 'error in get_logic_instruction'
     op_str = ''
 
@@ -95,9 +99,10 @@ def get_logic_instruction(op:AST.LogicOp):
 
     return op_str, op_com
 
+
 def check_for_pointers(node_type, base):
     ptr_depth = 0
-    for a in range(len(node_type)-1, -1, -1):
+    for a in range(len(node_type) - 1, -1, -1):
         if node_type[a] == '*':
             ptr_depth += 1
 
@@ -105,10 +110,12 @@ def check_for_pointers(node_type, base):
         base += '*'
     return base
 
+
 def to_array_type(node_type):
-    base = '[' + node_type[len(node_type)-1] + ' x '
+    base = '[' + node_type[len(node_type) - 1] + ' x '
     base += to_base_type(node_type[1:]) + ']'
     return base
+
 
 def to_base_type(node_type):
     if node_type[0:3] == 'int':
@@ -119,6 +126,7 @@ def to_base_type(node_type):
         return 'i8'
     elif node_type[0:4] == 'bool':
         return 'i1'
+
 
 def to_llvm_type(node) -> str:
     node_type = node.get_type().__repr__()
@@ -132,10 +140,11 @@ def to_llvm_type(node) -> str:
     llvm_type = check_for_pointers(node_type, base)
     return llvm_type
 
+
 class LLVMVisitor(Visitor):
     file = None
-    _rcounter = 0 # counter to keep track of registers used
-    _lcounter = 0 # counter to keep track of labels used
+    _rcounter = 0  # counter to keep track of registers used
+    _lcounter = 0  # counter to keep track of labels used
     cur_func = ''
 
     def __init__(self, file):
@@ -147,7 +156,7 @@ class LLVMVisitor(Visitor):
         self.file.write(self.header_buf.getvalue() + '\n')
 
     # HELPER FUNCTIONS
-    def print_to_file(self, string, comment=None, ws_str ='\n\t\t', ws_comment='\n\t'):
+    def print_to_file(self, string, comment=None, ws_str='\n\t\t', ws_comment='\n\t'):
         self.file.write(ws_comment + '; ' + comment)
         self.file.write(ws_str + string)
 
@@ -167,7 +176,8 @@ class LLVMVisitor(Visitor):
     def get_register_of(self, ast: AST.Component):
         if isinstance(ast, AST.Index):
             reg = self.get_rname()
-            self.gen_getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
+            self.gen_getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0,
+                                        ast.get_child(1).get_value())
             return reg
         return ast.get_register()
 
@@ -180,7 +190,8 @@ class LLVMVisitor(Visitor):
         elif isinstance(ast, AST.Index):
             reg1 = self.get_rname()
             reg2 = self.get_rname()
-            self.gen_getelemntptr_array(reg1, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
+            self.gen_getelemntptr_array(reg1, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0,
+                                        ast.get_child(1).get_value())
             self.gen_load(reg2, reg1, to_llvm_type(ast))
             return reg2
         else:
@@ -226,12 +237,14 @@ class LLVMVisitor(Visitor):
 
     def gen_int_printf(self, reg, type_of):
         comment = 'print ' + reg
-        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @istr,i32 0, i32 0)," + type_of + " " + str(reg) + ")"
+        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @istr,i32 0, i32 0)," + type_of + " " + str(
+            reg) + ")"
         self.print_to_file(string, comment)
 
     def gen_float_printf(self, reg):
         comment = 'print ' + reg
-        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @fstr,i32 0, i32 0), double " + str(reg) + ")"
+        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @fstr,i32 0, i32 0), double " + str(
+            reg) + ")"
         self.print_to_file(string, comment)
 
     # %X = trunc i32 235 to i1 (%X = 1)
@@ -282,17 +295,18 @@ class LLVMVisitor(Visitor):
         string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr
         self.print_to_file(string, comment)
 
-    def gen_getelemntptr_array(self, reg, type_of, base_ptr, base = None, offset=None):
+    def gen_getelemntptr_array(self, reg, type_of, base_ptr, base=None, offset=None):
         comment = 'get value stored at ' + base_ptr + ' at base ' + str(base) + ' + offset' + str(offset)
-        string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr + ', i64 ' + str(base) + ', i64 ' + str(offset)
+        string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr + ', i64 ' + str(
+            base) + ', i64 ' + str(offset)
         self.print_to_file(string, comment)
 
-    def gen_branch_uncon(self, label1): # unconditional branch
+    def gen_branch_uncon(self, label1):  # unconditional branch
         comment = 'branch to ' + label1
         string = 'br label %' + label1
         self.print_to_file(string, comment)
 
-    def gen_branch_con(self, label1, label2, reg): # conditional branch
+    def gen_branch_con(self, label1, label2, reg):  # conditional branch
         comment = 'branch to ' + label1 + ' if ' + reg + ' is true, else branch to ' + label2
         string = 'br i1 ' + reg + ', label %' + label1 + ', label %' + label2
         self.print_to_file(string, comment)
@@ -306,7 +320,7 @@ class LLVMVisitor(Visitor):
                 string += ', '
             string += to_llvm_type(args[a])
         string += ') {'
-        self.print_to_file(string, comment,'\n', '\n\n')
+        self.print_to_file(string, comment, '\n', '\n\n')
 
         for a in range(len(args)):
             # allocate a register for the function argument
@@ -321,7 +335,7 @@ class LLVMVisitor(Visitor):
 
     def gen_function_call(self, reg, rtype, name, args):
         comment = 'call function ' + name + ' in ' + reg
-        string = reg + ' = call '+ rtype + ' @' + name + '('
+        string = reg + ' = call ' + rtype + ' @' + name + '('
         for a in range(len(args)):
             if a != 0:
                 string += ', '
@@ -372,12 +386,12 @@ class LLVMVisitor(Visitor):
 
     def visitIncrPre(self, ast: AST.IncrPre):
         self.visitChildren(ast)
-        reg = self.get_rname()                                              # reserve register
+        reg = self.get_rname()  # reserve register
         ast.set_register(reg)
         var_reg = self.get_rname()
         self.gen_load(var_reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
         self.gen_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())  # increase by 1
-        self.gen_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
+        self.gen_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))  # store variable
 
     def visitIncrPost(self, ast: AST.IncrPost):
         self.visitChildren(ast)
@@ -386,7 +400,7 @@ class LLVMVisitor(Visitor):
         ast.set_register(reg)
         var_reg = self.get_rname()
         self.gen_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sum())
-        self.gen_store(var_reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
+        self.gen_store(var_reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))  # store variable
 
     def visitDecrPre(self, ast: AST.DecrPre):
         self.visitChildren(ast)
@@ -395,7 +409,7 @@ class LLVMVisitor(Visitor):
         var_reg = self.get_rname()
         self.gen_load(var_reg, self.get_value_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
         self.gen_math_instr(reg, var_reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
-        self.gen_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
+        self.gen_store(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))  # store variable
 
     def visitDecrPost(self, ast: AST.DecrPost):
         self.visitChildren(ast)
@@ -404,7 +418,7 @@ class LLVMVisitor(Visitor):
         ast.set_register(reg)
         var_reg = self.get_rname()
         self.gen_math_instr(var_reg, reg, 1, to_llvm_type(ast.get_child(0)), AST.Sub())
-        self.gen_store(var_reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))                          # store variable
+        self.gen_store(var_reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))  # store variable
 
     def visitNeg(self, ast: AST.Neg):
         self.visitChildren(ast)
@@ -448,7 +462,6 @@ class LLVMVisitor(Visitor):
             self.gen_trunc(reg, 'i8', 'i1', var_reg)
         elif ast.get_conversion_type() == AST.conv_type.CHAR_TO_INT:
             self.gen_zext(reg, 'i8', 'i32', var_reg)
-
 
     def visitBinaryOp(self, ast: AST.BinaryOp):
         self.visitChildren(ast)
@@ -522,22 +535,22 @@ class LLVMVisitor(Visitor):
         args = []
         for a in range(1, ast.get_child_count()):
             args.append(ast.get_child(a).get_child(0))
-        self.cur_func = ast.get_name() # for array definitions
+        self.cur_func = ast.get_name()  # for array definitions
         self.gen_function_def(to_llvm_type(ast), ast.get_name(), args)
         self.visitChildren(ast)
         self.file.write('\n}')
 
-    def visitReturnStatement(self, ast:AST.ReturnStatement):
+    def visitReturnStatement(self, ast: AST.ReturnStatement):
         self.visitChildren(ast)
         self.gen_return_statement(to_llvm_type(ast), self.get_value_of(ast.get_child(0)))
 
-    def visitFunctionCall(self, ast:AST.FunctionCall):
+    def visitFunctionCall(self, ast: AST.FunctionCall):
         self.visitChildren(ast)
         ast.set_register(self.get_rname())
         args = []
         for a in range(ast.get_child_count()):
             args.append(ast.get_child(a))
-        self.gen_function_call(ast.get_register(), to_llvm_type(ast), ast.get_name() ,args)
+        self.gen_function_call(ast.get_register(), to_llvm_type(ast), ast.get_name(), args)
 
     def visitForStatement(self, ast: AST.ForStatement):
         loop_check = self.get_lname()

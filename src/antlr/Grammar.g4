@@ -58,7 +58,7 @@ block: statement+;
 
 typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE | VOID_TYPE) (CONST? STAR)* CONST?;
 
-arrayIndex: LEFT_S_BRACE (expr| INT)  RIGHT_S_BRACE;
+arrayIndex: LEFT_S_BRACE (literal | expr)  RIGHT_S_BRACE; // literal needs to be seperate & first because of hackey array-length
 
 arrayLit: LEFT_C_BRACE literal (COMMA literal)* RIGHT_C_BRACE;
 

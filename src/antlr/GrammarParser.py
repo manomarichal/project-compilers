@@ -58,8 +58,8 @@ def serializedATN():
         buf.write("\2GN\t\2\2\2HJ\7\n\2\2IH\3\2\2\2IJ\3\2\2\2JK\3\2\2\2K")
         buf.write("M\7\32\2\2LI\3\2\2\2MP\3\2\2\2NL\3\2\2\2NO\3\2\2\2OR\3")
         buf.write("\2\2\2PN\3\2\2\2QS\7\n\2\2RQ\3\2\2\2RS\3\2\2\2S\7\3\2")
-        buf.write("\2\2TW\7!\2\2UX\5\66\34\2VX\7\4\2\2WU\3\2\2\2WV\3\2\2")
-        buf.write("\2XY\3\2\2\2YZ\7\"\2\2Z\t\3\2\2\2[\\\7\37\2\2\\a\5\64")
+        buf.write("\2\2TW\7!\2\2UX\5\64\33\2VX\5\66\34\2WU\3\2\2\2WV\3\2")
+        buf.write("\2\2XY\3\2\2\2YZ\7\"\2\2Z\t\3\2\2\2[\\\7\37\2\2\\a\5\64")
         buf.write("\33\2]^\7\25\2\2^`\5\64\33\2_]\3\2\2\2`c\3\2\2\2a_\3\2")
         buf.write("\2\2ab\3\2\2\2bd\3\2\2\2ca\3\2\2\2de\7 \2\2e\13\3\2\2")
         buf.write("\2fg\7\61\2\2g\r\3\2\2\2hq\5\22\n\2il\5,\27\2jl\5\20\t")
@@ -498,12 +498,13 @@ class GrammarParser ( Parser ):
         def RIGHT_S_BRACE(self):
             return self.getToken(GrammarParser.RIGHT_S_BRACE, 0)
 
+        def literal(self):
+            return self.getTypedRuleContext(GrammarParser.LiteralContext,0)
+
+
         def expr(self):
             return self.getTypedRuleContext(GrammarParser.ExprContext,0)
 
-
-        def INT(self):
-            return self.getToken(GrammarParser.INT, 0)
 
         def getRuleIndex(self):
             return GrammarParser.RULE_arrayIndex
@@ -530,12 +531,12 @@ class GrammarParser ( Parser ):
             la_ = self._interp.adaptivePredict(self._input,6,self._ctx)
             if la_ == 1:
                 self.state = 83
-                self.expr(0)
+                self.literal()
                 pass
 
             elif la_ == 2:
                 self.state = 84
-                self.match(GrammarParser.INT)
+                self.expr(0)
                 pass
 
 

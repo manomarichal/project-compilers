@@ -39,6 +39,8 @@ class Visitor (GrammarVisitor):
         my_type = self.visitTypeObject(ctx.typeObj())
         if ctx.arrayIndex():
             my_type.pushType(TypeComponents.ARR)
+            if ctx.arrayIndex().literal():
+                my_type.set_array_len(int(self.visit(ctx.arrayIndex().literal()).get_value()))
 
         return name, my_type
 
