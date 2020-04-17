@@ -152,11 +152,14 @@ class Visitor (GrammarVisitor):
                     my_ast = AST.DecrPost()
                 elif ctx.INCR():
                     my_ast = AST.IncrPost()
-                elif ctx.arrayIndex():
-                    my_ast = AST.Index()
-                    my_ast.set_index(self.visit(ctx.arrayIndex()))
                 my_ast.set_positional_child(0, self.visit(ctx.getChild(0)))
                 my_ast.set_source_loc(source_from_ctx(ctx))
+                return my_ast
+            elif ctx.arrayIndex():
+                my_ast = AST.Index()
+                index = self.visit(ctx.arrayIndex())
+                my_ast.add_child(self.visit(ctx.getChild(0)))
+                my_ast.set_index(index)
                 return my_ast
             elif ctx.getChild(0).getSymbol().type == GrammarParser.INCR:
                 my_ast = AST.IncrPre()
@@ -366,7 +369,7 @@ class Visitor (GrammarVisitor):
         return my_ast
 
     def visitArrayIndex(self, ctx: GrammarParser.ArrayIndexContext):
-        index = AST.Literal(value=int(ctx.INT().getText()))
+        index = self.visit(ctx.getChild(1))
         index.set_type(TypeClass([TypeComponents.INT]))
         return index
 

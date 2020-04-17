@@ -44,7 +44,7 @@ def serializedATN():
         buf.write("\3\33\3\33\7\33\u0133\n\33\f\33\16\33\u0136\13\33\3\34")
         buf.write("\3\34\3\34\3\34\3\34\5\34\u013d\n\34\5\34\u013f\n\34\3")
         buf.write("\34\3\34\3\34\2\3\64\35\2\4\6\b\n\f\16\20\22\24\26\30")
-        buf.write("\32\34\36 \"$&(*,.\60\62\64\66\2\13\3\2\6\b\3\2\21\22")
+        buf.write("\32\34\36 \"$&(*,.\60\62\64\66\2\13\3\2\6\t\3\2\22\23")
         buf.write("\3\2-.\4\2\27\27\31\31\4\2\30\30\32\32\3\2\32\34\4\2%")
         buf.write("%((\4\2&&))\4\2\'\'**\2\u0162\29\3\2\2\2\4>\3\2\2\2\6")
         buf.write("C\3\2\2\2\bR\3\2\2\2\nY\3\2\2\2\fd\3\2\2\2\16n\3\2\2\2")
@@ -56,10 +56,10 @@ def serializedATN():
         buf.write("\3\2\2\2\64\u0114\3\2\2\2\66\u0137\3\2\2\28:\5\4\3\29")
         buf.write("8\3\2\2\29:\3\2\2\2:;\3\2\2\2;<\7\2\2\3<\3\3\2\2\2=?\5")
         buf.write("\16\b\2>=\3\2\2\2?@\3\2\2\2@>\3\2\2\2@A\3\2\2\2A\5\3\2")
-        buf.write("\2\2BD\7\t\2\2CB\3\2\2\2CD\3\2\2\2DE\3\2\2\2EL\t\2\2\2")
-        buf.write("FH\7\t\2\2GF\3\2\2\2GH\3\2\2\2HI\3\2\2\2IK\7\32\2\2JG")
+        buf.write("\2\2BD\7\n\2\2CB\3\2\2\2CD\3\2\2\2DE\3\2\2\2EL\t\2\2\2")
+        buf.write("FH\7\n\2\2GF\3\2\2\2GH\3\2\2\2HI\3\2\2\2IK\7\32\2\2JG")
         buf.write("\3\2\2\2KN\3\2\2\2LJ\3\2\2\2LM\3\2\2\2MP\3\2\2\2NL\3\2")
-        buf.write("\2\2OQ\7\t\2\2PO\3\2\2\2PQ\3\2\2\2Q\7\3\2\2\2RU\7!\2\2")
+        buf.write("\2\2OQ\7\n\2\2PO\3\2\2\2PQ\3\2\2\2Q\7\3\2\2\2RU\7!\2\2")
         buf.write("SV\5\64\33\2TV\7\4\2\2US\3\2\2\2UT\3\2\2\2VW\3\2\2\2W")
         buf.write("X\7\"\2\2X\t\3\2\2\2YZ\7\37\2\2Z_\5\62\32\2[\\\7\25\2")
         buf.write("\2\\^\5\62\32\2][\3\2\2\2^a\3\2\2\2_]\3\2\2\2_`\3\2\2")
@@ -91,23 +91,23 @@ def serializedATN():
         buf.write("\u00a5\3\2\2\2\u00aa\u00a6\3\2\2\2\u00aa\u00a7\3\2\2\2")
         buf.write("\u00aa\u00a8\3\2\2\2\u00aa\u00a9\3\2\2\2\u00ab\35\3\2")
         buf.write("\2\2\u00ac\u00ad\7\37\2\2\u00ad\u00ae\5\4\3\2\u00ae\u00af")
-        buf.write("\7 \2\2\u00af\37\3\2\2\2\u00b0\u00b1\7\n\2\2\u00b1\u00b2")
-        buf.write("\5\30\r\2\u00b2\u00b5\5\32\16\2\u00b3\u00b4\7\13\2\2\u00b4")
+        buf.write("\7 \2\2\u00af\37\3\2\2\2\u00b0\u00b1\7\13\2\2\u00b1\u00b2")
+        buf.write("\5\30\r\2\u00b2\u00b5\5\32\16\2\u00b3\u00b4\7\f\2\2\u00b4")
         buf.write("\u00b6\5\32\16\2\u00b5\u00b3\3\2\2\2\u00b5\u00b6\3\2\2")
-        buf.write("\2\u00b6!\3\2\2\2\u00b7\u00b8\7\f\2\2\u00b8\u00b9\5\30")
+        buf.write("\2\u00b6!\3\2\2\2\u00b7\u00b8\7\r\2\2\u00b8\u00b9\5\30")
         buf.write("\r\2\u00b9\u00bd\7\37\2\2\u00ba\u00bc\5$\23\2\u00bb\u00ba")
         buf.write("\3\2\2\2\u00bc\u00bf\3\2\2\2\u00bd\u00bb\3\2\2\2\u00bd")
         buf.write("\u00be\3\2\2\2\u00be\u00c1\3\2\2\2\u00bf\u00bd\3\2\2\2")
         buf.write("\u00c0\u00c2\5&\24\2\u00c1\u00c0\3\2\2\2\u00c1\u00c2\3")
         buf.write("\2\2\2\u00c2\u00c3\3\2\2\2\u00c3\u00c4\7 \2\2\u00c4#\3")
-        buf.write("\2\2\2\u00c5\u00c6\7\r\2\2\u00c6\u00c7\5\62\32\2\u00c7")
+        buf.write("\2\2\2\u00c5\u00c6\7\16\2\2\u00c6\u00c7\5\62\32\2\u00c7")
         buf.write("\u00c8\7$\2\2\u00c8\u00c9\5\4\3\2\u00c9%\3\2\2\2\u00ca")
-        buf.write("\u00cb\7\16\2\2\u00cb\u00cc\7$\2\2\u00cc\u00cd\5\4\3\2")
-        buf.write("\u00cd\'\3\2\2\2\u00ce\u00cf\7\17\2\2\u00cf\u00d0\7\35")
+        buf.write("\u00cb\7\17\2\2\u00cb\u00cc\7$\2\2\u00cc\u00cd\5\4\3\2")
+        buf.write("\u00cd\'\3\2\2\2\u00ce\u00cf\7\20\2\2\u00cf\u00d0\7\35")
         buf.write("\2\2\u00d0\u00d1\5,\27\2\u00d1\u00d2\7#\2\2\u00d2\u00d3")
         buf.write("\5,\27\2\u00d3\u00d4\7#\2\2\u00d4\u00d5\5,\27\2\u00d5")
         buf.write("\u00d6\7\36\2\2\u00d6\u00d7\5\32\16\2\u00d7)\3\2\2\2\u00d8")
-        buf.write("\u00d9\7\20\2\2\u00d9\u00da\5\30\r\2\u00da\u00db\5\32")
+        buf.write("\u00d9\7\21\2\2\u00d9\u00da\5\30\r\2\u00da\u00db\5\32")
         buf.write("\16\2\u00db+\3\2\2\2\u00dc\u00e4\5\60\31\2\u00dd\u00e2")
         buf.write("\5.\30\2\u00de\u00e2\5\64\33\2\u00df\u00e2\5\66\34\2\u00e0")
         buf.write("\u00e2\5\24\13\2\u00e1\u00dd\3\2\2\2\u00e1\u00de\3\2\2")
@@ -176,18 +176,18 @@ class GrammarParser ( Parser ):
     sharedContextCache = PredictionContextCache()
 
     literalNames = [ "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
-                     "'int'", "'float'", "'char'", "'const'", "'if'", "'else'", 
-                     "'switch'", "'case'", "'default'", "'for'", "'while'", 
-                     "'break'", "'continue'", "'void'", "'return'", "','", 
-                     "'='", "'+'", "'&'", "'-'", "'*'", "'/'", "'%'", "'('", 
-                     "')'", "'{'", "'}'", "'['", "']'", "';'", "':'", "'<'", 
-                     "'>'", "'=='", "'<='", "'>='", "'!='", "'&&'", "'||'", 
-                     "'++'", "'--'", "'!'", "'printf'" ]
+                     "'int'", "'float'", "'char'", "'void'", "'const'", 
+                     "'if'", "'else'", "'switch'", "'case'", "'default'", 
+                     "'for'", "'while'", "'break'", "'continue'", "'return'", 
+                     "','", "'='", "'+'", "'&'", "'-'", "'*'", "'/'", "'%'", 
+                     "'('", "')'", "'{'", "'}'", "'['", "']'", "';'", "':'", 
+                     "'<'", "'>'", "'=='", "'<='", "'>='", "'!='", "'&&'", 
+                     "'||'", "'++'", "'--'", "'!'", "'printf'" ]
 
     symbolicNames = [ "<INVALID>", "CHAR", "INT", "FLOAT", "INT_TYPE", "FLOAT_TYPE", 
-                      "CHAR_TYPE", "CONST", "IF_KW", "ELSE_KW", "SWITCH_KW", 
-                      "CASE_BRANCH", "DEFAULT_BRANCH", "FOR_KW", "WHILE_KW", 
-                      "BREAK_KW", "CONT_KW", "VOID_KW", "RETURN_KW", "COMMA", 
+                      "CHAR_TYPE", "VOID_TYPE", "CONST", "IF_KW", "ELSE_KW", 
+                      "SWITCH_KW", "CASE_BRANCH", "DEFAULT_BRANCH", "FOR_KW", 
+                      "WHILE_KW", "BREAK_KW", "CONT_KW", "RETURN_KW", "COMMA", 
                       "ASSIGN_OP", "PLUS", "AMP", "MINUS", "STAR", "SLASH", 
                       "PERCENT", "LEFT_PAREN", "RIGHT_PAREN", "LEFT_C_BRACE", 
                       "RIGHT_C_BRACE", "LEFT_S_BRACE", "RIGHT_S_BRACE", 
@@ -239,17 +239,17 @@ class GrammarParser ( Parser ):
     INT_TYPE=4
     FLOAT_TYPE=5
     CHAR_TYPE=6
-    CONST=7
-    IF_KW=8
-    ELSE_KW=9
-    SWITCH_KW=10
-    CASE_BRANCH=11
-    DEFAULT_BRANCH=12
-    FOR_KW=13
-    WHILE_KW=14
-    BREAK_KW=15
-    CONT_KW=16
-    VOID_KW=17
+    VOID_TYPE=7
+    CONST=8
+    IF_KW=9
+    ELSE_KW=10
+    SWITCH_KW=11
+    CASE_BRANCH=12
+    DEFAULT_BRANCH=13
+    FOR_KW=14
+    WHILE_KW=15
+    BREAK_KW=16
+    CONT_KW=17
     RETURN_KW=18
     COMMA=19
     ASSIGN_OP=20
@@ -328,7 +328,7 @@ class GrammarParser ( Parser ):
             self.state = 55
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << GrammarParser.CHAR) | (1 << GrammarParser.INT) | (1 << GrammarParser.FLOAT) | (1 << GrammarParser.INT_TYPE) | (1 << GrammarParser.FLOAT_TYPE) | (1 << GrammarParser.CHAR_TYPE) | (1 << GrammarParser.CONST) | (1 << GrammarParser.IF_KW) | (1 << GrammarParser.SWITCH_KW) | (1 << GrammarParser.FOR_KW) | (1 << GrammarParser.WHILE_KW) | (1 << GrammarParser.BREAK_KW) | (1 << GrammarParser.CONT_KW) | (1 << GrammarParser.RETURN_KW) | (1 << GrammarParser.PLUS) | (1 << GrammarParser.AMP) | (1 << GrammarParser.MINUS) | (1 << GrammarParser.STAR) | (1 << GrammarParser.LEFT_PAREN) | (1 << GrammarParser.LEFT_C_BRACE) | (1 << GrammarParser.INCR) | (1 << GrammarParser.DECR) | (1 << GrammarParser.NOT_OP) | (1 << GrammarParser.PRINT) | (1 << GrammarParser.ID))) != 0):
+            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << GrammarParser.CHAR) | (1 << GrammarParser.INT) | (1 << GrammarParser.FLOAT) | (1 << GrammarParser.INT_TYPE) | (1 << GrammarParser.FLOAT_TYPE) | (1 << GrammarParser.CHAR_TYPE) | (1 << GrammarParser.VOID_TYPE) | (1 << GrammarParser.CONST) | (1 << GrammarParser.IF_KW) | (1 << GrammarParser.SWITCH_KW) | (1 << GrammarParser.FOR_KW) | (1 << GrammarParser.WHILE_KW) | (1 << GrammarParser.BREAK_KW) | (1 << GrammarParser.CONT_KW) | (1 << GrammarParser.RETURN_KW) | (1 << GrammarParser.PLUS) | (1 << GrammarParser.AMP) | (1 << GrammarParser.MINUS) | (1 << GrammarParser.STAR) | (1 << GrammarParser.LEFT_PAREN) | (1 << GrammarParser.LEFT_C_BRACE) | (1 << GrammarParser.INCR) | (1 << GrammarParser.DECR) | (1 << GrammarParser.NOT_OP) | (1 << GrammarParser.PRINT) | (1 << GrammarParser.ID))) != 0):
                 self.state = 54
                 self.block()
 
@@ -385,7 +385,7 @@ class GrammarParser ( Parser ):
                 self.state = 62 
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << GrammarParser.CHAR) | (1 << GrammarParser.INT) | (1 << GrammarParser.FLOAT) | (1 << GrammarParser.INT_TYPE) | (1 << GrammarParser.FLOAT_TYPE) | (1 << GrammarParser.CHAR_TYPE) | (1 << GrammarParser.CONST) | (1 << GrammarParser.IF_KW) | (1 << GrammarParser.SWITCH_KW) | (1 << GrammarParser.FOR_KW) | (1 << GrammarParser.WHILE_KW) | (1 << GrammarParser.BREAK_KW) | (1 << GrammarParser.CONT_KW) | (1 << GrammarParser.RETURN_KW) | (1 << GrammarParser.PLUS) | (1 << GrammarParser.AMP) | (1 << GrammarParser.MINUS) | (1 << GrammarParser.STAR) | (1 << GrammarParser.LEFT_PAREN) | (1 << GrammarParser.LEFT_C_BRACE) | (1 << GrammarParser.INCR) | (1 << GrammarParser.DECR) | (1 << GrammarParser.NOT_OP) | (1 << GrammarParser.PRINT) | (1 << GrammarParser.ID))) != 0)):
+                if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << GrammarParser.CHAR) | (1 << GrammarParser.INT) | (1 << GrammarParser.FLOAT) | (1 << GrammarParser.INT_TYPE) | (1 << GrammarParser.FLOAT_TYPE) | (1 << GrammarParser.CHAR_TYPE) | (1 << GrammarParser.VOID_TYPE) | (1 << GrammarParser.CONST) | (1 << GrammarParser.IF_KW) | (1 << GrammarParser.SWITCH_KW) | (1 << GrammarParser.FOR_KW) | (1 << GrammarParser.WHILE_KW) | (1 << GrammarParser.BREAK_KW) | (1 << GrammarParser.CONT_KW) | (1 << GrammarParser.RETURN_KW) | (1 << GrammarParser.PLUS) | (1 << GrammarParser.AMP) | (1 << GrammarParser.MINUS) | (1 << GrammarParser.STAR) | (1 << GrammarParser.LEFT_PAREN) | (1 << GrammarParser.LEFT_C_BRACE) | (1 << GrammarParser.INCR) | (1 << GrammarParser.DECR) | (1 << GrammarParser.NOT_OP) | (1 << GrammarParser.PRINT) | (1 << GrammarParser.ID))) != 0)):
                     break
 
         except RecognitionException as re:
@@ -411,6 +411,9 @@ class GrammarParser ( Parser ):
 
         def CHAR_TYPE(self):
             return self.getToken(GrammarParser.CHAR_TYPE, 0)
+
+        def VOID_TYPE(self):
+            return self.getToken(GrammarParser.VOID_TYPE, 0)
 
         def CONST(self, i:int=None):
             if i is None:
@@ -453,7 +456,7 @@ class GrammarParser ( Parser ):
 
             self.state = 67
             _la = self._input.LA(1)
-            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << GrammarParser.INT_TYPE) | (1 << GrammarParser.FLOAT_TYPE) | (1 << GrammarParser.CHAR_TYPE))) != 0)):
+            if not((((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << GrammarParser.INT_TYPE) | (1 << GrammarParser.FLOAT_TYPE) | (1 << GrammarParser.CHAR_TYPE) | (1 << GrammarParser.VOID_TYPE))) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -723,7 +726,7 @@ class GrammarParser ( Parser ):
                 self.state = 103
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
-                if token in [GrammarParser.CHAR, GrammarParser.INT, GrammarParser.FLOAT, GrammarParser.INT_TYPE, GrammarParser.FLOAT_TYPE, GrammarParser.CHAR_TYPE, GrammarParser.CONST, GrammarParser.RETURN_KW, GrammarParser.PLUS, GrammarParser.AMP, GrammarParser.MINUS, GrammarParser.STAR, GrammarParser.LEFT_PAREN, GrammarParser.LEFT_C_BRACE, GrammarParser.INCR, GrammarParser.DECR, GrammarParser.NOT_OP, GrammarParser.PRINT, GrammarParser.ID]:
+                if token in [GrammarParser.CHAR, GrammarParser.INT, GrammarParser.FLOAT, GrammarParser.INT_TYPE, GrammarParser.FLOAT_TYPE, GrammarParser.CHAR_TYPE, GrammarParser.VOID_TYPE, GrammarParser.CONST, GrammarParser.RETURN_KW, GrammarParser.PLUS, GrammarParser.AMP, GrammarParser.MINUS, GrammarParser.STAR, GrammarParser.LEFT_PAREN, GrammarParser.LEFT_C_BRACE, GrammarParser.INCR, GrammarParser.DECR, GrammarParser.NOT_OP, GrammarParser.PRINT, GrammarParser.ID]:
                     self.state = 101
                     self.general_expr()
                     pass
@@ -880,7 +883,7 @@ class GrammarParser ( Parser ):
             self.state = 134
             self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << GrammarParser.INT_TYPE) | (1 << GrammarParser.FLOAT_TYPE) | (1 << GrammarParser.CHAR_TYPE) | (1 << GrammarParser.CONST))) != 0):
+            if (((_la) & ~0x3f) == 0 and ((1 << _la) & ((1 << GrammarParser.INT_TYPE) | (1 << GrammarParser.FLOAT_TYPE) | (1 << GrammarParser.CHAR_TYPE) | (1 << GrammarParser.VOID_TYPE) | (1 << GrammarParser.CONST))) != 0):
                 self.state = 118
                 self.typeObj()
                 self.state = 119
@@ -1721,7 +1724,7 @@ class GrammarParser ( Parser ):
                 self.state = 218
                 self.returnStatement()
                 pass
-            elif token in [GrammarParser.CHAR, GrammarParser.INT, GrammarParser.FLOAT, GrammarParser.INT_TYPE, GrammarParser.FLOAT_TYPE, GrammarParser.CHAR_TYPE, GrammarParser.CONST, GrammarParser.PLUS, GrammarParser.AMP, GrammarParser.MINUS, GrammarParser.STAR, GrammarParser.LEFT_PAREN, GrammarParser.LEFT_C_BRACE, GrammarParser.INCR, GrammarParser.DECR, GrammarParser.NOT_OP, GrammarParser.PRINT, GrammarParser.ID]:
+            elif token in [GrammarParser.CHAR, GrammarParser.INT, GrammarParser.FLOAT, GrammarParser.INT_TYPE, GrammarParser.FLOAT_TYPE, GrammarParser.CHAR_TYPE, GrammarParser.VOID_TYPE, GrammarParser.CONST, GrammarParser.PLUS, GrammarParser.AMP, GrammarParser.MINUS, GrammarParser.STAR, GrammarParser.LEFT_PAREN, GrammarParser.LEFT_C_BRACE, GrammarParser.INCR, GrammarParser.DECR, GrammarParser.NOT_OP, GrammarParser.PRINT, GrammarParser.ID]:
                 self.enterOuterAlt(localctx, 2)
                 self.state = 223
                 self._errHandler.sync(self)

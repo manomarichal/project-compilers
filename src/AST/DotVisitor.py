@@ -43,7 +43,8 @@ class DotVisitor(Visitor):
         self.graph.add_node(pydot.Node(name, label=self.label_strategy(ast)))
 
         for index in range(0, ast.get_child_count()):
-            child_name = self.visit(ast.get_child(index))
+            node = ast.get_child(index)
+            child_name = self.visit(node)
             self.graph.add_edge(pydot.Edge(name, child_name))
 
         return name
