@@ -1,3 +1,7 @@
+void foo()
+{
+    1+1;
+}
 
 int main() {
     int c[1];

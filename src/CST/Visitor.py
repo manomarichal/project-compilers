@@ -252,8 +252,10 @@ class Visitor (GrammarVisitor):
             token = ctx.getChild(tokenNr)
             token_type = token.getSymbol().type
 
-            if token_type in {GrammarParser.CHAR_TYPE, GrammarParser.INT_TYPE, GrammarParser.FLOAT_TYPE}:
+            if token_type in {GrammarParser.CHAR_TYPE, GrammarParser.INT_TYPE, GrammarParser.FLOAT_TYPE, GrammarParser.VOID_TYPE}:
                 assert len(type_stack) == 0
+                if token_type == GrammarParser.VOID_TYPE:
+                    type_stack.append(TypeComponents.VOID)
                 if token_type == GrammarParser.CHAR_TYPE:
                     type_stack.append(TypeComponents.CHAR)
                 if token_type == GrammarParser.INT_TYPE:
