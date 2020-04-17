@@ -321,8 +321,13 @@ class LLVMVisitor(Visitor):
             self.gen_store('%' + str(a), arg_reg, to_llvm_type(args[a]))
 
     def gen_function_call(self, reg, rtype, name, args):
-        comment = 'call function ' + name + ' in ' + reg
-        string = reg + ' = call '+ rtype + ' @' + name + '('
+        if rtype[0:4] == 'void':
+            comment = 'call function ' + name
+            string = 'call void' + ' @' + name + '('
+        else:
+            comment = 'call function ' + name + ' in ' + reg
+            string = reg + ' = call '+ rtype + ' @' + name + '('
+
         for a in range(len(args)):
             if a != 0:
                 string += ', '
@@ -334,6 +339,9 @@ class LLVMVisitor(Visitor):
         comment = 'return register ' + str(reg)
         string = "ret " + rtype + ' ' + str(reg)
         self.print_to_file(string, comment)
+
+    def gen_void_return(self):
+        self.print_to_file("ret void", "return void")
 
     # VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
@@ -521,6 +529,8 @@ class LLVMVisitor(Visitor):
         self.cur_func = ast.get_name() # for array definitions
         self.gen_function_def(to_llvm_type(ast), ast.get_name(), args)
         self.visit(ast.get_child(0))
+        if (to_llvm_type(ast)[0:4] == 'void'):
+            self.gen_void_return()
         self.file.write('\n}')
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
