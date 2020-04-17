@@ -152,7 +152,9 @@ class TypedSemanticsVisitor(Visitor):
         self.visitChildren(node)
 
     def visitFunctionDefinition(self, node: AST.FunctionDefinition):
-        if not node.get_type() == TypeClass(TypeComponents.VOID):
+        expected_return = node.get_type()
+        void_type = TypeClass(TypeComponents.VOID)
+        if not node.get_type() == TypeClass([TypeComponents.VOID]):
             self.returns_awaiting.append(True)
             self.visit_children_outside_statement(node)
             missing_return = self.returns_awaiting[len(self.returns_awaiting)-1]

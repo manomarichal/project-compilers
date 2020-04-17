@@ -6,6 +6,7 @@ FLOAT : [0-9]+'.'[0-9]+;
 INT_TYPE : 'int';
 FLOAT_TYPE : 'float';
 CHAR_TYPE : 'char';
+VOID_TYPE : 'void';
 CONST : 'const';
 IF_KW : 'if';
 ELSE_KW : 'else';
@@ -16,7 +17,6 @@ FOR_KW : 'for';
 WHILE_KW : 'while';
 BREAK_KW : 'break';
 CONT_KW : 'continue';
-VOID_KW : 'void';
 RETURN_KW: 'return';
 COMMA: ',';
 ASSIGN_OP : '=';
@@ -56,7 +56,7 @@ doc : block? EOF;
 
 block: statement+;
 
-typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
+typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE | VOID_TYPE) (CONST? STAR)* CONST?;
 
 arrayIndex: LEFT_S_BRACE (expr| INT)  RIGHT_S_BRACE;
 

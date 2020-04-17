@@ -20,11 +20,11 @@ def serializedATN():
         buf.write("\3\2\3\2\3\2\3\3\6\3m\n\3\r\3\16\3n\3\4\6\4r\n\4\r\4\16")
         buf.write("\4s\3\4\3\4\6\4x\n\4\r\4\16\4y\3\5\3\5\3\5\3\5\3\6\3\6")
         buf.write("\3\6\3\6\3\6\3\6\3\7\3\7\3\7\3\7\3\7\3\b\3\b\3\b\3\b\3")
-        buf.write("\b\3\b\3\t\3\t\3\t\3\n\3\n\3\n\3\n\3\n\3\13\3\13\3\13")
-        buf.write("\3\13\3\13\3\13\3\13\3\f\3\f\3\f\3\f\3\f\3\r\3\r\3\r\3")
-        buf.write("\r\3\r\3\r\3\r\3\r\3\16\3\16\3\16\3\16\3\17\3\17\3\17")
-        buf.write("\3\17\3\17\3\17\3\20\3\20\3\20\3\20\3\20\3\20\3\21\3\21")
-        buf.write("\3\21\3\21\3\21\3\21\3\21\3\21\3\21\3\22\3\22\3\22\3\22")
+        buf.write("\b\3\t\3\t\3\t\3\t\3\t\3\t\3\n\3\n\3\n\3\13\3\13\3\13")
+        buf.write("\3\13\3\13\3\f\3\f\3\f\3\f\3\f\3\f\3\f\3\r\3\r\3\r\3\r")
+        buf.write("\3\r\3\16\3\16\3\16\3\16\3\16\3\16\3\16\3\16\3\17\3\17")
+        buf.write("\3\17\3\17\3\20\3\20\3\20\3\20\3\20\3\20\3\21\3\21\3\21")
+        buf.write("\3\21\3\21\3\21\3\22\3\22\3\22\3\22\3\22\3\22\3\22\3\22")
         buf.write("\3\22\3\23\3\23\3\23\3\23\3\23\3\23\3\23\3\24\3\24\3\25")
         buf.write("\3\25\3\26\3\26\3\27\3\27\3\30\3\30\3\31\3\31\3\32\3\32")
         buf.write("\3\33\3\33\3\34\3\34\3\35\3\35\3\36\3\36\3\37\3\37\3 ")
@@ -53,10 +53,10 @@ def serializedATN():
         buf.write("\2\2\2W\3\2\2\2\2Y\3\2\2\2\2[\3\2\2\2\2]\3\2\2\2\2_\3")
         buf.write("\2\2\2\2a\3\2\2\2\2c\3\2\2\2\2e\3\2\2\2\3g\3\2\2\2\5l")
         buf.write("\3\2\2\2\7q\3\2\2\2\t{\3\2\2\2\13\177\3\2\2\2\r\u0085")
-        buf.write("\3\2\2\2\17\u008a\3\2\2\2\21\u0090\3\2\2\2\23\u0093\3")
-        buf.write("\2\2\2\25\u0098\3\2\2\2\27\u009f\3\2\2\2\31\u00a4\3\2")
-        buf.write("\2\2\33\u00ac\3\2\2\2\35\u00b0\3\2\2\2\37\u00b6\3\2\2")
-        buf.write("\2!\u00bc\3\2\2\2#\u00c5\3\2\2\2%\u00ca\3\2\2\2\'\u00d1")
+        buf.write("\3\2\2\2\17\u008a\3\2\2\2\21\u008f\3\2\2\2\23\u0095\3")
+        buf.write("\2\2\2\25\u0098\3\2\2\2\27\u009d\3\2\2\2\31\u00a4\3\2")
+        buf.write("\2\2\33\u00a9\3\2\2\2\35\u00b1\3\2\2\2\37\u00b5\3\2\2")
+        buf.write("\2!\u00bb\3\2\2\2#\u00c1\3\2\2\2%\u00ca\3\2\2\2\'\u00d1")
         buf.write("\3\2\2\2)\u00d3\3\2\2\2+\u00d5\3\2\2\2-\u00d7\3\2\2\2")
         buf.write("/\u00d9\3\2\2\2\61\u00db\3\2\2\2\63\u00dd\3\2\2\2\65\u00df")
         buf.write("\3\2\2\2\67\u00e1\3\2\2\29\u00e3\3\2\2\2;\u00e5\3\2\2")
@@ -74,28 +74,28 @@ def serializedATN():
         buf.write("\7h\2\2\u0080\u0081\7n\2\2\u0081\u0082\7q\2\2\u0082\u0083")
         buf.write("\7c\2\2\u0083\u0084\7v\2\2\u0084\f\3\2\2\2\u0085\u0086")
         buf.write("\7e\2\2\u0086\u0087\7j\2\2\u0087\u0088\7c\2\2\u0088\u0089")
-        buf.write("\7t\2\2\u0089\16\3\2\2\2\u008a\u008b\7e\2\2\u008b\u008c")
-        buf.write("\7q\2\2\u008c\u008d\7p\2\2\u008d\u008e\7u\2\2\u008e\u008f")
-        buf.write("\7v\2\2\u008f\20\3\2\2\2\u0090\u0091\7k\2\2\u0091\u0092")
-        buf.write("\7h\2\2\u0092\22\3\2\2\2\u0093\u0094\7g\2\2\u0094\u0095")
-        buf.write("\7n\2\2\u0095\u0096\7u\2\2\u0096\u0097\7g\2\2\u0097\24")
-        buf.write("\3\2\2\2\u0098\u0099\7u\2\2\u0099\u009a\7y\2\2\u009a\u009b")
-        buf.write("\7k\2\2\u009b\u009c\7v\2\2\u009c\u009d\7e\2\2\u009d\u009e")
-        buf.write("\7j\2\2\u009e\26\3\2\2\2\u009f\u00a0\7e\2\2\u00a0\u00a1")
-        buf.write("\7c\2\2\u00a1\u00a2\7u\2\2\u00a2\u00a3\7g\2\2\u00a3\30")
-        buf.write("\3\2\2\2\u00a4\u00a5\7f\2\2\u00a5\u00a6\7g\2\2\u00a6\u00a7")
-        buf.write("\7h\2\2\u00a7\u00a8\7c\2\2\u00a8\u00a9\7w\2\2\u00a9\u00aa")
-        buf.write("\7n\2\2\u00aa\u00ab\7v\2\2\u00ab\32\3\2\2\2\u00ac\u00ad")
-        buf.write("\7h\2\2\u00ad\u00ae\7q\2\2\u00ae\u00af\7t\2\2\u00af\34")
-        buf.write("\3\2\2\2\u00b0\u00b1\7y\2\2\u00b1\u00b2\7j\2\2\u00b2\u00b3")
-        buf.write("\7k\2\2\u00b3\u00b4\7n\2\2\u00b4\u00b5\7g\2\2\u00b5\36")
-        buf.write("\3\2\2\2\u00b6\u00b7\7d\2\2\u00b7\u00b8\7t\2\2\u00b8\u00b9")
-        buf.write("\7g\2\2\u00b9\u00ba\7c\2\2\u00ba\u00bb\7m\2\2\u00bb \3")
-        buf.write("\2\2\2\u00bc\u00bd\7e\2\2\u00bd\u00be\7q\2\2\u00be\u00bf")
-        buf.write("\7p\2\2\u00bf\u00c0\7v\2\2\u00c0\u00c1\7k\2\2\u00c1\u00c2")
-        buf.write("\7p\2\2\u00c2\u00c3\7w\2\2\u00c3\u00c4\7g\2\2\u00c4\"")
-        buf.write("\3\2\2\2\u00c5\u00c6\7x\2\2\u00c6\u00c7\7q\2\2\u00c7\u00c8")
-        buf.write("\7k\2\2\u00c8\u00c9\7f\2\2\u00c9$\3\2\2\2\u00ca\u00cb")
+        buf.write("\7t\2\2\u0089\16\3\2\2\2\u008a\u008b\7x\2\2\u008b\u008c")
+        buf.write("\7q\2\2\u008c\u008d\7k\2\2\u008d\u008e\7f\2\2\u008e\20")
+        buf.write("\3\2\2\2\u008f\u0090\7e\2\2\u0090\u0091\7q\2\2\u0091\u0092")
+        buf.write("\7p\2\2\u0092\u0093\7u\2\2\u0093\u0094\7v\2\2\u0094\22")
+        buf.write("\3\2\2\2\u0095\u0096\7k\2\2\u0096\u0097\7h\2\2\u0097\24")
+        buf.write("\3\2\2\2\u0098\u0099\7g\2\2\u0099\u009a\7n\2\2\u009a\u009b")
+        buf.write("\7u\2\2\u009b\u009c\7g\2\2\u009c\26\3\2\2\2\u009d\u009e")
+        buf.write("\7u\2\2\u009e\u009f\7y\2\2\u009f\u00a0\7k\2\2\u00a0\u00a1")
+        buf.write("\7v\2\2\u00a1\u00a2\7e\2\2\u00a2\u00a3\7j\2\2\u00a3\30")
+        buf.write("\3\2\2\2\u00a4\u00a5\7e\2\2\u00a5\u00a6\7c\2\2\u00a6\u00a7")
+        buf.write("\7u\2\2\u00a7\u00a8\7g\2\2\u00a8\32\3\2\2\2\u00a9\u00aa")
+        buf.write("\7f\2\2\u00aa\u00ab\7g\2\2\u00ab\u00ac\7h\2\2\u00ac\u00ad")
+        buf.write("\7c\2\2\u00ad\u00ae\7w\2\2\u00ae\u00af\7n\2\2\u00af\u00b0")
+        buf.write("\7v\2\2\u00b0\34\3\2\2\2\u00b1\u00b2\7h\2\2\u00b2\u00b3")
+        buf.write("\7q\2\2\u00b3\u00b4\7t\2\2\u00b4\36\3\2\2\2\u00b5\u00b6")
+        buf.write("\7y\2\2\u00b6\u00b7\7j\2\2\u00b7\u00b8\7k\2\2\u00b8\u00b9")
+        buf.write("\7n\2\2\u00b9\u00ba\7g\2\2\u00ba \3\2\2\2\u00bb\u00bc")
+        buf.write("\7d\2\2\u00bc\u00bd\7t\2\2\u00bd\u00be\7g\2\2\u00be\u00bf")
+        buf.write("\7c\2\2\u00bf\u00c0\7m\2\2\u00c0\"\3\2\2\2\u00c1\u00c2")
+        buf.write("\7e\2\2\u00c2\u00c3\7q\2\2\u00c3\u00c4\7p\2\2\u00c4\u00c5")
+        buf.write("\7v\2\2\u00c5\u00c6\7k\2\2\u00c6\u00c7\7p\2\2\u00c7\u00c8")
+        buf.write("\7w\2\2\u00c8\u00c9\7g\2\2\u00c9$\3\2\2\2\u00ca\u00cb")
         buf.write("\7t\2\2\u00cb\u00cc\7g\2\2\u00cc\u00cd\7v\2\2\u00cd\u00ce")
         buf.write("\7w\2\2\u00ce\u00cf\7t\2\2\u00cf\u00d0\7p\2\2\u00d0&\3")
         buf.write("\2\2\2\u00d1\u00d2\7.\2\2\u00d2(\3\2\2\2\u00d3\u00d4\7")
@@ -153,17 +153,17 @@ class GrammarLexer(Lexer):
     INT_TYPE = 4
     FLOAT_TYPE = 5
     CHAR_TYPE = 6
-    CONST = 7
-    IF_KW = 8
-    ELSE_KW = 9
-    SWITCH_KW = 10
-    CASE_BRANCH = 11
-    DEFAULT_BRANCH = 12
-    FOR_KW = 13
-    WHILE_KW = 14
-    BREAK_KW = 15
-    CONT_KW = 16
-    VOID_KW = 17
+    VOID_TYPE = 7
+    CONST = 8
+    IF_KW = 9
+    ELSE_KW = 10
+    SWITCH_KW = 11
+    CASE_BRANCH = 12
+    DEFAULT_BRANCH = 13
+    FOR_KW = 14
+    WHILE_KW = 15
+    BREAK_KW = 16
+    CONT_KW = 17
     RETURN_KW = 18
     COMMA = 19
     ASSIGN_OP = 20
@@ -203,29 +203,29 @@ class GrammarLexer(Lexer):
     modeNames = [ "DEFAULT_MODE" ]
 
     literalNames = [ "<INVALID>",
-            "'int'", "'float'", "'char'", "'const'", "'if'", "'else'", "'switch'", 
-            "'case'", "'default'", "'for'", "'while'", "'break'", "'continue'", 
-            "'void'", "'return'", "','", "'='", "'+'", "'&'", "'-'", "'*'", 
-            "'/'", "'%'", "'('", "')'", "'{'", "'}'", "'['", "']'", "';'", 
-            "':'", "'<'", "'>'", "'=='", "'<='", "'>='", "'!='", "'&&'", 
-            "'||'", "'++'", "'--'", "'!'", "'printf'" ]
+            "'int'", "'float'", "'char'", "'void'", "'const'", "'if'", "'else'", 
+            "'switch'", "'case'", "'default'", "'for'", "'while'", "'break'", 
+            "'continue'", "'return'", "','", "'='", "'+'", "'&'", "'-'", 
+            "'*'", "'/'", "'%'", "'('", "')'", "'{'", "'}'", "'['", "']'", 
+            "';'", "':'", "'<'", "'>'", "'=='", "'<='", "'>='", "'!='", 
+            "'&&'", "'||'", "'++'", "'--'", "'!'", "'printf'" ]
 
     symbolicNames = [ "<INVALID>",
             "CHAR", "INT", "FLOAT", "INT_TYPE", "FLOAT_TYPE", "CHAR_TYPE", 
-            "CONST", "IF_KW", "ELSE_KW", "SWITCH_KW", "CASE_BRANCH", "DEFAULT_BRANCH", 
-            "FOR_KW", "WHILE_KW", "BREAK_KW", "CONT_KW", "VOID_KW", "RETURN_KW", 
-            "COMMA", "ASSIGN_OP", "PLUS", "AMP", "MINUS", "STAR", "SLASH", 
-            "PERCENT", "LEFT_PAREN", "RIGHT_PAREN", "LEFT_C_BRACE", "RIGHT_C_BRACE", 
-            "LEFT_S_BRACE", "RIGHT_S_BRACE", "SEMICOLON", "COLON", "SMALLER_OP", 
-            "GREATER_OP", "EQUAL_OP", "SMALLER_E_OP", "GREATER_E_OP", "NOT_EQUAL_OP", 
-            "AND_OP", "OR_OP", "INCR", "DECR", "NOT_OP", "PRINT", "ID", 
-            "WS", "COMMENT_SINGLE", "COMMENT_MULTI" ]
+            "VOID_TYPE", "CONST", "IF_KW", "ELSE_KW", "SWITCH_KW", "CASE_BRANCH", 
+            "DEFAULT_BRANCH", "FOR_KW", "WHILE_KW", "BREAK_KW", "CONT_KW", 
+            "RETURN_KW", "COMMA", "ASSIGN_OP", "PLUS", "AMP", "MINUS", "STAR", 
+            "SLASH", "PERCENT", "LEFT_PAREN", "RIGHT_PAREN", "LEFT_C_BRACE", 
+            "RIGHT_C_BRACE", "LEFT_S_BRACE", "RIGHT_S_BRACE", "SEMICOLON", 
+            "COLON", "SMALLER_OP", "GREATER_OP", "EQUAL_OP", "SMALLER_E_OP", 
+            "GREATER_E_OP", "NOT_EQUAL_OP", "AND_OP", "OR_OP", "INCR", "DECR", 
+            "NOT_OP", "PRINT", "ID", "WS", "COMMENT_SINGLE", "COMMENT_MULTI" ]
 
     ruleNames = [ "CHAR", "INT", "FLOAT", "INT_TYPE", "FLOAT_TYPE", "CHAR_TYPE", 
-                  "CONST", "IF_KW", "ELSE_KW", "SWITCH_KW", "CASE_BRANCH", 
-                  "DEFAULT_BRANCH", "FOR_KW", "WHILE_KW", "BREAK_KW", "CONT_KW", 
-                  "VOID_KW", "RETURN_KW", "COMMA", "ASSIGN_OP", "PLUS", 
-                  "AMP", "MINUS", "STAR", "SLASH", "PERCENT", "LEFT_PAREN", 
+                  "VOID_TYPE", "CONST", "IF_KW", "ELSE_KW", "SWITCH_KW", 
+                  "CASE_BRANCH", "DEFAULT_BRANCH", "FOR_KW", "WHILE_KW", 
+                  "BREAK_KW", "CONT_KW", "RETURN_KW", "COMMA", "ASSIGN_OP", 
+                  "PLUS", "AMP", "MINUS", "STAR", "SLASH", "PERCENT", "LEFT_PAREN", 
                   "RIGHT_PAREN", "LEFT_C_BRACE", "RIGHT_C_BRACE", "LEFT_S_BRACE", 
                   "RIGHT_S_BRACE", "SEMICOLON", "COLON", "SMALLER_OP", "GREATER_OP", 
                   "EQUAL_OP", "SMALLER_E_OP", "GREATER_E_OP", "NOT_EQUAL_OP", 
