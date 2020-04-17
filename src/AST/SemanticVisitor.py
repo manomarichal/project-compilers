@@ -59,7 +59,16 @@ class UntypedSemanticVisitor(Visitor):
             self.error(UndeclaredError(node))
         else:
             if entry in self.uninitialised_st_entries:
-                if isinstance(node.get_parent(), AST.AssignOp) and node.get_parent().get_child(0) is node:
+                child: Component = node
+                parent: Composite = child.get_parent()
+                while isinstance(parent, AST.Index):
+                    if not parent.get_child(0) is child:
+                        self.warn(UninitialisedWarning(node))
+                        return
+                    child = parent
+                    parent = parent.get_parent()
+
+                if isinstance(parent, AST.AssignOp) and parent.get_child(0) is child:
                     self.uninitialised_st_entries.remove(entry)
                 else:
                     self.warn(UninitialisedWarning(node))

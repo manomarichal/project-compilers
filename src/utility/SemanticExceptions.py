@@ -64,9 +64,11 @@ class NoConversionError (SemanticError, StatementException):
 
 
 class InvalidTypeError (SemanticError, StatementException):
-    def __init__(self, node: Component, my_type: TypeClass):
+    def __init__(self, node: Component, my_type: TypeClass, detail: str = None):
         self.node = node
         self.message = "invalid type " + str(my_type) + " for " + self.repr_node(node)
+        if detail is not None:
+            self.message += " (" + detail + ")"
 
 
 class UndeclaredError (SemanticError, StatementException):

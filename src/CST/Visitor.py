@@ -33,6 +33,15 @@ class Visitor (GrammarVisitor):
     def exit_scope(self, ast: AST.Scope):
         self._current_sym_table = self._current_sym_table.jump_to_parent_table()
 
+    def extract_decl(self, ctx: GrammarParser.PureDeclContext):
+        name = ctx.identifier().getText()
+
+        my_type = self.visitTypeObject(ctx.typeObj())
+        if ctx.arrayIndex():
+            my_type.pushType(TypeComponents.ARR)
+
+        return name, my_type
+
     def aggregateResult(self, aggregate: AST.DummyNode, nextResult):
         if nextResult is None:
             return aggregate
@@ -158,9 +167,9 @@ class Visitor (GrammarVisitor):
                 my_ast.set_positional_child(0, self.visit(ctx.getChild(0)))
                 my_ast.set_source_loc(source_from_ctx(ctx))
                 return my_ast
-            elif ctx.getChild(0).getSymbol().type == GrammarParser.INCR:
+            elif ctx.INCR():
                 my_ast = AST.IncrPre()
-            elif ctx.getChild(0).getSymbol().type == GrammarParser.DECR:
+            elif ctx.DECR():
                 my_ast = AST.DecrPre()
 
             my_ast.add_child(self.visit(ctx.getChild(1)))
@@ -212,7 +221,7 @@ class Visitor (GrammarVisitor):
     def visitLiteral(self, ctx):
         my_ast = AST.Literal()
 
-        if ctx.CHAR():  #TODO (maybe) multivalue chars
+        if ctx.CHAR():  # TODO (maybe) multivalue chars
             my_ast.val = ord(ctx.getText()[1])
             my_ast.set_type(TypeClass([TypeComponents.CHAR]))
         if ctx.INT():
@@ -227,7 +236,7 @@ class Visitor (GrammarVisitor):
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
-    def visitArrayLit(self, ctx: GrammarParser.ArrayLitContext):  # not very type-safe at all
+    def visitArrayLit(self, ctx: GrammarParser.ArrayLitContext):  # not very type-safe at all (nor safe in general)
         my_ast = AST.Literal(value=[])
 
         element = None
@@ -235,7 +244,7 @@ class Visitor (GrammarVisitor):
             element = self.visit(child)
             my_ast.get_value().append(element.get_value())
         my_type: TypeClass = deepcopy(element.get_type())
-        my_type.pushType(TypeComponents.ARR, len(ctx.literal()))
+        my_type.pushType(TypeComponents.ARR)
         my_ast.set_type(my_type)
 
         my_ast.set_source_loc(source_from_ctx(ctx))
@@ -279,14 +288,12 @@ class Visitor (GrammarVisitor):
 
     def visitDecl(self, ctx):
         my_ast = AST.Decl()
-        var = AST.Variable(ctx.getChild(1).getText())
+        decl_info = self.extract_decl(ctx.pureDecl())
+        var = AST.Variable(decl_info[0])
         var.set_source_loc(source_from_ctx(ctx))
         my_ast.add_child(var)
 
-        var_type = self.visitTypeObject(ctx.getChild(0))
-        if ctx.arrayIndex():
-            var_type.pushType(TypeComponents.ARR, self.visit(ctx.arrayIndex()).get_value())
-        self._current_sym_table[ctx.getChild(1).getText()] = VarEntry(var_type, None)
+        self._current_sym_table[decl_info[0]] = VarEntry(decl_info[1], None)
 
         my_ast.set_source_loc(source_from_ctx(ctx))
         if ctx.ASSIGN_OP() is not None:
@@ -328,35 +335,36 @@ class Visitor (GrammarVisitor):
         return my_ast
 
     def visitFunctionDecl(self, ctx: GrammarParser.FunctionDeclContext):
-        my_ast = AST.FunctionDefinition(ctx.getChild(1).getText())
+        decl_info_list = [self.extract_decl(ctx.pureDecl(i)) for i in range(len(ctx.pureDecl()))]
+
+        my_ast = AST.FunctionDefinition(decl_info_list[0][0])
         my_ast.set_source_loc(source_from_ctx(ctx))
 
         # set type & arg_count of function
-        my_st_entry = FuncEntry(self.visitTypeObject(ctx.getChild(0)))
-        my_st_entry.arg_count = len(ctx.typeObj())-1
+        my_st_entry = FuncEntry(decl_info_list[0][1])
+        my_st_entry.arg_count = len(decl_info_list)-1
 
         self.enter_scope(my_ast)
 
         # make function body
-        my_ast.add_child(self.visit(ctx.getChild(len(ctx.children) - 1)))
+        my_ast.add_child(self.visit(ctx.stateOrScope()))
 
         # add variables within the scope for each argument & add argument info to function's st entry
-        for a in range(1, len(ctx.children)-1):
-            if isinstance(ctx.getChild(a), GrammarParser.TypeObjContext):
-                arg = AST.Variable(ctx.getChild(a+1).getText())
-                arg.set_source_loc(ctx.getChild(a+1))
-                decl = AST.Decl()
-                decl.set_source_loc(ctx.getChild(a + 1))
-                decl.add_child(arg)
-                my_ast.add_child(decl)
-                arg_type = self.visitTypeObject(ctx.getChild(a))
-                self._current_sym_table[arg.get_name()] = VarEntry(arg_type)
-                my_st_entry.arg_types.append(arg_type)
+        for arg_nr in range(1, len(decl_info_list)):
+            arg_ctx = ctx.pureDecl(arg_nr)
+            arg = AST.Variable(decl_info_list[arg_nr][0])
+            arg.set_source_loc(source_from_ctx(arg_ctx))
+            decl = AST.Decl()
+            decl.set_source_loc(source_from_ctx(arg_ctx))
+            decl.add_child(arg)
+            my_ast.add_child(decl)
+            self._current_sym_table[arg.get_name()] = VarEntry(decl_info_list[arg_nr][1])
+            my_st_entry.arg_types.append(decl_info_list[arg_nr][1])
 
         self.exit_scope(my_ast)
 
         # save function's st entry
-        self._current_sym_table[ctx.getChild(1).getText()] = my_st_entry
+        self._current_sym_table[decl_info_list[0][0]] = my_st_entry
         return my_ast
 
     def visitReturnStatement(self, ctx:GrammarParser.ReturnStatementContext):
@@ -364,9 +372,3 @@ class Visitor (GrammarVisitor):
         my_ast.set_source_loc(source_from_ctx(ctx))
         my_ast.add_child(self.visit(ctx.getChild(1)))
         return my_ast
-
-    def visitArrayIndex(self, ctx: GrammarParser.ArrayIndexContext):
-        index = AST.Literal(value=int(ctx.INT().getText()))
-        index.set_type(TypeClass([TypeComponents.INT]))
-        return index
-

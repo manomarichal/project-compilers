@@ -68,7 +68,7 @@ statement: functionDecl | (general_expr | control) SEMICOLON | construct;
 
 control: BREAK_KW | CONT_KW;
 
-functionDecl: typeObj identifier (arrayIndex)? LEFT_PAREN ( (typeObj identifier (arrayIndex)?) (COMMA typeObj identifier (arrayIndex)?)* )? RIGHT_PAREN stateOrScope;
+functionDecl: pureDecl LEFT_PAREN ( pureDecl (COMMA pureDecl)* )? RIGHT_PAREN stateOrScope;
 
 functionCall: identifier LEFT_PAREN ( (functionArgument) (COMMA functionArgument)* )? RIGHT_PAREN;
 
@@ -97,8 +97,9 @@ whileConstr: WHILE_KW parenCond  stateOrScope;
 
 general_expr: (returnStatement) | (decl | expr | printf | functionCall); // TODO: fix naming (this should be the simpler name)
 
-decl:  typeObj identifier (arrayIndex)? ASSIGN_OP expr |
-    typeObj identifier (arrayIndex)?;
+decl:  pureDecl (ASSIGN_OP expr)?; // TODO: separate declaration & definition (for re-use)
+
+pureDecl: typeObj identifier (arrayIndex)?; // this is the actual declaration, decl can also be a defininition
 
 returnStatement: RETURN_KW (decl | expr | printf | functionCall);
 
@@ -120,7 +121,7 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     expr AND_OP expr |
     expr OR_OP expr |
     <assoc=right> expr ASSIGN_OP expr |
-    identifier (arrayIndex)?|
+    identifier|
     literal;
 
 printf : PRINT LEFT_PAREN (literal | identifier (arrayIndex)?) RIGHT_PAREN; // TODO: print any (general) expression

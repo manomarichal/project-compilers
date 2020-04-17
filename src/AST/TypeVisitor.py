@@ -148,13 +148,14 @@ class TypeVisitor (Visitor):
         return own_type
 
     def visitIndex(self, node: Index):
-        child_type = self.visit(node.get_child(0))
+        child_types = self.visitChildren(node)
         own_type = None
-        if child_type.is_array():
-            own_type = deepcopy(child_type)
+        self.assume_mono_conversion(node, 1, TypeClass([TypeComponents.INT]))
+        if child_types[0].is_array():
+            own_type = deepcopy(child_types[0])
             own_type.popType()
         else:
-            self.add_error(InvalidTypeError(node, child_type))
+            self.add_error(InvalidTypeError(node, child_types[0], "can only index arrays"))
         node.set_type(own_type)
         return own_type
 

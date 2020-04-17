@@ -20,7 +20,8 @@ class TypeComponents:
                     INT: "int",
                     FLOAT: "float",
                     CONST: "const",
-                    PTR: "*"}
+                    PTR: "*",
+                    ARR: "[]"}
 
 
 class TypeClass:
@@ -28,17 +29,12 @@ class TypeClass:
     # [1:] = type modifier
     _type_stack = []
 
-    # length of arrays in the same order as in _type_stack (if any)
-    _array_lengths = []
-
     def __init__(self, type_stack):
         self._type_stack = type_stack
         self._array_lengths = []
 
-    def pushType(self, new_type, info=None):  # info used to pass array length
+    def pushType(self, new_type):
         self._type_stack.append(new_type)
-        if new_type == TypeComponents.ARR and info is not None:
-            self._array_lengths.append(info)
 
     def popType(self, ignore_const: bool = False):
         if ignore_const and self.get_top_type() == TypeComponents.CONST:
@@ -90,7 +86,8 @@ class TypeClass:
         return result
 
     def converts_to(self, other):
-        return True
+        void_type = TypeClass([TypeComponents.VOID])
+        return self == void_type and not other == void_type
 
     def get_top_type(self, exclude=None):
         if exclude is None:
@@ -103,12 +100,10 @@ class TypeClass:
 
     def __repr__(self):
         result = ""
-        array_nr = 0
         for component in self.getType():
             if component == TypeComponents.ARR:
                 result = result[0:len(result)-1]
-                result = "[" + result + "]x" + str(self._array_lengths[array_nr]) + " "
-                array_nr += 1
+                result = "[" + result + "] "
                 continue
             result += TypeComponents.translations[component] + " "
         return result[0:len(result)-1]

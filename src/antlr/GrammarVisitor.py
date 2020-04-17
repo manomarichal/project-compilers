@@ -1,4 +1,4 @@
-# Generated from antlr/Grammar.g4 by ANTLR 4.8
+# Generated from src/antlr/Grammar.g4 by ANTLR 4.8
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .GrammarParser import GrammarParser
@@ -121,6 +121,11 @@ class GrammarVisitor(ParseTreeVisitor):
 
     # Visit a parse tree produced by GrammarParser#decl.
     def visitDecl(self, ctx:GrammarParser.DeclContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by GrammarParser#pureDecl.
+    def visitPureDecl(self, ctx:GrammarParser.PureDeclContext):
         return self.visitChildren(ctx)
 
 
