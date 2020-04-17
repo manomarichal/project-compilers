@@ -90,6 +90,16 @@ class TypeClass:
             other.popType()
             if self == other:
                 result = True
+            self.pushType(TypeComponents.ARR)
+            other.pushType(TypeComponents.PTR)
+
+        if self_type == TypeComponents.PTR and other_type == TypeComponents.ARR:
+            self.popType()
+            other.popType()
+            if self == other:
+                result = True
+            self.pushType(TypeComponents.PTR)
+            other.pushType(TypeComponents.ARR)
 
         self.pushType(TypeComponents.CONST)
         if self == other:
@@ -100,8 +110,14 @@ class TypeClass:
         return result
 
     def converts_to(self, other):
+        if self.promotes_to(other):
+            return True
         void_type = TypeClass([TypeComponents.VOID])
-        return self == void_type and not other == void_type
+        if self == void_type and not other == void_type:
+            return False
+        if self.is_array() or other.is_array():
+            return False
+        return True
 
     def get_top_type(self, exclude=None):
         if exclude is None:

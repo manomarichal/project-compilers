@@ -29,12 +29,25 @@ class SemanticWarning (SemanticException):
     pass
 
 
-class DocumentException (SemanticException):
+class BlockException (SemanticException):
     pass
 
 
 class StatementException (SemanticException):
     pass
+
+
+class UnusedCodeWarning (SemanticWarning, BlockException):
+    def __init__(self, node: Component):
+        self.node = node
+        self.message = "unreachable code found"
+
+
+class NoReturnWarning (SemanticWarning, StatementException):
+    def __init__(self, node: FunctionDefinition):
+        self.node = node
+        self.message = "function \"" + node.get_name() + "\" with return type " \
+                       + node.get_type().__repr__() + " may not return anything"
 
 
 class ImplicitConversionWarning (SemanticWarning, StatementException):
@@ -109,11 +122,11 @@ class ArgCountMismatchError (SemanticError, StatementException):
 class IllegalStatementError (SemanticError, StatementException):
     def __init__(self, node: Component, context: str):
         self.node = node
-        self.message = "illegal statement " + self.repr_node(node) + " in context " + context
+        self.message = "illegal statement " + self.repr_node(node) + ": " + context
 
 
 class MissingReturnError (SemanticError, StatementException):
     def __init__(self, node: FunctionDefinition):
         self.node = node
-        self.message = "function \"" + node.get_name() + "\" missing a return statement (with non-void type " \
-                       + node.get_type().__repr__() + ")"
+        self.message = "function \"" + node.get_name() + "\" with non-void type " + node.get_type().__repr__() \
+                       + " missing a return statement"
