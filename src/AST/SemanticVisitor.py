@@ -189,10 +189,10 @@ class TypedSemanticsVisitor(Visitor):
             self.returns_awaiting.pop()
             if missing_return:
                 self.error(MissingReturnError(node))
+            if not self.last_scope_exited:
+                self.warn(NoReturnWarning(node))
         else:
             self.visitChildren(node)
-        if not self.last_scope_exited:
-            self.warn(NoReturnWarning(node))
 
     def visitReturnStatement(self, node: AST.ReturnStatement):
         self.visitChildren(node)
