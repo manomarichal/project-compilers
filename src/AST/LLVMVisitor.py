@@ -136,7 +136,8 @@ class LLVMVisitor(Visitor):
     file = None
     _rcounter = 0 # counter to keep track of registers used
     _lcounter = 0 # counter to keep track of labels used
-    cur_func = ''
+    exit_label_stack = []
+    begin_label_stack = []
 
     def __init__(self, file):
         self.header_buf = StringIO()
@@ -156,8 +157,6 @@ class LLVMVisitor(Visitor):
 
     def get_rname(self) -> str:
         self._rcounter += 1
-        if self._rcounter == 5:
-            pass
         return '%t' + str(self._rcounter)
 
     def get_lname(self) -> str:
@@ -167,7 +166,7 @@ class LLVMVisitor(Visitor):
     def get_register_of(self, ast: AST.Component):
         if isinstance(ast, AST.Index):
             reg = self.get_rname()
-            self.gen_getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
+            self._getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
             return reg
         return ast.get_register()
 
@@ -180,7 +179,7 @@ class LLVMVisitor(Visitor):
         elif isinstance(ast, AST.Index):
             reg1 = self.get_rname()
             reg2 = self.get_rname()
-            self.gen_getelemntptr_array(reg1, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
+            self.gen_getelemntptr_array(reg1, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
             self.gen_load(reg2, reg1, to_llvm_type(ast))
             return reg2
         else:
@@ -333,10 +332,6 @@ class LLVMVisitor(Visitor):
         comment = 'return register ' + str(reg)
         string = "ret " + rtype + ' ' + str(reg)
         self.print_to_file(string, comment)
-
-    def gen_array_def(self, name, size, type, values):
-        string = '@' + self.cur_func + '.' + name + ' = private unnamed_addr constant [' + size + ' x ' + type + ']'
-        self.header_buf.write(string)
 
     # VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
@@ -505,6 +500,8 @@ class LLVMVisitor(Visitor):
         loop_check = self.get_lname()
         loop_body = self.get_lname()
         loop_end = self.get_lname()
+        self.begin_label_stack.append(loop_check)
+        self.exit_label_stack.append(loop_end)
 
         self.gen_branch_uncon(loop_check)
 
@@ -516,15 +513,18 @@ class LLVMVisitor(Visitor):
         self.visit(ast.get_child(1))
         self.gen_branch_uncon(loop_check)
 
+        self.begin_label_stack.pop()
+        self.exit_label_stack.pop()
         self.print_label(loop_end, 'exit')
 
     def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
         args = []
         for a in range(1, ast.get_child_count()):
+            self.visit(ast.get_child(a).get_child(0))
             args.append(ast.get_child(a).get_child(0))
         self.cur_func = ast.get_name() # for array definitions
         self.gen_function_def(to_llvm_type(ast), ast.get_name(), args)
-        self.visitChildren(ast)
+        self.visit(ast.get_child(0))
         self.file.write('\n}')
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
@@ -544,6 +544,8 @@ class LLVMVisitor(Visitor):
         loop_body = self.get_lname()
         loop_update = self.get_lname()
         loop_end = self.get_lname()
+        self.begin_label_stack.append(loop_check)
+        self.exit_label_stack.append(loop_end)
 
         self.visit(ast.get_child(0))
         self.gen_branch_uncon(loop_check)
@@ -560,4 +562,12 @@ class LLVMVisitor(Visitor):
         self.visit(ast.get_child(3))
         self.gen_branch_uncon(loop_check)
 
+        self.begin_label_stack.pop()
+        self.exit_label_stack.pop()
         self.print_label(loop_end, 'exit')
+
+    def visitBreak(self, ast: AST.Break):
+        self.gen_branch_uncon(self.exit_label_stack[-1])
+
+    def visitContinue(self, ast: AST.Continue):
+        self.gen_branch_uncon(self.begin_label_stack[-1])
