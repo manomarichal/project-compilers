@@ -58,7 +58,7 @@ block: statement+;
 
 typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE) (CONST? STAR)* CONST?;
 
-arrayIndex: LEFT_S_BRACE INT RIGHT_S_BRACE;
+arrayIndex: LEFT_S_BRACE (expr| INT)  RIGHT_S_BRACE;
 
 arrayLit: LEFT_C_BRACE literal (COMMA literal)* RIGHT_C_BRACE;
 
@@ -68,11 +68,11 @@ statement: functionDecl | (general_expr | control) SEMICOLON | construct;
 
 control: BREAK_KW | CONT_KW;
 
-functionDecl: typeObj identifier LEFT_PAREN ( (typeObj identifier) (COMMA typeObj identifier)* )? RIGHT_PAREN stateOrScope;
+functionDecl: typeObj identifier (arrayIndex)? LEFT_PAREN ( (typeObj identifier (arrayIndex)?) (COMMA typeObj identifier (arrayIndex)?)* )? RIGHT_PAREN stateOrScope;
 
 functionCall: identifier LEFT_PAREN ( (functionArgument) (COMMA functionArgument)* )? RIGHT_PAREN;
 
-functionArgument: general_expr;
+functionArgument: expr;
 
 // TODO: I don't really know the rules here (eg. for(int a=0; ...) allowed but not if(int a=0) or while(int a=0) according to online compiler)
 parenCond: LEFT_PAREN general_expr RIGHT_PAREN;
@@ -120,7 +120,7 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     expr AND_OP expr |
     expr OR_OP expr |
     <assoc=right> expr ASSIGN_OP expr |
-    identifier |
+    identifier (arrayIndex)?|
     literal;
 
-printf : PRINT LEFT_PAREN (literal | identifier) RIGHT_PAREN; // TODO: print any (general) expression
+printf : PRINT LEFT_PAREN (literal | identifier (arrayIndex)?) RIGHT_PAREN; // TODO: print any (general) expression
