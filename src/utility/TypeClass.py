@@ -119,7 +119,7 @@ class TypeClass:
         if self.promotes_to(other):
             return True
         void_type = TypeClass([TypeComponents.VOID])
-        if self == void_type and not other == void_type:
+        if self == void_type or other == void_type:
             return False
         if self.is_array() or other.is_array():  # not really true: arrays are ptrs & ptrs can be converted to int etc
             return False
