@@ -48,8 +48,10 @@ NOT_OP : '!';
 PRINT : 'printf';
 ID : [_a-zA-Z][_a-zA-Z0-9]*;
 WS: [ \n\t\r]+ -> skip;
+STRING: '"'.*?'"';
 COMMENT_SINGLE: '//'~('\r'|'\n')* -> skip;
 COMMENT_MULTI: '/*' .*? '*/' -> skip;
+
 
 
 doc : block? EOF;
@@ -124,4 +126,4 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     identifier|
     literal;
 
-printf : PRINT LEFT_PAREN (literal | identifier (arrayIndex)?) RIGHT_PAREN; // TODO: print any (general) expression
+printf : PRINT LEFT_PAREN (STRING (COMMA expr)*) RIGHT_PAREN; // TODO: print any (general) expression

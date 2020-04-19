@@ -105,9 +105,12 @@ def check_for_pointers(node_type, base):
         base += '*'
     return base
 
-def to_array_type(node_type):
-    base = '[' + node_type[len(node_type)-1] + ' x '
-    base += to_base_type(node_type[1:]) + ']'
+def to_array_type(node_type: str):
+    node_type = node_type[1:len(node_type)-1]
+    strs = node_type.split('x')
+    strs[0] = strs[0][0:len(strs[0])-1]
+    base = '[' + strs[1] + ' x '
+    base += to_base_type(strs[0]) + ']'
     return base
 
 def to_base_type(node_type):
@@ -199,8 +202,8 @@ class LLVMVisitor(Visitor):
 
     # GENERATOR FUNCTIONS
     def print_label(self, label, label_comment):
-        self.file.write('\n\n; ' + label_comment)
-        self.file.write('\n' + label + ':')
+        self.body_buf.write('\n\n; ' + label_comment)
+        self.body_buf.write('\n' + label + ':')
         return label
 
     def gen_alloca(self, reg, type):
@@ -295,7 +298,7 @@ class LLVMVisitor(Visitor):
 
     def gen_getelemntptr_array(self, reg, type_of, base_ptr, base = None, offset=None):
         comment = 'get value stored at ' + base_ptr + ' at base ' + str(base) + ' + offset' + str(offset)
-        string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr + ', i64 ' + str(base) + ', i64 ' + str(offset)
+        string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr + ', i32 ' + str(base) + ', i32 ' + str(offset)
         self.print_to_file(string, comment)
 
     def gen_branch_uncon(self, label1): # unconditional branch
