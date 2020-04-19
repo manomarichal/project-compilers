@@ -93,6 +93,14 @@ class Composite(Component):
     def get_child(self, i: int)->Component:
         return self._children[i]
 
+    def remove_child(self, child):
+        if isinstance(child, Component):
+            self._children.remove(child)
+            return
+        if isinstance(child, int):
+            self._children.pop(child)
+            return
+
     def replace_child(self, old_child: Component, new_child: Component):
         index = self._children.index(old_child)
         self._children[index] = new_child

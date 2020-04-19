@@ -4,6 +4,9 @@ from src.utility.SemanticExceptions import *
 from src.utility import SymbolTable
 from src.utility.TypeClass import *
 
+# TODO: move non-error-detecting funtionality out of here (setting return flag on functions, removing unreachable code)
+#  or split into more focused (thematic?) passes
+
 
 class UntypedSemanticVisitor(Visitor):
     # defined_var_entries: set{VarEntry}
@@ -251,11 +254,16 @@ class TypedSemanticsVisitor(Visitor):
         self.errors.append(error)
         raise error
 
-    def visit(self, node):
-        if len(self.block_exited) > 0 and self.block_exited[len(self.block_exited)-1] and not self.unused_code_warned:
-            self.unused_code_warned = True
-            self.warn(UnusedCodeWarning(node))
-        super().visit(node)
+    def visit(self, node: Component):
+        if len(self.block_exited) > 0 and self.block_exited[len(self.block_exited)-1]:
+            if not self.unused_code_warned:
+                self.unused_code_warned = True
+                self.warn(UnusedCodeWarning(node))
+            # TODO: remove unreachable nodes (without disturbing iteration)
+            # parent: Composite = node.get_parent()
+            # parent.remove_child(node)
+        else:
+            super().visit(node)
 
     def visitComposite(self, node: AST.Composite):
         self.visitChildren(node)
