@@ -1,30 +1,21 @@
+// Should print the numbers 10 20 30
 
-void test()
-{
-    printf(1);
-}
-
-
-int main()
-{
-    test();
+int main(){
+    printf("%d; hiiiii", 1);
     return 0;
 }
 
 
-
-
-
-
-//int swap(int *xp, int *yp)
+//
+//
+//void swap(int *xp, int *yp)
 //{
 //    int temp = *xp;
 //    *xp = *yp;
 //    *yp = temp;
-//    return 0;
 //}
 //
-//int bubbleSort(int arr[10])
+//void bubbleSort(int arr[10])
 //{
 //    for (int i = 0; i < 5; i = i + 1)
 //    {
@@ -36,7 +27,6 @@ int main()
 //           }
 //       }
 //   }
-//   return 0;
 //}
 //
 ///* Function to print an array */

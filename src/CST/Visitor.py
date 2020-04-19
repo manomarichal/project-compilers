@@ -313,9 +313,11 @@ class Visitor (GrammarVisitor):
         return my_ast
 
     def visitPrintf(self, ctx):
-        my_ast = AST.Printf()
-        my_ast.add_child(self.visit(ctx.getChild(2)))
-        my_ast.set_source_loc(source_from_ctx(ctx))
+        my_ast = AST.Printf(ctx.getChild(2).getText())
+        for index in range(1, ctx.getChildCount()):
+            if isinstance(ctx.getChild(index), GrammarParser.ExprContext):
+                my_ast.add_child(self.visit(ctx.getChild(index)))
+            pass
         return my_ast
 
     def visitControl(self, ctx: GrammarParser.ControlContext):

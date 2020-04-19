@@ -138,23 +138,29 @@ class LLVMVisitor(Visitor):
     file = None
     _rcounter = 0 # counter to keep track of registers used
     _lcounter = 0 # counter to keep track of labels used
+    _scounter = 0 # counter to keep track of strings used
     exit_label_stack = []
     begin_label_stack = []
 
     def __init__(self, file):
         self.header_buf = StringIO()
+        self.body_buf = StringIO()
         self.file = file
         self.header_buf.write("declare i32 @printf(i8*, ...)")
         self.header_buf.write("\n@istr = private constant [4 x i8] c\"%d\\0A\\00\"")
         self.header_buf.write("\n@fstr = private constant [4 x i8] c\"%f\\0A\\00\"")
-        self.file.write(self.header_buf.getvalue() + '\n')
 
     # HELPER FUNCTIONS
     def print_to_file(self, string, comment=None, ws_str ='\n\t\t', ws_comment='\n\t'):
-        self.file.write(ws_comment + '; ' + comment)
-        self.file.write(ws_str + string)
+        self.body_buf.write(ws_comment + '; ' + comment)
+        self.body_buf.write(ws_str + string)
+
+    def print_to_header(self, string):
+        self.header_buf.write('\n' + string)
 
     def close(self):
+        self.file.write(self.header_buf.getvalue() + '\n')
+        self.file.write(self.body_buf.getvalue() + '\n')
         self.file.close()
 
     def get_rname(self) -> str:
@@ -165,10 +171,14 @@ class LLVMVisitor(Visitor):
         self._lcounter += 1
         return 'l' + str(self._lcounter)
 
+    def get_strname(self) -> str:
+        self._scounter += 1
+        return '@.str.' + str(self._scounter)
+
     def get_register_of(self, ast: AST.Component):
         if isinstance(ast, AST.Index):
             reg = self.get_rname()
-            self._getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
+            self.gen_getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
             return reg
         return ast.get_register()
 
@@ -225,14 +235,14 @@ class LLVMVisitor(Visitor):
         op_str, op_com = get_logic_instruction(op)
         self.gen_binary_instruction(res, lhs, rhs, type_of, op_str, op_com)
 
-    def gen_int_printf(self, reg, type_of):
-        comment = 'print ' + str(reg)
-        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @istr,i32 0, i32 0)," + type_of + " " + str(reg) + ")"
-        self.print_to_file(string, comment)
-
-    def gen_float_printf(self, reg):
-        comment = 'print ' + reg
-        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8],[4 x i8]* @fstr,i32 0, i32 0), double " + str(reg) + ")"
+    #   %12 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([11 x i8], [11 x i8]* @.str, i32 0, i32 0), i32 %7, i32 %9, i32 %11)
+    def gen_printf(self, meta_size, str_name, args):
+        comment = 'print'
+        string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([" + str(meta_size) \
+                 + " x i8],[" + str(meta_size) + " x i8]* " + str_name + ",i32 0, i32 0)"
+        for arg in args:
+            string += ', ' + str(arg[0]) + " " + str(arg[1])
+        string += ")"
         self.print_to_file(string, comment)
 
     # %X = trunc i32 235 to i1 (%X = 1)
@@ -343,6 +353,11 @@ class LLVMVisitor(Visitor):
     def gen_void_return(self):
         self.print_to_file("ret void", "return void")
 
+    def gen_str_constant(self, meta: str, meta_size):
+        name = self.get_strname()
+        self.print_to_header(name + ' = private unnamed_addr constant [' + str(meta_size) + ' x i8] c' + meta)
+        return name
+
     # VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
         self.visitChildren(ast)
@@ -365,15 +380,11 @@ class LLVMVisitor(Visitor):
 
     def visitPrintf(self, ast: AST.Printf):  #
         self.visitChildren(ast)
-        reg = self.get_value_of(ast.get_child(0))
-
-        if to_llvm_type(ast.get_child(0)) != 'float':
-            self.gen_int_printf(reg, to_llvm_type(ast.get_child(0)))
-        else:
-            # we first need to convert the float for a double (because reasons)
-            c_reg = self.get_rname()
-            self.gen_fpext(c_reg, 'float', 'double', reg)
-            self.gen_float_printf(c_reg)
+        str_name = self.gen_str_constant(ast.get_meta(), ast.get_meta_size())
+        args = []
+        for i in range(ast.get_child_count()):
+            args.append([to_llvm_type(ast.get_child(i)), self.get_value_of(ast.get_child(i))])
+        self.gen_printf(ast.get_meta_size(), str_name, args)
 
     def visitIncrPre(self, ast: AST.IncrPre):
         self.visitChildren(ast)
@@ -531,7 +542,7 @@ class LLVMVisitor(Visitor):
         self.visit(ast.get_child(0))
         if (to_llvm_type(ast)[0:4] == 'void'):
             self.gen_void_return()
-        self.file.write('\n}')
+        self.body_buf.write('\n}')
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
         self.visitChildren(ast)

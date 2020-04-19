@@ -24,11 +24,7 @@ from src.AST.SemanticVisitor import UntypedSemanticVisitor, TypedSemanticsVisito
 
 from src.AST.DotVisitor import label_big as label_style
 
-# TODO implicit conversions bij return statements
-# TODO variables out of scope deftige error geve
-# TODO int * * * a wordt als func def gezien;
-# TODO ++ -- werke niet
-# TODO void
+# TODO strings bij prinf()
 
 def ast_pass(visitor: ASTVisitor, tree: Component):
     return visitor, visitor.visit(tree)
