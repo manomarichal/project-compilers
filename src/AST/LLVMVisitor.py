@@ -148,6 +148,13 @@ def get_constant(type_of):
         return '0.0'
     elif type_of[0] == '[':
         return "zeroinitializer"
+    elif is_pointer(type_of):
+        return "null"
+    else:
+        print("oof")
+
+def is_pointer(type_of):
+    return type_of[len(type_of)-1] == '*'
 
 class LLVMVisitor(Visitor):
     file = None
@@ -196,7 +203,7 @@ class LLVMVisitor(Visitor):
     def get_register_of(self, ast: AST.Component):
         if isinstance(ast, AST.Index):
             reg = self.get_rname()
-            self.gen_getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
+            self.gen_getelemntptr_offset(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
             return reg
         return ast.get_register()
 
@@ -209,7 +216,7 @@ class LLVMVisitor(Visitor):
         elif isinstance(ast, AST.Index):
             reg1 = self.get_rname()
             reg2 = self.get_rname()
-            self.gen_getelemntptr_array(reg1, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
+            self.gen_getelemntptr_offset(reg1, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
             self.gen_load(reg2, reg1, to_llvm_type(ast))
             return reg2
         else:
@@ -333,7 +340,7 @@ class LLVMVisitor(Visitor):
         string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr
         self.print_to_file(string, comment)
 
-    def gen_getelemntptr_array(self, reg, type_of, base_ptr, base = None, offset=None):
+    def gen_getelemntptr_offset(self, reg, type_of, base_ptr, base = None, offset=None):
         comment = 'get value stored at ' + base_ptr + ' at base ' + str(base) + ' + offset' + str(offset)
         string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr + ', i32 ' + str(base) + ', i32 ' + str(offset)
         self.print_to_file(string, comment)
@@ -399,6 +406,11 @@ class LLVMVisitor(Visitor):
         return name
 
     def gen_default_return(self, rtype):
+        if (rtype[0:4] == 'void'):
+            self.gen_void_return()
+            return
+        constant = get_constant(rtype)
+        self.gen_return_statement(rtype, constant)
         pass
 
     def gen_global_var_assign(self, ast: AST.AssignOp):
@@ -604,7 +616,6 @@ class LLVMVisitor(Visitor):
     def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
         self.scope_counter += 1
         args = []
-        has_return = False
         for a in range(1, ast.get_child_count()):
             self.visit(ast.get_child(a).get_child(0))
             args.append(ast.get_child(a).get_child(0))
@@ -612,8 +623,9 @@ class LLVMVisitor(Visitor):
         self.gen_function_def(to_llvm_type(ast), ast.get_name(), args)
         self.visit(ast.get_child(0))
 
-        if (to_llvm_type(ast)[0:4] == 'void'):
-            self.gen_void_return()
+        if not ast.guarantied_return:
+            self.gen_default_return(to_llvm_type(ast))
+
         self.body_buf.write('\n}')
         self.scope_counter -= 1
 
