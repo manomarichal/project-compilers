@@ -613,6 +613,9 @@ class LLVMVisitor(Visitor):
         self.exit_label_stack.pop()
         self.print_label(loop_end, 'exit')
 
+    def visitFunctionDeclaration(self, ast: AST.FunctionDeclaration):
+        pass
+
     def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
         self.scope_counter += 1
         args = []
@@ -631,6 +634,9 @@ class LLVMVisitor(Visitor):
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
         self.visitChildren(ast)
+        if to_llvm_type(ast)[0:4] == 'void':
+            self.gen_void_return()
+            return
         self.gen_return_statement(to_llvm_type(ast), self.get_value_of(ast.get_child(0)))
 
     def visitFunctionCall(self, ast:AST.FunctionCall):
