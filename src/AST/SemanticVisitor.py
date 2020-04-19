@@ -96,6 +96,10 @@ class UntypedSemanticVisitor(Visitor):
 
         self.verify_func_def_signature(node, entry)
 
+        nest = node.get_enclosing(AST.FunctionDefinition)
+        if nest is not None:
+            self.error(NestedFunctionError(node, nest))
+
         if entry not in self.declared_function_entries:
             self.declared_function_entries.add(entry)
 
@@ -113,18 +117,22 @@ class UntypedSemanticVisitor(Visitor):
 
         self.verify_func_decl_signature(node, entry)
 
+        nest = node.get_enclosing(AST.FunctionDefinition)
+        if nest is not None:
+            self.error(NestedFunctionError(node, nest))
+
         if entry not in self.declared_function_entries:
             self.declared_function_entries.add(entry)
 
     def verify_func_decl_signature(self, node: AST.FunctionDeclaration, entry: SymbolTable.FuncEntry):
         node_args = [node.get_child(i).get_child(0).get_type() for i in range(node.get_child_count())]
         if node_args != entry.arg_types:
-            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (node_args, node.get_type())))
+            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (entry.arg_types, entry.type_obj)))
 
     def verify_func_def_signature(self, node: AST.FunctionDefinition, entry: SymbolTable.FuncEntry):
         node_args = [node.get_child(i).get_child(0).get_type() for i in range(1, node.get_child_count())]
         if node_args != entry.arg_types:
-            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (node_args, node.get_type())))
+            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (entry.arg_types, entry.type_obj)))
 
     def visit_function_arg(self, node: AST.Decl):
         entry: SymbolTable.VarEntry = node.get_child(0).get_st_entry()
@@ -224,18 +232,19 @@ class TypedSemanticsVisitor(Visitor):
         self.visitChildren(node)
 
     def visitFunctionDefinition(self, node: AST.FunctionDefinition):
-        if not node.get_type() == TypeClass([TypeComponents.VOID]):
-            self.returns_awaiting.append(True)
-            self.visit_children_outside_statement(node)
-            missing_return = self.returns_awaiting[len(self.returns_awaiting)-1]
-            self.returns_awaiting.pop()
-            if missing_return:
+        void_type = TypeClass([TypeComponents.VOID])
+        self.returns_awaiting.append(True)
+        self.visit_children_outside_statement(node)
+        missing_return = self.returns_awaiting[len(self.returns_awaiting) - 1]
+        self.returns_awaiting.pop()
+        if missing_return:
+            node.guarantied_return = False
+            if not node.get_type() == void_type:
                 self.warn(NoReturnWarning(node))
-            else:
-                if not self.last_scope_exited:
-                    self.warn(MayNotReturnWarning(node))
         else:
-            self.visitChildren(node)
+            node.guarantied_return = True
+            if not node.get_type() == void_type and not self.last_scope_exited:
+                self.warn(MayNotReturnWarning(node))
 
     def visitReturnStatement(self, node: AST.ReturnStatement):
         self.visitChildren(node)
@@ -245,7 +254,7 @@ class TypedSemanticsVisitor(Visitor):
         self.block_exited[len(self.block_exited)-1] = True
 
     def visitContinue(self, node: AST.Continue):
-        if node.get_enclosing(AST.ForStatement) is None and node.get_enclosing(AST.WhileStatement):
+        if node.get_enclosing(AST.ForStatement) is None and node.get_enclosing(AST.WhileStatement) is None:
             self.error(IllegalStatementError(node, "no enclosing loop construct"))
         self.block_exited[len(self.block_exited)-1] = True
 

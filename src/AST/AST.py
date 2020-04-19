@@ -54,8 +54,10 @@ class Component:
             return None
         return self.get_parent().get_scope()
 
-    def get_enclosing(self, node_type: type):
+    def get_enclosing(self, node_type: type, inclusive=False):
         current = self
+        if not inclusive:
+            current = self.get_parent()
         while not (current is None or isinstance(current, node_type)):
             current = current.get_parent()
         return current
@@ -566,10 +568,12 @@ class FunctionDeclaration(Scope):  # shouldn't really be a scope, but this way w
 
 class FunctionDefinition(Scope):
     _name: str
+    guarantied_return: bool
 
     def __init__(self, name):
         super().__init__()
         self._name = name
+        self.guarantied_return = bool()
 
     def get_name(self):
         return self._name

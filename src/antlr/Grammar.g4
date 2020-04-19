@@ -106,9 +106,10 @@ decl:  pureDecl (ASSIGN_OP expr)?; // TODO: separate declaration & definition (f
 
 pureDecl: typeObj identifier (arrayIndex)?; // this is the actual declaration, decl can also be a defininition
 
-returnStatement: RETURN_KW (expr | functionCall);
+returnStatement: RETURN_KW (expr | functionCall)?;
 
-literal: INT | FLOAT | CHAR | arrayLit;
+// TODO: "arrayLit" aka initialiser lists should be remover or thorougly cleaned up
+literal: INT | FLOAT | CHAR | arrayLit | STRING;
 
 expr : LEFT_PAREN expr RIGHT_PAREN |
     expr (DECR | INCR) |
@@ -129,6 +130,6 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     identifier|
     literal;
 
-printf : PRINT LEFT_PAREN (STRING (COMMA expr)*) RIGHT_PAREN; // TODO: print any (general) expression
+printf : PRINT LEFT_PAREN (STRING (COMMA expr)*) RIGHT_PAREN;
 
-scanf : SCAN LEFT_PAREN (STRING (COMMA expr)*) RIGHT_PAREN; // TODO: print any (general) expression
+scanf : SCAN LEFT_PAREN (STRING (COMMA expr)*) RIGHT_PAREN;

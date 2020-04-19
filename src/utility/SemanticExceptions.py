@@ -133,7 +133,7 @@ class ConstAssignmentError (SemanticError, StatementException):
 class ArgCountMismatchError (SemanticError, StatementException):
     def __init__(self, node: FunctionCall, expected, actual):
         self.node = node
-        self.message = "attempting to call function \"" + node.get_name() + "\" with " + str(actual) + " arguments, " \
+        self.message = "attempting to call function \"" + node.get_name() + "\" with " + str(actual) + " argument(s), " \
                        + str(expected) + " expected"
 
         self.expected = expected
@@ -151,3 +151,11 @@ class SignatureMismatchError (SemanticError, BlockException):
         self.message = "conflicting declarations or definitions found for function \"" + node.get_name() + "\": " \
                        + str(sign_a[0]) + "->" + str(sign_a[1]) + " VS " \
                        + str(sign_b[0]) + "->" + str(sign_b[1])
+
+
+class NestedFunctionError (SemanticError, BlockException):
+    def __init__(self, node: Composite, outer: FunctionDefinition):
+        self.node = node
+        self.message = "defining or declaring function \"" + node.get_name() + "\"" \
+                       + " inside function \"" + outer.get_name() + "\"" \
+                       + " – nested function definitions aren't currently supported"
