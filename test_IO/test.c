@@ -1,25 +1,13 @@
 
 #include <stdio.h>
-
-int f(int a) {
-	if (a<2) {
-		return a;
-	}
-	else {
-		return f(a-1) + f(a-2);
-	}
-	return 0;
-}
-
 // Recursive fibonnaci
 int main(){
-	int n;
-    printf("Enter a number:");
-	scanf("%d",&n);
-	int i = 1;
-	while(i++ <= n){
-		printf("fib(%d)\t= %d;\n", i, f(i));
-	}
+    int b = 1;
+    int c = 2;
+	int* a[2];
+	a[0] = &b;
+	a[1] = &c;
+	printf("%d", *a[1]);
 	return 0;
 }
 

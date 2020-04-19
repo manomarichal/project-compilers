@@ -98,6 +98,8 @@ def get_logic_instruction(op:AST.LogicOp):
 def check_for_pointers(node_type, base):
     ptr_depth = 0
     for a in range(len(node_type)-1, -1, -1):
+        if node_type[a] == ']':
+            break
         if node_type[a] == '*':
             ptr_depth += 1
 
@@ -105,13 +107,15 @@ def check_for_pointers(node_type, base):
         base += '*'
     return base
 
-def to_array_type(node_type: str):
+def to_array_type(node_type: str, farg = False):
     node_type = node_type[1:len(node_type)-1]
     strs = node_type.split('x')
     strs[0] = strs[0][0:len(strs[0])-1]
+    if farg:
+        return to_base_type(strs[0]) + '*'
     base = '[' + strs[1] + ' x '
-    base += to_base_type(strs[0]) + ']'
-    return base
+    base += to_base_type(strs[0])
+    return check_for_pointers(strs[0], base) + ']'
 
 def to_base_type(node_type):
     if node_type[0:3] == 'int':
@@ -123,14 +127,14 @@ def to_base_type(node_type):
     elif node_type[0:4] == 'bool':
         return 'i1'
 
-def to_llvm_type(node) -> str:
+def to_llvm_type(node, farg = False) -> str:
     node_type = node.get_type().__repr__()
 
     base = ''
     if node_type == 'void':
         base = 'void'
     elif node_type[0] == '[':
-        base += to_array_type(node_type)
+        base += to_array_type(node_type, farg)
     else:
         base += to_base_type(node_type)
 
@@ -351,7 +355,7 @@ class LLVMVisitor(Visitor):
         for a in range(len(args)):
             if a != 0:
                 string += ', '
-            string += to_llvm_type(args[a])
+            string += to_llvm_type(args[a], True)
         string += ') {'
         self.print_to_file(string, comment,'\n', '\n\n', -1)
 
@@ -547,7 +551,7 @@ class LLVMVisitor(Visitor):
     def visitIndir(self, ast: AST.Indir):
         self.visitChildren(ast)
         reg = self.get_rname()
-        self.gen_load(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))
+        self.gen_load(reg, self.get_register_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
         ast.set_register(reg)
         pass
 
