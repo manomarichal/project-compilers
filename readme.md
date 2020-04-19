@@ -7,8 +7,8 @@
 We hebben alle mandatory dingen afgewerkt. Onderaan de readme kan je een overzicht zien van wat we allemaal gemaakt hebben.
 Voor elk feature hebben we een testfile, in test_IO/working_examples 
 
-- run.py: genereert voor alle c files in **./test_IO/working_examples** de llvm ir, dotfiles en de ast als png
-- clean.py: verwijdert alle gegenereerde files uit **./test_IO**
+- run.py: genereert voor alle c files in **./test_IO/CompilersBenchmark** de llvm ir, dotfiles en de ast als png
+- clean.py: verwijdert alle gegenereerde files uit **./test_IO/**
 
 De tests die we hebben gedaan hebben we vergeleken met gcc om te checken of ze klopten.
 
