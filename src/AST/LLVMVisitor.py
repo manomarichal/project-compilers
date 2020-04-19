@@ -98,6 +98,8 @@ def get_logic_instruction(op:AST.LogicOp):
 def check_for_pointers(node_type, base):
     ptr_depth = 0
     for a in range(len(node_type)-1, -1, -1):
+        if node_type[a] == ']':
+            break
         if node_type[a] == '*':
             ptr_depth += 1
 
@@ -105,13 +107,15 @@ def check_for_pointers(node_type, base):
         base += '*'
     return base
 
-def to_array_type(node_type: str):
+def to_array_type(node_type: str, farg = False):
     node_type = node_type[1:len(node_type)-1]
     strs = node_type.split('x')
     strs[0] = strs[0][0:len(strs[0])-1]
+    if farg:
+        return to_base_type(strs[0]) + '*'
     base = '[' + strs[1] + ' x '
-    base += to_base_type(strs[0]) + ']'
-    return base
+    base += to_base_type(strs[0])
+    return check_for_pointers(strs[0], base) + ']'
 
 def to_base_type(node_type):
     if node_type[0:3] == 'int':
@@ -123,14 +127,14 @@ def to_base_type(node_type):
     elif node_type[0:4] == 'bool':
         return 'i1'
 
-def to_llvm_type(node) -> str:
+def to_llvm_type(node, farg = False) -> str:
     node_type = node.get_type().__repr__()
 
     base = ''
     if node_type == 'void':
         base = 'void'
     elif node_type[0] == '[':
-        base += to_array_type(node_type)
+        base += to_array_type(node_type, farg)
     else:
         base += to_base_type(node_type)
 
@@ -144,6 +148,13 @@ def get_constant(type_of):
         return '0.0'
     elif type_of[0] == '[':
         return "zeroinitializer"
+    elif is_pointer(type_of):
+        return "null"
+    else:
+        print("oof")
+
+def is_pointer(type_of):
+    return type_of[len(type_of)-1] == '*'
 
 class LLVMVisitor(Visitor):
     file = None
@@ -192,7 +203,7 @@ class LLVMVisitor(Visitor):
     def get_register_of(self, ast: AST.Component):
         if isinstance(ast, AST.Index):
             reg = self.get_rname()
-            self.gen_getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
+            self.gen_getelemntptr_offset(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
             return reg
         return ast.get_register()
 
@@ -205,7 +216,7 @@ class LLVMVisitor(Visitor):
         elif isinstance(ast, AST.Index):
             reg1 = self.get_rname()
             reg2 = self.get_rname()
-            self.gen_getelemntptr_array(reg1, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
+            self.gen_getelemntptr_offset(reg1, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
             self.gen_load(reg2, reg1, to_llvm_type(ast))
             return reg2
         else:
@@ -329,7 +340,7 @@ class LLVMVisitor(Visitor):
         string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr
         self.print_to_file(string, comment)
 
-    def gen_getelemntptr_array(self, reg, type_of, base_ptr, base = None, offset=None):
+    def gen_getelemntptr_offset(self, reg, type_of, base_ptr, base = None, offset=None):
         comment = 'get value stored at ' + base_ptr + ' at base ' + str(base) + ' + offset' + str(offset)
         string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr + ', i32 ' + str(base) + ', i32 ' + str(offset)
         self.print_to_file(string, comment)
@@ -351,7 +362,7 @@ class LLVMVisitor(Visitor):
         for a in range(len(args)):
             if a != 0:
                 string += ', '
-            string += to_llvm_type(args[a])
+            string += to_llvm_type(args[a], True)
         string += ') {'
         self.print_to_file(string, comment,'\n', '\n\n', -1)
 
@@ -395,6 +406,11 @@ class LLVMVisitor(Visitor):
         return name
 
     def gen_default_return(self, rtype):
+        if (rtype[0:4] == 'void'):
+            self.gen_void_return()
+            return
+        constant = get_constant(rtype)
+        self.gen_return_statement(rtype, constant)
         pass
 
     def gen_global_var_assign(self, ast: AST.AssignOp):
@@ -547,7 +563,7 @@ class LLVMVisitor(Visitor):
     def visitIndir(self, ast: AST.Indir):
         self.visitChildren(ast)
         reg = self.get_rname()
-        self.gen_load(reg, ast.get_child(0).get_register(), to_llvm_type(ast.get_child(0)))
+        self.gen_load(reg, self.get_register_of(ast.get_child(0)), to_llvm_type(ast.get_child(0)))
         ast.set_register(reg)
         pass
 
@@ -597,10 +613,12 @@ class LLVMVisitor(Visitor):
         self.exit_label_stack.pop()
         self.print_label(loop_end, 'exit')
 
+    def visitFunctionDeclaration(self, ast: AST.FunctionDeclaration):
+        pass
+
     def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
         self.scope_counter += 1
         args = []
-        has_return = False
         for a in range(1, ast.get_child_count()):
             self.visit(ast.get_child(a).get_child(0))
             args.append(ast.get_child(a).get_child(0))
@@ -608,13 +626,17 @@ class LLVMVisitor(Visitor):
         self.gen_function_def(to_llvm_type(ast), ast.get_name(), args)
         self.visit(ast.get_child(0))
 
-        if (to_llvm_type(ast)[0:4] == 'void'):
-            self.gen_void_return()
+        if not ast.guarantied_return:
+            self.gen_default_return(to_llvm_type(ast))
+
         self.body_buf.write('\n}')
         self.scope_counter -= 1
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
         self.visitChildren(ast)
+        if to_llvm_type(ast)[0:4] == 'void':
+            self.gen_void_return()
+            return
         self.gen_return_statement(to_llvm_type(ast), self.get_value_of(ast.get_child(0)))
 
     def visitFunctionCall(self, ast:AST.FunctionCall):

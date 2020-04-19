@@ -269,9 +269,10 @@ class Printf(Composite):
 
     def __init__(self, meta: str):
         Composite.__init__(self)
-        self._meta = meta[0:len(meta)-1] + '\\00"'
-        self._meta_size = len(meta) - 1
-
+        x = len(meta)
+        new = meta.replace("\\n", "\\0A")
+        self._meta = new[0:len(new)-1] + "\\00\""
+        self._meta_size = len(meta) - meta.count('\\') - 1
     def get_meta(self):
         return self._meta
 
