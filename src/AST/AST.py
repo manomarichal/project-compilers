@@ -262,11 +262,15 @@ class Decl(Composite):
 class Printf(Composite):
     _meta = ''
     _meta_size = 0
-    def __init__(self, meta:str):
+
+    def __init__(self, meta: str):
+        Composite.__init__(self)
         self._meta = meta[0:len(meta)-1] + '\\00"'
         self._meta_size = len(meta) - 1
+
     def get_meta(self):
         return self._meta
+
     def get_meta_size(self):
         return self._meta_size
 
