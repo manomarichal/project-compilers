@@ -171,8 +171,8 @@ Notes:
 - 5.4 (mandatory) Semantic Analysis
     - [x] (optional) check if all paths end with return
 - 5.5 (mandatory) Optimizations
-    - [x] (mandatory) unreachable & dead code after return
-    - [x] (mandatory) unreachable & dead code after break/continue
+    - [ ] (mandatory) unreachable & dead code after return
+    - [ ] (mandatory) unreachable & dead code after break/continue
     - [ ] (optional) non used variables
     - [ ] (optional) conditionals that are never true
 - 5.6 (mandatory) LLVM
