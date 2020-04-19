@@ -240,7 +240,9 @@ class DummyNode(Composite):
 
 
 class Doc(Scope):
-    pass
+    def __init__(self):
+        super().__init__()
+        self.IO = False  # TODO: actual import nodes
 
 
 class Expression(Composite):
@@ -276,6 +278,7 @@ class Printf(Composite):
     def get_meta_size(self):
         return self._meta_size
 
+
 class Scanf(Composite):
     _meta = ''
     _meta_size = 0
@@ -290,6 +293,7 @@ class Scanf(Composite):
 
     def get_meta_size(self):
         return self._meta_size
+
 
 class Index(UnaryOp):
     def set_object(self, obj: Component):

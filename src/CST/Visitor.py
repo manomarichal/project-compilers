@@ -63,6 +63,7 @@ class Visitor (GrammarVisitor):
 
     def visitDoc(self, ctx):
         my_ast = AST.Doc()
+        my_ast.IO = ctx.STDIO() is not None
         self.enter_scope(my_ast)
         my_ast.add_childs(self.visitBlock(ctx.block()))
         my_ast.set_source_loc(source_from_ctx(ctx))
@@ -318,6 +319,7 @@ class Visitor (GrammarVisitor):
 
     def visitPrintf(self, ctx):
         my_ast = AST.Printf(ctx.getChild(2).getText())
+        my_ast.set_source_loc(source_from_ctx(ctx))
         for index in range(1, ctx.getChildCount()):
             if isinstance(ctx.getChild(index), GrammarParser.ExprContext):
                 my_ast.add_child(self.visit(ctx.getChild(index)))
@@ -326,6 +328,7 @@ class Visitor (GrammarVisitor):
 
     def visitScanf(self, ctx):
         my_ast = AST.Scanf(ctx.getChild(2).getText())
+        my_ast.set_source_loc(source_from_ctx(ctx))
         for index in range(1, ctx.getChildCount()):
             if isinstance(ctx.getChild(index), GrammarParser.ExprContext):
                 my_ast.add_child(self.visit(ctx.getChild(index)))

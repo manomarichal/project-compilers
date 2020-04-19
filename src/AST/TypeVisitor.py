@@ -224,3 +224,9 @@ class TypeVisitor (Visitor):
         self.assume_mono_conversion(node, 0, function_type)
         node.set_type(function_type)
         return function_type
+
+    def visitScanf(self, node: Scanf):
+        child_types = self.visitChildren(node)
+        for child in child_types:
+            if not child.is_ptr():
+                self.add_error(InvalidTypeError(node, child, "expected a pointer type as argument"))
