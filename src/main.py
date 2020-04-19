@@ -60,6 +60,10 @@ def main(argv: list):
         global mute_warnings
         mute_warnings = True
 
+    test_run = False
+    if "-test" in argv:
+        test_run = True
+
     input_stream = FileStream(argv[1])
     lexer = GrammarLexer(input_stream)
     stream = CommonTokenStream(lexer)
@@ -74,13 +78,14 @@ def main(argv: list):
 
     visitor = CSTVisitor()
     ast = visitor.visit(tree)
-
-    ast_visualise(ast, "test_IO/no_passes")
+    if test_run:
+        ast_visualise(ast, "test_IO/no_passes")
 
     ast_error_pass(UntypedSemanticVisitor(), ast)
 
     ast_error_pass(TypeVisitor(), ast)
-    ast_visualise(ast, "test_IO/typed")
+    if test_run:
+        ast_visualise(ast, "test_IO/typed")
 
     ast_error_pass(TypedSemanticsVisitor(), ast)
 

@@ -395,5 +395,11 @@ class Visitor (GrammarVisitor):
     def visitReturnStatement(self, ctx: GrammarParser.ReturnStatementContext):
         my_ast = AST.ReturnStatement()
         my_ast.set_source_loc(source_from_ctx(ctx))
-        my_ast.add_child(self.visit(ctx.getChild(1)))
+        if ctx.getChildCount() > 1:
+            my_ast.add_child(self.visit(ctx.getChild(1)))
+        else:
+            void = AST.Literal(value=None)
+            void.set_source_loc(source_from_ctx(ctx))
+            void.set_type(TypeClass([TypeComponents.VOID]))
+            my_ast.add_child(void)
         return my_ast

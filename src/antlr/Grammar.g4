@@ -105,7 +105,7 @@ decl:  pureDecl (ASSIGN_OP expr)?; // TODO: separate declaration & definition (f
 
 pureDecl: typeObj identifier (arrayIndex)?; // this is the actual declaration, decl can also be a defininition
 
-returnStatement: RETURN_KW (decl | expr | printf | functionCall);
+returnStatement: RETURN_KW (decl | expr | printf | functionCall)?;
 
 literal: INT | FLOAT | CHAR | arrayLit;
 

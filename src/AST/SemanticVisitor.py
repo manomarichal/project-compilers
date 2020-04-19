@@ -96,6 +96,10 @@ class UntypedSemanticVisitor(Visitor):
 
         self.verify_func_def_signature(node, entry)
 
+        nest = node.get_enclosing(AST.FunctionDefinition)
+        if nest is not None:
+            self.error(NestedFunctionError(node, nest))
+
         if entry not in self.declared_function_entries:
             self.declared_function_entries.add(entry)
 
@@ -112,6 +116,10 @@ class UntypedSemanticVisitor(Visitor):
         entry = node.get_st_entry()
 
         self.verify_func_decl_signature(node, entry)
+
+        nest = node.get_enclosing(AST.FunctionDefinition)
+        if nest is not None:
+            self.error(NestedFunctionError(node, nest))
 
         if entry not in self.declared_function_entries:
             self.declared_function_entries.add(entry)
@@ -235,7 +243,9 @@ class TypedSemanticsVisitor(Visitor):
                 if not self.last_scope_exited:
                     self.warn(MayNotReturnWarning(node))
         else:
-            self.visitChildren(node)
+            self.returns_awaiting.append(False)
+            self.visit_children_outside_statement(node)
+            self.returns_awaiting.pop()
 
     def visitReturnStatement(self, node: AST.ReturnStatement):
         self.visitChildren(node)
