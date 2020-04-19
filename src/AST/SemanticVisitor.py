@@ -38,6 +38,10 @@ class UntypedSemanticVisitor(Visitor):
         self.errors.append(error)
         raise error
 
+    def assume_single_rval(self, node: AST.Composite):
+        if not node.get_child(0).is_lval():
+            self.error(RValError(node))
+
     def visitComposite(self, node: AST.Composite):
         self.visitChildren(node)
 
@@ -78,9 +82,23 @@ class UntypedSemanticVisitor(Visitor):
                     self.warn(UninitialisedWarning(node))
 
     def visitAdress(self, node: AST.Adress):
-        if not node.get_child(0).is_lval():
-            self.error(RValError(node))
+        self.assume_single_rval(node)
+        self.visit(node.get_child(0))
 
+    def visitIncrPre(self, node: AST.IncrPre):
+        self.assume_single_rval(node)
+        self.visit(node.get_child(0))
+
+    def visitIncrPost(self, node):
+        self.assume_single_rval(node)
+        self.visit(node.get_child(0))
+
+    def visitDecrPre(self, node):
+        self.assume_single_rval(node)
+        self.visit(node.get_child(0))
+
+    def visitDecrPost(self, node):
+        self.assume_single_rval(node)
         self.visit(node.get_child(0))
 
     def visitAssignOp(self, node: AST.AssignOp):
@@ -237,12 +255,11 @@ class TypedSemanticsVisitor(Visitor):
         self.visit_children_outside_statement(node)
         missing_return = self.returns_awaiting[len(self.returns_awaiting) - 1]
         self.returns_awaiting.pop()
+        node.guarantied_return = self.last_scope_exited
         if missing_return:
-            node.guarantied_return = False
             if not node.get_type() == void_type:
                 self.warn(NoReturnWarning(node))
         else:
-            node.guarantied_return = True
             if not node.get_type() == void_type and not self.last_scope_exited:
                 self.warn(MayNotReturnWarning(node))
 
