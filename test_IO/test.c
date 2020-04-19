@@ -1,9 +1,20 @@
 #include <stdio.h>
 
 // This should print the number 10 for each basic operation (int and float)
-int a = 5;
+int b;
+int ar[10];
+char c;
+float d;
+
 int main(){
-    printf("this is a global variable: %d", a);
+    for (int a = 0; a < 10; a++)
+    {
+        ar[a] = a;
+    }
+    for (int a = 0; a < 10; a++)
+    {
+        printf("this is a global variable: %d", ar[a]);
+    }
     return 0;
 }
 

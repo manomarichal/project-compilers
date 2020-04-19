@@ -137,6 +137,14 @@ def to_llvm_type(node) -> str:
     llvm_type = check_for_pointers(node_type, base)
     return llvm_type
 
+def get_constant(type_of):
+    if type_of == 'i32' or type_of == 'i8':
+        return '0'
+    elif type_of == 'float':
+        return '0.0'
+    elif type_of[0] == '[':
+        return "zeroinitializer"
+
 class LLVMVisitor(Visitor):
     file = None
     _rcounter = 0 # counter to keep track of registers used
@@ -185,7 +193,7 @@ class LLVMVisitor(Visitor):
     def get_register_of(self, ast: AST.Component):
         if isinstance(ast, AST.Index):
             reg = self.get_rname()
-            self.gen_getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, ast.get_child(1).get_value())
+            self.gen_getelemntptr_array(reg, to_llvm_type(ast.get_child(0)), ast.get_child(0).get_register(), 0, self.get_value_of(ast.get_child(1)))
             return reg
         return ast.get_register()
 
@@ -374,10 +382,16 @@ class LLVMVisitor(Visitor):
     def gen_default_return(self, rtype):
         pass
 
-    def gen_global_var(self, ast: AST.AssignOp):
+    def gen_global_var_assign(self, ast: AST.AssignOp):
         var: AST.Variable = ast.get_child(0).get_child(0)
         var.set_register('@' + var.get_name())
         string = '@' + var.get_name() + ' = global ' + to_llvm_type(var) + ' ' + str(self.get_value_of(ast.get_child(1)))
+        self.print_to_header(string)
+
+    def gen_global_var_decl(self, ast: AST.Decl):
+        var: AST.Variable = ast.get_child(0)
+        var.set_register('@' + var.get_name())
+        string = '@' + var.get_name() + ' = global ' + to_llvm_type(var) + ' ' + get_constant(to_llvm_type(var))
         self.print_to_header(string)
 
     # VISITOR FUNCTIONS
@@ -385,13 +399,16 @@ class LLVMVisitor(Visitor):
         self.visitChildren(ast)
 
     def visitDecl(self, ast: AST.Decl):
+        if self.scope_counter == 0:
+            self.gen_global_var_decl(ast)
+            return
         var: AST.Variable = ast.get_child(0)
         var.set_register(self.get_rname())
         self.gen_alloca(var.get_register(), to_llvm_type(var))
 
     def visitAssignOp(self, ast: AST.AssignOp):
         if self.scope_counter == 0:
-            self.gen_global_var(ast)
+            self.gen_global_var_assign(ast)
             return
         self.visitChildren(ast)
         # assignment could also be a definition

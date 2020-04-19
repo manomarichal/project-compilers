@@ -54,6 +54,7 @@ def ast_visualise(ast: Component, filename: str, style=label_style):
     graph.write(filename + ".dot")
     graph.write_png(filename + ".png")
 
+# TODO global pointers
 
 def main(argv: list):
     if "-n" in argv:
