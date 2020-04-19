@@ -159,8 +159,7 @@ class LLVMVisitor(Visitor):
         self.body_buf = StringIO()
         self.file = file
         self.header_buf.write("declare i32 @printf(i8*, ...)")
-        self.header_buf.write("\n@istr = private constant [4 x i8] c\"%d\\0A\\00\"")
-        self.header_buf.write("\n@fstr = private constant [4 x i8] c\"%f\\0A\\00\"")
+        self.header_buf.write("declare i32 @__isoc99_scanf(i8*, ...)")
 
     # HELPER FUNCTIONS
     def print_to_file(self, string, comment=None, ws_str ='\n\t', ws_comment='\n', modifier = 0):
@@ -262,6 +261,22 @@ class LLVMVisitor(Visitor):
                 string += ', ' + 'double'+ " " + c_reg
             else:
                 string += ', ' + str(arg[0]) + " " + str(arg[1])
+
+        string += ")"
+        self.print_to_file(string, comment)
+
+    #   %4 = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([6 x i8], [6 x i8]* @.str, i32 0, i32 0), i8* %3)
+    def gen_scanf(self, meta_size, str_name, args):
+        comment = 'scan'
+        string = self.get_rname() + " = call i32 (i8*, ...) @__isoc99_scanf(i8* getelementptr inbounds ([" + str(meta_size) \
+                 + " x i8],[" + str(meta_size) + " x i8]* " + str_name + ",i32 0, i32 0)"
+        for arg in args:
+            if (to_llvm_type(arg)) == 'float':
+                c_reg = self.get_rname()
+                self.gen_fpext(c_reg, 'float', 'double', str(self.get_value_of(arg)))
+                string += ', ' + 'double'+ " " + c_reg
+            else:
+                string += ', ' + str(to_llvm_type(arg)) + " " + str(self.get_value_of(arg))
 
         string += ")"
         self.print_to_file(string, comment)
@@ -427,6 +442,12 @@ class LLVMVisitor(Visitor):
             args.append([to_llvm_type(ast.get_child(i)), self.get_value_of(ast.get_child(i))])
         self.gen_printf(ast.get_meta_size(), str_name, args)
 
+    def visitScanf(self, ast: AST.Scanf):  #
+        self.visitChildren(ast)
+        str_name = self.gen_str_constant(ast.get_meta(), ast.get_meta_size())
+        self.gen_scanf(ast.get_meta_size(), str_name, ast._children)
+
+
     def visitIncrPre(self, ast: AST.IncrPre):
         self.visitChildren(ast)
         reg = self.get_rname()
@@ -463,6 +484,9 @@ class LLVMVisitor(Visitor):
         reg = self.get_rname()
         ast.set_register(reg)
         self.gen_math_instr(reg, var_reg, -1, to_llvm_type(ast.get_child(0)), AST.Prod())
+
+    def visitNot(self, ast: AST.Not):
+        pass
 
     def visitPos(self, ast: AST.Neg):
         self.visitChildren(ast)

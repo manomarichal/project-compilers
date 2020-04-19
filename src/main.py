@@ -55,6 +55,11 @@ def ast_visualise(ast: Component, filename: str, style=label_style):
     graph.write_png(filename + ".png")
 
 # TODO global pointers
+# TODO Not
+# TODO semantic error arguments scanf mogen alleen char arrays zijn
+# TODO arrays als func argument
+# TODO strings printen
+
 
 def main(argv: list):
     if "-n" in argv:
