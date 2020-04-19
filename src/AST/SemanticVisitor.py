@@ -127,12 +127,12 @@ class UntypedSemanticVisitor(Visitor):
     def verify_func_decl_signature(self, node: AST.FunctionDeclaration, entry: SymbolTable.FuncEntry):
         node_args = [node.get_child(i).get_child(0).get_type() for i in range(node.get_child_count())]
         if node_args != entry.arg_types:
-            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (node_args, node.get_type())))
+            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (entry.arg_types, entry.type_obj)))
 
     def verify_func_def_signature(self, node: AST.FunctionDefinition, entry: SymbolTable.FuncEntry):
         node_args = [node.get_child(i).get_child(0).get_type() for i in range(1, node.get_child_count())]
         if node_args != entry.arg_types:
-            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (node_args, node.get_type())))
+            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (entry.arg_types, entry.type_obj)))
 
     def visit_function_arg(self, node: AST.Decl):
         entry: SymbolTable.VarEntry = node.get_child(0).get_st_entry()
@@ -255,7 +255,7 @@ class TypedSemanticsVisitor(Visitor):
         self.block_exited[len(self.block_exited)-1] = True
 
     def visitContinue(self, node: AST.Continue):
-        if node.get_enclosing(AST.ForStatement) is None and node.get_enclosing(AST.WhileStatement):
+        if node.get_enclosing(AST.ForStatement) is None and node.get_enclosing(AST.WhileStatement) is None:
             self.error(IllegalStatementError(node, "no enclosing loop construct"))
         self.block_exited[len(self.block_exited)-1] = True
 

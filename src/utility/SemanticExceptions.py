@@ -133,7 +133,7 @@ class ConstAssignmentError (SemanticError, StatementException):
 class ArgCountMismatchError (SemanticError, StatementException):
     def __init__(self, node: FunctionCall, expected, actual):
         self.node = node
-        self.message = "attempting to call function \"" + node.get_name() + "\" with " + str(actual) + " arguments, " \
+        self.message = "attempting to call function \"" + node.get_name() + "\" with " + str(actual) + " argument(s), " \
                        + str(expected) + " expected"
 
         self.expected = expected
