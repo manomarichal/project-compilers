@@ -144,6 +144,7 @@ class LLVMVisitor(Visitor):
     _scounter = 0 # counter to keep track of strings used
     exit_label_stack = []
     begin_label_stack = []
+    scope_counter = 0
 
     def __init__(self, file):
         self.header_buf = StringIO()
@@ -154,7 +155,10 @@ class LLVMVisitor(Visitor):
         self.header_buf.write("\n@fstr = private constant [4 x i8] c\"%f\\0A\\00\"")
 
     # HELPER FUNCTIONS
-    def print_to_file(self, string, comment=None, ws_str ='\n\t\t', ws_comment='\n\t'):
+    def print_to_file(self, string, comment=None, ws_str ='\n\t', ws_comment='\n', modifier = 0):
+        for a in range(self.scope_counter + modifier):
+            ws_str += '\t'
+            ws_comment += '\t'
         self.body_buf.write(ws_comment + '; ' + comment)
         self.body_buf.write(ws_str + string)
 
@@ -326,7 +330,7 @@ class LLVMVisitor(Visitor):
                 string += ', '
             string += to_llvm_type(args[a])
         string += ') {'
-        self.print_to_file(string, comment,'\n', '\n\n')
+        self.print_to_file(string, comment,'\n', '\n\n', -1)
 
         for a in range(len(args)):
             # allocate a register for the function argument
@@ -367,6 +371,15 @@ class LLVMVisitor(Visitor):
         self.print_to_header(name + ' = private unnamed_addr constant [' + str(meta_size) + ' x i8] c' + meta)
         return name
 
+    def gen_default_return(self, rtype):
+        pass
+
+    def gen_global_var(self, ast: AST.AssignOp):
+        var: AST.Variable = ast.get_child(0).get_child(0)
+        var.set_register('@' + var.get_name())
+        string = '@' + var.get_name() + ' = global ' + to_llvm_type(var) + ' ' + str(self.get_value_of(ast.get_child(1)))
+        self.print_to_header(string)
+
     # VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
         self.visitChildren(ast)
@@ -377,8 +390,10 @@ class LLVMVisitor(Visitor):
         self.gen_alloca(var.get_register(), to_llvm_type(var))
 
     def visitAssignOp(self, ast: AST.AssignOp):
+        if self.scope_counter == 0:
+            self.gen_global_var(ast)
+            return
         self.visitChildren(ast)
-
         # assignment could also be a definition
         if isinstance(ast.get_child(0), AST.Decl):
             var: AST.Variable = ast.get_child(0).get_child(0)
@@ -542,16 +557,20 @@ class LLVMVisitor(Visitor):
         self.print_label(loop_end, 'exit')
 
     def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
+        self.scope_counter += 1
         args = []
+        has_return = False
         for a in range(1, ast.get_child_count()):
             self.visit(ast.get_child(a).get_child(0))
             args.append(ast.get_child(a).get_child(0))
         self.cur_func = ast.get_name() # for array definitions
         self.gen_function_def(to_llvm_type(ast), ast.get_name(), args)
         self.visit(ast.get_child(0))
+
         if (to_llvm_type(ast)[0:4] == 'void'):
             self.gen_void_return()
         self.body_buf.write('\n}')
+        self.scope_counter -= 1
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
         self.visitChildren(ast)
