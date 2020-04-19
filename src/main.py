@@ -58,7 +58,7 @@ def ast_visualise(ast: Component, filename: str, style=label_style):
 # TODO Not
 # TODO semantic error arguments scanf mogen alleen char arrays zijn
 # TODO arrays als func argument
-# TODO strings printen
+# TODO strings als array opslaan, lezen & printen + /n enz herkennen
 
 
 def main(argv: list):
