@@ -37,6 +37,12 @@ class StatementException (SemanticException):
     pass
 
 
+class ImplicitDeclarationWarning (SemanticWarning, StatementException):
+    def __init__(self, node: FunctionCall):
+        self.node = node
+        self.message = "implicitly declaring function \"" + node.get_name() + "\""
+
+
 class UnusedCodeWarning (SemanticWarning, BlockException):
     def __init__(self, node: Component):
         self.node = node

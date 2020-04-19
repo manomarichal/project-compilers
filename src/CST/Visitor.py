@@ -338,10 +338,34 @@ class Visitor (GrammarVisitor):
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
 
+    def visitFunctionDef(self, ctx: GrammarParser.FunctionDefContext):
+        decl = self.visitFunctionDecl(ctx.functionDecl())
+        my_ast = AST.FunctionDefinition(decl.get_name())
+        my_ast.set_source_loc(source_from_ctx(ctx))
+
+        self.enter_scope(my_ast)
+
+        # add definitions of arguments
+        for child_nr in range(decl.get_child_count()):
+            var: AST.Variable = decl.get_child(child_nr).get_child(0)
+            self._current_sym_table[var.get_name()] = var.get_st_entry()
+        my_ast.swap_children(decl)
+
+        # make function body
+        my_ast.add_child(self.visit(ctx.stateOrScope()), 0)
+
+        self.exit_scope(my_ast)
+
+        # add function to ST
+        # self._current_sym_table[my_ast.get_name()] = decl.get_st_entry()
+        # due to weird way st works w/ "current symbol table", the entry is already there
+
+        return my_ast
+
     def visitFunctionDecl(self, ctx: GrammarParser.FunctionDeclContext):
         decl_info_list = [self.extract_decl(ctx.pureDecl(i)) for i in range(len(ctx.pureDecl()))]
 
-        my_ast = AST.FunctionDefinition(decl_info_list[0][0])
+        my_ast = AST.FunctionDeclaration(decl_info_list[0][0])
         my_ast.set_source_loc(source_from_ctx(ctx))
 
         # set type & arg_count of function
@@ -350,10 +374,7 @@ class Visitor (GrammarVisitor):
 
         self.enter_scope(my_ast)
 
-        # make function body
-        my_ast.add_child(self.visit(ctx.stateOrScope()))
-
-        # add variables within the scope for each argument & add argument info to function's st entry
+        # add variable decls for each argument & add arguments info to function's st entries
         for arg_nr in range(1, len(decl_info_list)):
             arg_ctx = ctx.pureDecl(arg_nr)
             arg = AST.Variable(decl_info_list[arg_nr][0])

@@ -139,6 +139,13 @@ class TypeVisitor (Visitor):
     def visitIndir(self, node: Indir):
         child_type = self.visit(node.get_child(0))
         own_type = None
+
+        if child_type.is_array():
+            child_type = deepcopy(child_type)
+            child_type.popType(True)
+            child_type.pushType(TypeComponents.PTR)
+            self.insert_conversion(node, 0, child_type, False)
+
         if child_type.is_ptr():
             own_type = deepcopy(child_type)
             own_type.popType()
@@ -149,13 +156,21 @@ class TypeVisitor (Visitor):
 
     def visitIndex(self, node: Index):
         child_types = self.visitChildren(node)
+        indexed_type: TypeClass = child_types[0]
         own_type = None
         self.assume_mono_conversion(node, 1, TypeClass([TypeComponents.INT]))
-        if child_types[0].is_array():
-            own_type = deepcopy(child_types[0])
+
+        if indexed_type.is_ptr():
+            indexed_type = deepcopy(child_types[0])
+            indexed_type.popType(True)
+            indexed_type.pushType(TypeComponents.ARR)
+            self.insert_conversion(node, 0, indexed_type, False)
+
+        if indexed_type.is_array():
+            own_type = deepcopy(indexed_type)
             own_type.popType()
         else:
-            self.add_error(InvalidTypeError(node, child_types[0], "can only index arrays"))
+            self.add_error(InvalidTypeError(node, child_types[0], "can only index arrays or pointers"))
         node.set_type(own_type)
         return own_type
 

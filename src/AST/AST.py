@@ -513,10 +513,6 @@ class Continue (Leaf):
     pass
 
 
-class WhileConstr(Composite):
-    pass
-
-
 # Functions:
 class FunctionCall(Composite):
     _name: str
@@ -527,6 +523,29 @@ class FunctionCall(Composite):
 
     def get_name(self):
         return self._name
+
+
+class FunctionDeclaration(Scope):  # shouldn't really be a scope, but this way we can store arg type info in the ST
+    _name: str
+
+    def __init__(self, name):
+        super().__init__()
+        self._name = name
+
+    def get_name(self):
+        return self._name
+
+    def get_st_entry(self):
+        scope = self.get_scope()
+        if scope is None:
+            return None
+        return scope.symbol_find(self.get_name())
+
+    def get_type(self):
+        entry = self.get_st_entry()
+        if entry is None:
+            return None
+        return entry.type_obj
 
 
 class FunctionDefinition(Scope):

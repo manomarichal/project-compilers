@@ -115,7 +115,7 @@ class TypeClass:
         void_type = TypeClass([TypeComponents.VOID])
         if self == void_type and not other == void_type:
             return False
-        if self.is_array() or other.is_array():
+        if self.is_array() or other.is_array():  # not really true: arrays are ptrs & ptrs can be converted to int etc
             return False
         return True
 

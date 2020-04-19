@@ -54,10 +54,9 @@ COMMENT_SINGLE: '//'~('\r'|'\n')* -> skip;
 COMMENT_MULTI: '/*' .*? '*/' -> skip;
 
 
+doc :(STDIO)? block EOF;
 
-doc :(STDIO)? block? EOF;
-
-block: statement+;
+block: statement*;
 
 typeObj:  CONST? (INT_TYPE | FLOAT_TYPE | CHAR_TYPE | VOID_TYPE) (CONST? STAR)* CONST?;
 
@@ -67,17 +66,19 @@ arrayLit: LEFT_C_BRACE literal (COMMA literal)* RIGHT_C_BRACE;
 
 identifier: ID;
 
-statement: functionDecl | (general_expr | control) SEMICOLON | construct;
+statement: functionDef | (general_expr | control | functionDecl) SEMICOLON | construct;
 
 control: BREAK_KW | CONT_KW;
 
-functionDecl: pureDecl LEFT_PAREN ( pureDecl (COMMA pureDecl)* )? RIGHT_PAREN stateOrScope;
+functionDecl: pureDecl LEFT_PAREN ( pureDecl (COMMA pureDecl)* )? RIGHT_PAREN;
+
+functionDef: functionDecl stateOrScope;
 
 functionCall: identifier LEFT_PAREN ( (functionArgument) (COMMA functionArgument)* )? RIGHT_PAREN;
 
 functionArgument: expr;
 
-// TODO: I don't really know the rules here (eg. for(int a=0; ...) allowed but not if(int a=0) or while(int a=0) according to online compiler)
+// TODO: I don't really know the rules here (eg. "for(int a=0; ...)" allowed but not "if(int a=0)" or "while(int a=0)" according to online compiler)
 parenCond: LEFT_PAREN general_expr RIGHT_PAREN;
 
 stateOrScope: statement | scopeConstr;
@@ -98,7 +99,7 @@ forConstr: FOR_KW LEFT_PAREN general_expr SEMICOLON general_expr SEMICOLON gener
 
 whileConstr: WHILE_KW parenCond  stateOrScope;
 
-general_expr: (returnStatement) | (decl | expr | printf | functionCall); // TODO: fix naming (this should be the simpler name)
+general_expr: (returnStatement) | (decl | expr | printf | functionCall);
 
 decl:  pureDecl (ASSIGN_OP expr)?; // TODO: separate declaration & definition (for re-use)
 

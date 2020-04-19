@@ -26,8 +26,12 @@ from src.AST.DotVisitor import label_big as label_style
 
 # TODO strings bij prinf()
 
+mute_warnings: bool = False
+
+
 def ast_pass(visitor: ASTVisitor, tree: Component):
     return visitor, visitor.visit(tree)
+
 
 def ast_error_pass(visitor: ASTVisitor, tree: Component):
     try:
@@ -38,8 +42,9 @@ def ast_error_pass(visitor: ASTVisitor, tree: Component):
     else:
         for error in visitor.errors:
             print(error.__repr__(), file=sys.stderr)
-        for warning in visitor.warnings:
-            print(warning.__repr__(), file=sys.stderr)
+        if not mute_warnings:
+            for warning in visitor.warnings:
+                print(warning.__repr__(), file=sys.stderr)
         if len(visitor.errors) > 0:
             exit(1)
 
@@ -50,7 +55,11 @@ def ast_visualise(ast: Component, filename: str, style=label_style):
     graph.write_png(filename + ".png")
 
 
-def main(argv):
+def main(argv: list):
+    if "-n" in argv:
+        global mute_warnings
+        mute_warnings = True
+
     input_stream = FileStream(argv[1])
     lexer = GrammarLexer(input_stream)
     stream = CommonTokenStream(lexer)
@@ -75,15 +84,15 @@ def main(argv):
 
     ast_error_pass(TypedSemanticsVisitor(), ast)
 
-    if len(argv) == 3:
-        if argv[2] == '-cf':
-            ast_pass(ConstantFoldingVisitor(), ast)
+    if "-cf" in argv:
+        ast_pass(ConstantFoldingVisitor(), ast)
 
     # ast_visualise(ast, fname, label_style)
     tfile = open(fname + '.ll', 'w+')
     llvm = LLVMVisitor(tfile)
     llvm.visit(ast)
     llvm.close()
+
 
 if __name__ == '__main__':
     main(sys.argv)

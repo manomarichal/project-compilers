@@ -6,14 +6,18 @@ from src.utility.TypeClass import *
 
 
 class UntypedSemanticVisitor(Visitor):
-    defined_st_entries: set
-    uninitialised_st_entries: set
-    warnings: list
-    errors: list
+    # defined_var_entries: set{VarEntry}
+    # uninitialised_var_entries: set{VarEntry}
+    # declared_function_entries: set{FunctionEntry}
+    # defined_function_entries: set{FunctionEntry}
+    # warnings: list[SemanticException]
+    # errors: list[SemanticException]
 
     def __init__(self):
-        self.defined_st_entries = set()
-        self.uninitialised_st_entries = set()
+        self.defined_var_entries = set()
+        self.uninitialised_var_entries = set()
+        self.declared_function_entries = set()
+        self.defined_function_entries = set()
         self.warnings = list()
         self.errors = list()
 
@@ -46,19 +50,19 @@ class UntypedSemanticVisitor(Visitor):
 
     def visitDecl(self, node: AST.Decl):
         entry = node.get_scope().symbol_find(node.get_child(0).get_name())
-        if entry in self.defined_st_entries:
+        if entry in self.defined_var_entries:
             self.error(RedeclaredError(node.get_child(0)))
         else:
-            self.defined_st_entries.add(entry)
+            self.defined_var_entries.add(entry)
             if not isinstance(node.get_parent(), AST.AssignOp):
-                self.uninitialised_st_entries.add(entry)
+                self.uninitialised_var_entries.add(entry)
 
     def visitVariable(self, node: AST.Variable):
         entry = node.get_st_entry()
-        if entry is None or entry not in self.defined_st_entries:
+        if entry is None or entry not in self.defined_var_entries:
             self.error(UndeclaredError(node))
         else:
-            if entry in self.uninitialised_st_entries:
+            if entry in self.uninitialised_var_entries:
                 child: Component = node
                 parent: Composite = child.get_parent()
                 while isinstance(parent, AST.Index):
@@ -69,7 +73,7 @@ class UntypedSemanticVisitor(Visitor):
                     parent = parent.get_parent()
 
                 if isinstance(parent, AST.AssignOp) and parent.get_child(0) is child:
-                    self.uninitialised_st_entries.remove(entry)
+                    self.uninitialised_var_entries.remove(entry)
                 else:
                     self.warn(UninitialisedWarning(node))
 
@@ -89,26 +93,28 @@ class UntypedSemanticVisitor(Visitor):
 
     def visitFunctionDefinition(self, node: AST.FunctionDefinition):
         entry = node.get_scope().symbol_find(node.get_name())
-        if entry in self.defined_st_entries:
+        if entry in self.defined_function_entries:
             self.error(RedeclaredError(node))
         else:
-            self.defined_st_entries.add(entry)
+            self.defined_function_entries.add(entry)
 
         for argNr in range(1, node.get_child_count()):
             self.visit_function_arg(node.get_child(argNr))
         self.visit_outside_statement(node.get_child(0))
 
     def visit_function_arg(self, node: AST.Decl):
-        entry: SymbolTable.FuncEntry = node.get_scope().symbol_find(node.get_child(0).get_name())
-        if entry in self.defined_st_entries:
+        entry: SymbolTable.VarEntry = node.get_scope().symbol_find(node.get_child(0).get_name())
+        if entry in self.defined_var_entries:
             self.error(RedeclaredError(node.get_child(0)))
         else:
-            self.defined_st_entries.add(entry)
+            self.defined_var_entries.add(entry)
 
     def visitFunctionCall(self, node: AST.FunctionCall):
         entry: SymbolTable.FuncEntry = node.get_scope().symbol_find(node.get_name())
-        if entry is None or entry not in self.defined_st_entries:
+        if entry is None:
             self.error(UndeclaredError(node))
+        if entry not in self.defined_var_entries:
+            self.warn(ImplicitDeclarationWarning(node))
         if entry.arg_count != node.get_child_count():
             self.error(ArgCountMismatchError(node, entry.arg_count, node.get_child_count()))
 
@@ -117,6 +123,13 @@ class UntypedSemanticVisitor(Visitor):
         if function is None:
             self.error(IllegalStatementError(node, "no enclosing function definition"))
         self.visitChildren(node)
+
+    def visitWhileStatement(self, node: AST.WhileStatement):  # TODO
+        self.visit(node.get_child(1))
+        self.visit(node.get_child(0))
+
+    def visitForStatement(self, node: AST.ForStatement):  # TODO
+        self.visit(node.get_child(0))
 
 
 # TODO: internal state and weird upkeep is getting a bit much -> helper functions? subclassing? separate passes?
