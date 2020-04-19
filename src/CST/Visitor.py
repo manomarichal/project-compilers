@@ -320,6 +320,14 @@ class Visitor (GrammarVisitor):
             pass
         return my_ast
 
+    def visitScanf(self, ctx):
+        my_ast = AST.Scanf(ctx.getChild(2).getText())
+        for index in range(1, ctx.getChildCount()):
+            if isinstance(ctx.getChild(index), GrammarParser.ExprContext):
+                my_ast.add_child(self.visit(ctx.getChild(index)))
+            pass
+        return my_ast
+
     def visitControl(self, ctx: GrammarParser.ControlContext):
         my_ast = None
         token_type = ctx.getChild(0).getSymbol().type

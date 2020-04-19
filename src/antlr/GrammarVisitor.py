@@ -154,5 +154,10 @@ class GrammarVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by GrammarParser#scanf.
+    def visitScanf(self, ctx:GrammarParser.ScanfContext):
+        return self.visitChildren(ctx)
+
+
 
 del GrammarParser

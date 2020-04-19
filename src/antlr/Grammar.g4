@@ -47,6 +47,7 @@ INCR: '++';
 DECR: '--';
 NOT_OP : '!';
 PRINT : 'printf';
+SCAN : 'scanf';
 ID : [_a-zA-Z][_a-zA-Z0-9]*;
 WS: [ \n\t\r]+ -> skip;
 STRING: '"'.*?'"';
@@ -99,13 +100,13 @@ forConstr: FOR_KW LEFT_PAREN general_expr SEMICOLON general_expr SEMICOLON gener
 
 whileConstr: WHILE_KW parenCond  stateOrScope;
 
-general_expr: (returnStatement) | (decl | expr | printf | functionCall);
+general_expr: (returnStatement) | (decl | expr | printf | scanf | functionCall);
 
 decl:  pureDecl (ASSIGN_OP expr)?; // TODO: separate declaration & definition (for re-use)
 
 pureDecl: typeObj identifier (arrayIndex)?; // this is the actual declaration, decl can also be a defininition
 
-returnStatement: RETURN_KW (decl | expr | printf | functionCall)?;
+returnStatement: RETURN_KW (expr | functionCall)?;
 
 literal: INT | FLOAT | CHAR | arrayLit;
 
@@ -129,3 +130,5 @@ expr : LEFT_PAREN expr RIGHT_PAREN |
     literal;
 
 printf : PRINT LEFT_PAREN (STRING (COMMA expr)*) RIGHT_PAREN; // TODO: print any (general) expression
+
+scanf : SCAN LEFT_PAREN (STRING (COMMA expr)*) RIGHT_PAREN; // TODO: print any (general) expression
