@@ -244,7 +244,13 @@ class LLVMVisitor(Visitor):
         string = self.get_rname() + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([" + str(meta_size) \
                  + " x i8],[" + str(meta_size) + " x i8]* " + str_name + ",i32 0, i32 0)"
         for arg in args:
-            string += ', ' + str(arg[0]) + " " + str(arg[1])
+            if (arg[0]) == 'float':
+                c_reg = self.get_rname()
+                self.gen_fpext(c_reg, 'float', 'double', str(arg[1]))
+                string += ', ' + 'double'+ " " + c_reg
+            else:
+                string += ', ' + str(arg[0]) + " " + str(arg[1])
+
         string += ")"
         self.print_to_file(string, comment)
 

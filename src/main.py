@@ -87,7 +87,7 @@ def main(argv: list):
     if "-cf" in argv:
         ast_pass(ConstantFoldingVisitor(), ast)
 
-    # ast_visualise(ast, fname, label_style)
+    ast_visualise(ast, fname, label_style)
     tfile = open(fname + '.ll', 'w+')
     llvm = LLVMVisitor(tfile)
     llvm.visit(ast)
