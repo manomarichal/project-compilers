@@ -12,7 +12,16 @@ class SemanticException (Exception):
         self.message = message
 
     def __repr__(self):  # TODO: add source text to AST nodes
-        return type(self).__name__ + ": " + self.message + "\n\tat " + self.node.get_source_loc()
+        result = type(self).__name__
+        if self.message is not None:
+            result += ": " + self.message
+        if self.node is not None:
+            result += "\n\tat "
+            if self.node.get_source_loc() is not None:
+                result += self.node.get_source_loc()
+            else:
+                result += "<unknown location>"
+        return result
 
     @staticmethod
     def repr_node(node):
@@ -104,6 +113,14 @@ class UndeclaredError (SemanticError, StatementException):
         self.message = "usage of undeclared " + self.repr_node(node)
 
 
+class UndefinedError (SemanticError, StatementException):
+    def __init__(self, node: Component, detail: str = None):
+        self.node = node
+        self.message = "usage of undefined " + self.repr_node(node)
+        if detail is not None:
+            self.message += " (" + detail + ")"
+
+
 class RedeclaredError (SemanticError, StatementException):
     def __init__(self, node: Component):
         self.node = node
@@ -159,3 +176,9 @@ class NestedFunctionError (SemanticError, BlockException):
         self.message = "defining or declaring function \"" + node.get_name() + "\"" \
                        + " inside function \"" + outer.get_name() + "\"" \
                        + " – nested function definitions aren't currently supported"
+
+
+class NoMainError (SemanticError, BlockException):
+    def __init__(self, node: Doc):
+        self.node = node
+        self.message = "no main function found"

@@ -1,5 +1,8 @@
 import copy
 
+# TODO: array ±= ptr, reflect this better (arr_to_ptr & ptr_to_arr, merge is_ptr & is_array) or merge them altogether
+# TODO: better const support
+
 
 class TypeComponents:
     VOID = 0
@@ -80,6 +83,9 @@ class TypeClass:
         return self.get_top_type() == TypeComponents.ARR
 
     def promotes_to(self, other):
+        if self == other:
+            return True
+
         self_type = self.get_top_type(TypeComponents.CONST)
         other_type = other.get_top_type(TypeComponents.CONST)
         result = False
@@ -120,6 +126,8 @@ class TypeClass:
             return True
         void_type = TypeClass([TypeComponents.VOID])
         if self == void_type or other == void_type:
+            return False
+        if other.is_ptr():
             return False
         if self.is_array() or other.is_array():  # not really true: arrays are ptrs & ptrs can be converted to int etc
             return False

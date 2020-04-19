@@ -12,6 +12,8 @@ class UntypedSemanticVisitor(Visitor):
     # defined_function_entries: set{FunctionEntry}
     # warnings: list[SemanticException]
     # errors: list[SemanticException]
+    # has_main: bool
+    # has_IO: bool  # TODO: actual includes maybe?
 
     def __init__(self):
         self.defined_var_entries = set()
@@ -20,6 +22,8 @@ class UntypedSemanticVisitor(Visitor):
         self.defined_function_entries = set()
         self.warnings = list()
         self.errors = list()
+        self.has_main = False
+        self.has_IO = False
 
     def visit_outside_statement(self, node):
         try:
@@ -49,8 +53,11 @@ class UntypedSemanticVisitor(Visitor):
         self.visit_children_outside_statement(node)
 
     def visitDoc(self, node: AST.Doc):
+        self.has_IO = node.IO
         for child_nr in range(node.get_child_count()):
             self.visit_outside_statement(node.get_child(child_nr))
+        if not self.has_main:
+            self.error(NoMainError(node))
 
     def visitDecl(self, node: AST.Decl):
         entry = node.get_scope().symbol_find(node.get_child(0).get_name())
@@ -69,14 +76,16 @@ class UntypedSemanticVisitor(Visitor):
             if entry in self.uninitialised_var_entries:
                 child: Component = node
                 parent: Composite = child.get_parent()
-                while isinstance(parent, AST.Index):
+                while isinstance(parent, AST.Index) or isinstance(parent, AST.Adress):
                     if not parent.get_child(0) is child:
                         self.warn(UninitialisedWarning(node))
                         return
                     child = parent
                     parent = parent.get_parent()
 
-                if isinstance(parent, AST.AssignOp) and parent.get_child(0) is child:
+                # TODO: maybe ScanF inherits FunctionCall? otherwise, clean this up
+                if (isinstance(parent, AST.AssignOp) and parent.get_child(0) is child)\
+                        or (isinstance(parent, AST.FunctionCall) or isinstance(parent, AST.Scanf)):
                     self.uninitialised_var_entries.remove(entry)
                 else:
                     self.warn(UninitialisedWarning(node))
@@ -110,6 +119,9 @@ class UntypedSemanticVisitor(Visitor):
         self.visit(node.get_child(0))
 
     def visitFunctionDefinition(self, node: AST.FunctionDefinition):
+        if node.get_name() == "main":
+            self.has_main = True
+
         entry = node.get_st_entry()
 
         self.verify_func_def_signature(node, entry)
@@ -185,6 +197,16 @@ class UntypedSemanticVisitor(Visitor):
         self.visit_outside_statement(node.get_child(3))
         self.visit_outside_statement(node.get_child(1))
         self.visit_outside_statement(node.get_child(2))
+
+    def visitPrintf(self, node: AST.Printf):
+        if not self.has_IO:
+            self.error(UndefinedError(node, "forgot to include stdio?"))
+        self.visitChildren(node)
+
+    def visitScanf(self, node: AST.Scanf):
+        if not self.has_IO:
+            self.error(UndefinedError(node, "forgot to include stdio?"))
+        self.visitChildren(node)
 
 
 # TODO: internal state and weird upkeep is getting a bit much -> helper functions? subclassing? separate passes?
