@@ -142,6 +142,9 @@ class TypeClass:
             result += TypeComponents.translations[component] + " "
         return result[0:len(result)-1]
 
+    def __str__(self):
+        return repr(self)
+
 
 bool_type = TypeClass([TypeComponents.BOOL])
 char_type = TypeClass([TypeComponents.CHAR])

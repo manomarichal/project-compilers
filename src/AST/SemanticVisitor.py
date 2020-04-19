@@ -92,7 +92,13 @@ class UntypedSemanticVisitor(Visitor):
         self.visit(node.get_child(0))
 
     def visitFunctionDefinition(self, node: AST.FunctionDefinition):
-        entry = node.get_scope().symbol_find(node.get_name())
+        entry = node.get_st_entry()
+
+        self.verify_func_def_signature(node, entry)
+
+        if entry not in self.declared_function_entries:
+            self.declared_function_entries.add(entry)
+
         if entry in self.defined_function_entries:
             self.error(RedeclaredError(node))
         else:
@@ -102,8 +108,26 @@ class UntypedSemanticVisitor(Visitor):
             self.visit_function_arg(node.get_child(argNr))
         self.visit_outside_statement(node.get_child(0))
 
+    def visitFunctionDeclaration(self, node: AST.FunctionDeclaration):
+        entry = node.get_st_entry()
+
+        self.verify_func_decl_signature(node, entry)
+
+        if entry not in self.declared_function_entries:
+            self.declared_function_entries.add(entry)
+
+    def verify_func_decl_signature(self, node: AST.FunctionDeclaration, entry: SymbolTable.FuncEntry):
+        node_args = [node.get_child(i).get_child(0).get_type() for i in range(node.get_child_count())]
+        if node_args != entry.arg_types:
+            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (node_args, node.get_type())))
+
+    def verify_func_def_signature(self, node: AST.FunctionDefinition, entry: SymbolTable.FuncEntry):
+        node_args = [node.get_child(i).get_child(0).get_type() for i in range(1, node.get_child_count())]
+        if node_args != entry.arg_types:
+            self.error(SignatureMismatchError(node, (node_args, node.get_type()), (node_args, node.get_type())))
+
     def visit_function_arg(self, node: AST.Decl):
-        entry: SymbolTable.VarEntry = node.get_scope().symbol_find(node.get_child(0).get_name())
+        entry: SymbolTable.VarEntry = node.get_child(0).get_st_entry()
         if entry in self.defined_var_entries:
             self.error(RedeclaredError(node.get_child(0)))
         else:
@@ -113,7 +137,7 @@ class UntypedSemanticVisitor(Visitor):
         entry: SymbolTable.FuncEntry = node.get_scope().symbol_find(node.get_name())
         if entry is None:
             self.error(UndeclaredError(node))
-        if entry not in self.defined_var_entries:
+        if entry not in self.declared_function_entries:
             self.warn(ImplicitDeclarationWarning(node))
         if entry.arg_count != node.get_child_count():
             self.error(ArgCountMismatchError(node, entry.arg_count, node.get_child_count()))
@@ -124,12 +148,17 @@ class UntypedSemanticVisitor(Visitor):
             self.error(IllegalStatementError(node, "no enclosing function definition"))
         self.visitChildren(node)
 
-    def visitWhileStatement(self, node: AST.WhileStatement):  # TODO
-        self.visit(node.get_child(1))
-        self.visit(node.get_child(0))
+    # TODO - correct scoping (decl in body not usable in check)
+    def visitWhileStatement(self, node: AST.WhileStatement):
+        self.visit_outside_statement(node.get_child(1))
+        self.visit_outside_statement(node.get_child(0))
 
-    def visitForStatement(self, node: AST.ForStatement):  # TODO
-        self.visit(node.get_child(0))
+    # TODO - correct scoping (decl in body not usable in check or advance)
+    def visitForStatement(self, node: AST.ForStatement):
+        self.visit_outside_statement(node.get_child(0))
+        self.visit_outside_statement(node.get_child(3))
+        self.visit_outside_statement(node.get_child(1))
+        self.visit_outside_statement(node.get_child(2))
 
 
 # TODO: internal state and weird upkeep is getting a bit much -> helper functions? subclassing? separate passes?
@@ -201,9 +230,10 @@ class TypedSemanticsVisitor(Visitor):
             missing_return = self.returns_awaiting[len(self.returns_awaiting)-1]
             self.returns_awaiting.pop()
             if missing_return:
-                self.error(MissingReturnError(node))
-            if not self.last_scope_exited:
                 self.warn(NoReturnWarning(node))
+            else:
+                if not self.last_scope_exited:
+                    self.warn(MayNotReturnWarning(node))
         else:
             self.visitChildren(node)
 

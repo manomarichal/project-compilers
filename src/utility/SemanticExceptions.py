@@ -1,5 +1,6 @@
 from src.AST.AST import *
 from src.utility.TypeClass import TypeClass
+from src.utility import SymbolTable
 
 
 class SemanticException (Exception):
@@ -49,11 +50,18 @@ class UnusedCodeWarning (SemanticWarning, BlockException):
         self.message = "unreachable code found"
 
 
-class NoReturnWarning (SemanticWarning, StatementException):
+class MayNotReturnWarning (SemanticWarning, StatementException):
     def __init__(self, node: FunctionDefinition):
         self.node = node
         self.message = "function \"" + node.get_name() + "\" with return type " \
                        + node.get_type().__repr__() + " may not return anything"
+
+
+class NoReturnWarning (SemanticWarning, StatementException):
+    def __init__(self, node: FunctionDefinition):
+        self.node = node
+        self.message = "function \"" + node.get_name() + "\" with non-void type " + node.get_type().__repr__() \
+                       + " missing a return statement"
 
 
 class ImplicitConversionWarning (SemanticWarning, StatementException):
@@ -102,6 +110,12 @@ class RedeclaredError (SemanticError, StatementException):
         self.message = "redeclaration of " + self.repr_node(node)
 
 
+class RedefinedError(SemanticError, StatementException):
+    def __init__(self, node: Component):
+        self.node = node
+        self.message = "redeclaration of " + self.repr_node(node)
+
+
 class RValError (SemanticError, StatementException):
     def __init__(self, node: Component, detail=None):
         self.node = node
@@ -131,8 +145,9 @@ class IllegalStatementError (SemanticError, StatementException):
         self.message = "illegal statement " + self.repr_node(node) + ": " + context
 
 
-class MissingReturnError (SemanticError, StatementException):
-    def __init__(self, node: FunctionDefinition):
+class SignatureMismatchError (SemanticError, BlockException):
+    def __init__(self, node: FunctionDeclaration, sign_a: tuple, sign_b: tuple):
         self.node = node
-        self.message = "function \"" + node.get_name() + "\" with non-void type " + node.get_type().__repr__() \
-                       + " missing a return statement"
+        self.message = "conflicting declarations or definitions found for function \"" + node.get_name() + "\": " \
+                       + str(sign_a[0]) + "->" + str(sign_a[1]) + " VS " \
+                       + str(sign_b[0]) + "->" + str(sign_b[1])
