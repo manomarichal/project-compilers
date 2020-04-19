@@ -232,20 +232,19 @@ class TypedSemanticsVisitor(Visitor):
         self.visitChildren(node)
 
     def visitFunctionDefinition(self, node: AST.FunctionDefinition):
-        if not node.get_type() == TypeClass([TypeComponents.VOID]):
-            self.returns_awaiting.append(True)
-            self.visit_children_outside_statement(node)
-            missing_return = self.returns_awaiting[len(self.returns_awaiting)-1]
-            self.returns_awaiting.pop()
-            if missing_return:
+        void_type = TypeClass([TypeComponents.VOID])
+        self.returns_awaiting.append(True)
+        self.visit_children_outside_statement(node)
+        missing_return = self.returns_awaiting[len(self.returns_awaiting) - 1]
+        self.returns_awaiting.pop()
+        if missing_return:
+            node.guarantied_return = False
+            if not node.get_type() == void_type:
                 self.warn(NoReturnWarning(node))
-            else:
-                if not self.last_scope_exited:
-                    self.warn(MayNotReturnWarning(node))
         else:
-            self.returns_awaiting.append(False)
-            self.visit_children_outside_statement(node)
-            self.returns_awaiting.pop()
+            node.guarantied_return = True
+            if not node.get_type() == void_type and not self.last_scope_exited:
+                self.warn(MayNotReturnWarning(node))
 
     def visitReturnStatement(self, node: AST.ReturnStatement):
         self.visitChildren(node)

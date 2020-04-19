@@ -556,10 +556,12 @@ class FunctionDeclaration(Scope):  # shouldn't really be a scope, but this way w
 
 class FunctionDefinition(Scope):
     _name: str
+    guarantied_return: bool
 
     def __init__(self, name):
         super().__init__()
         self._name = name
+        self.guarantied_return = bool()
 
     def get_name(self):
         return self._name
