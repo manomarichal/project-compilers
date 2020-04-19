@@ -1,5 +1,6 @@
 grammar Grammar;
 
+STDIO: '#include <stdio.h>';
 CHAR : '\''[ -~] '\'';
 INT : [0-9]+;
 FLOAT : [0-9]+'.'[0-9]+;
@@ -54,7 +55,7 @@ COMMENT_MULTI: '/*' .*? '*/' -> skip;
 
 
 
-doc : block? EOF;
+doc :(STDIO)? block? EOF;
 
 block: statement+;
 
