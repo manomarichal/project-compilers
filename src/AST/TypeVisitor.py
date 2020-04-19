@@ -103,8 +103,31 @@ class TypeVisitor (Visitor):
         return own_type
 
     def visitMathOp(self, node: MathOp):
-        self.visitChildren(node)
-        own_type = self.assume_bi_conversion(node, 0, 1)
+        child_types = self.visitChildren(node)
+        own_type = None
+
+        if isinstance(node, Sum) or isinstance(node, Sub):
+            int_type = TypeClass([TypeComponents.INT])
+            if child_types[0].is_array():
+                self.add_error(InvalidTypeError(node, child_types[0]))
+            elif child_types[1].is_array():
+                self.add_error(InvalidTypeError(node, child_types[1]))
+            elif child_types[0].is_ptr():
+                self.assume_mono_conversion(node, 1, int_type)
+                own_type = child_types[0]
+            elif child_types[1].is_ptr():
+                self.assume_mono_conversion(node, 0, int_type)
+                own_type = child_types[1]
+            else:
+                own_type = self.assume_bi_conversion(node, 0, 1)
+        else:
+            if child_types[0].is_array() or child_types[0].is_ptr():
+                self.add_error(InvalidTypeError(node, child_types[0]))
+            elif child_types[1].is_array() or child_types[1].is_ptr():
+                self.add_error(InvalidTypeError(node, child_types[1]))
+            else:
+                own_type = self.assume_bi_conversion(node, 0, 1)
+
         node.set_type(own_type)
         return own_type
 

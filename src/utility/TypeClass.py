@@ -1,5 +1,8 @@
 import copy
 
+# TODO: array ±= ptr, reflect this better (arr_to_ptr & ptr_to_arr, merge is_ptr & is_array) or merge them altogether
+# TODO: better const support
+
 
 class TypeComponents:
     VOID = 0
