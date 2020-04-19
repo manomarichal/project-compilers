@@ -29,9 +29,15 @@ class TypeClass:
     # [1:] = type modifier
     _type_stack: list
 
-    def __init__(self, type_stack):
-        self._type_stack = type_stack
+    def __init__(self, type_stack, info_list=None):
+        self._type_stack = []
         self._array_lengths = []
+        for type_nr in range(len(type_stack)):
+            new_type = type_stack[type_nr]
+            if info_list is not None:
+                self.pushType(new_type, info_list[type_nr])
+            else:
+                self.pushType(new_type)
 
     def pushType(self, new_type, info=None):
         self._type_stack.append(new_type)

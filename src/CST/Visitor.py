@@ -234,6 +234,10 @@ class Visitor (GrammarVisitor):
             my_ast.set_type(TypeClass([TypeComponents.FLOAT]))
         if ctx.arrayLit():
             my_ast = self.visit(ctx.arrayLit())
+        if ctx.STRING():
+            my_ast.val = list(ctx.getText()[1:len(ctx.getText())-1])
+            # type should really be [char const]
+            my_ast.set_type(TypeClass([TypeComponents.CHAR, TypeComponents.ARR], [None, len(my_ast.val)]))
 
         my_ast.set_source_loc(source_from_ctx(ctx))
         return my_ast
