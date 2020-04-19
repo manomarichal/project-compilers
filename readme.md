@@ -63,8 +63,8 @@ The `-cf` flag can be added after `<filename>` to enable constant folding.
     
 ### Status:
 #### Project 1)
-- 2 Expression Parser
-    - 2.1 Grammar:
+- 1 Expression Parser
+    - 1.1 Grammar:
       -  [x] (mandatory) Binary operations + , - , * , and /
       -  [x] (mandatory) Binary operations > , < , and ==
       -  [x] (mandatory) Unary operators + and -
@@ -72,13 +72,16 @@ The `-cf` flag can be added after `<filename>` to enable constant folding.
       -  [x] (optional) Binary operator %
       -  [x] (optional) Comparison operators >= , <= , and !=
       -  [x] (optional) Logical operators && , || , and !
-    - [x] 2.2 (mandatory) AST
-    - [x] 2.3 (mandatory) Visualization
-    - [x] 2.4 (optional) Constant folding
+    - [x] 1.2 (mandatory) AST
+    - [x] 1.3 (mandatory) Visualization
+    - [x] 1.4 (optional) Constant folding
+
+Notes:
+- We supporten het declaren van meerder variables in hetzelfde statement niet, eg. `int a, b, c;`
 
 #### Project 2)
-- 1 Variables:
-    - 1.1 Grammar:
+- 2.1 Variables:
+    - 2.1.1 Grammar:
         - (mandatory) Types
             - [x] char
             - [x] int
@@ -93,12 +96,12 @@ The `-cf` flag can be added after `<filename>` to enable constant folding.
         - [x] (mandatory) Pointer Operations * and &
         - [x] (optional) Identifier Operations ++ and --
         - [x] (optional) Implicit Conversions (+ warnings for non-promotions)
-- [x] 1.2 (mandatory) AST
-- [x] 1.3 (mandatory) Visualization
-- [ ] 1.4 (optional) Constant Propagation
+- [x] 2.1.2 (mandatory) AST
+- [x] 2.1.3 (mandatory) Visualization
+- [ ] 2.1.4 (optional) Constant Propagation
 - 2 Error Analysis
-    - [x] 2.1 Syntax Errors
-    - [x] 2.2 Semantic Errors
+    - [x] 2.2.1 Syntax Errors
+    - [x] 2.2.2 Semantic Errors
         - [x] undefined & uninitialised variables
         - [x] redeclared & redefined variables
         - [x] operations on incompatible types (dereferencing a non-ptr type)
@@ -127,22 +130,72 @@ The `-cf` flag can be added after `<filename>` to enable constant folding.
       - [x] (optional) Binary operator %
       - [ ] (optional) Include comments in compiled LLVM
 
-Note: soms als je met floats werkt crashed het in assembly met een: 
-    
-    error: floating point constant invalid for type
- 
-dit komt wanneer je een floating point constant wil inladen dat een repeating decimal is in binary, bevoorbeeld
+#### Project 4)
+- 4.1 Grammar
+    - [x] (mandatory) if
+    - [x] (mandatory) else
+    - [x] (mandatory) while
+    - [x] (mandatory) for
+    - [x] (mandatory) break
+    - [x] (mandatory) continue
+    - [ ] (optional) switch
+    - [ ] (optional) case
+    - [ ] (optional) default
+    - [x] (mandatory) scopes
+- [x] 4.2 (mandatory) AST
+- [x] 4.3 (mandatory) Visualization
+- [x] 4.4 (mandatory) Semantic Analysis
+- 4.5 (mandatory) LLVM
+    - [x] (mandatory) if
+    - [x] (mandatory) else
+    - [x] (mandatory) while
+    - [x] (mandatory) for
+    - [x] (mandatory) break
+    - [x] (mandatory) continue
+    - [ ] (optional) switch
+    - [ ] (optional) case
+    - [ ] (optional) default
+    - [x] (mandatory) scopes
+#### Project 5)
+- 5.1 Grammar
+    - [x] (mandatory) return
+    - [x] (mandatory) void
+    - [x] (mandatory) scopes
+    - [x] (mandatory) local variables
+    - [x] (mandatory) global variables
+    - [x] (mandatory) functions
+- [x] 5.2 (mandatory) AST
+- [x] 5.3 (mandatory) Visualization
+- 5.4 (mandatory) Semantic Analysis
+    - [x] (optional) check if all paths end with return
+- 5.5 (mandatory) Optimizations
+    - [x] (mandatory) unreachable & dead code after return
+    - [x] (mandatory) unreachable & dead code after break/continue
+    - [ ] (optional) non used variables
+    - [ ] (optional) conditionals that are never true
+- 5.6 (mandatory) LLVM
+    - [x] (mandatory) return
+    - [x] (mandatory) void
+    - [x] (mandatory) scopes
+    - [x] (mandatory) local variables
+    - [x] (mandatory) global variables
+    - [x] (mandatory) functions
+#### Project 6)
+- 6.1 Grammar
+    - [x] (mandatory) arrays
+    - [x] (mandatory) import
+    - [ ] (optional) arrays with variable size
+    - [ ] (optional) multi-dimensional arrays
+- [x] 6.2 (mandatory) AST
+- [x] 6.3 (mandatory) Visualization
+- [x] 6.4 (mandatory) LLVM
 
-    float a = 1.3;
-
-Meer hierover op de LLVM documentatie: https://llvm.org/docs/LangRef.html#simple-constants 
-
-We hebben een mail gestuurt naar Brent of we hier rekening mee moesten houden, en hij zij van niet.
-
+Notes: 
+- We hebben arrays die kunnen gebruikt worden, maar ze kunnen wel niet aangesproken worden via een pointer.
+- We hebben support voor strings in de AST & Visualization, maar niet in LLVM. (wel char arrays)
+- Onze printf en scanf supporten het printen en lezen van char arrays niet.
 
 ### Remarks + extras
-
 - We hebben een assignment operator
 - We supporten operators * en & voor pointers, en pointers naar pointers naar pointers etc..
 
-**huge_test.c** combineert zo een beetje alles, dus ik raad aan om deze zeker te bekijken.
