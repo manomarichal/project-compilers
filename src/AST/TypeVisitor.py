@@ -163,8 +163,28 @@ class TypeVisitor (Visitor):
         self.visit_children_outside_statement(node)
         bool_type = TypeClass([TypeComponents.BOOL])
         self.assume_mono_conversion(node, 0, bool_type)
-        node.set_type(None)
         return None
+
+    def visitForStatement(self, node: ForStatement):
+        self.visit_children_outside_statement(node)
+        bool_type = TypeClass([TypeComponents.BOOL])
+        self.assume_mono_conversion(node, 1, bool_type)
+        return None
+
+    def visitWhileStatement(self, node: WhileStatement):
+        self.visit_children_outside_statement(node)
+        bool_type = TypeClass([TypeComponents.BOOL])
+        self.assume_mono_conversion(node, 0, bool_type)
+
+    def visitSwitchStatement(self, node: SwitchStatement):
+        self.visit_children_outside_statement(node)
+        int_type = TypeClass([TypeComponents.INT])
+        self.assume_mono_conversion(node, 0, int_type)
+
+    def visitCaseBranch(self, node: CaseBranch):
+        self.visit_children_outside_statement(node)
+        int_type = TypeClass([TypeComponents.INT])
+        self.assume_mono_conversion(node, 0, int_type)
 
     def visitFunctionDefinition(self, node: FunctionDefinition):
         self.visit_children_outside_statement(node)

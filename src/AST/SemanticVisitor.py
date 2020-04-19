@@ -119,16 +119,24 @@ class UntypedSemanticVisitor(Visitor):
         self.visitChildren(node)
 
 
+# TODO: internal state and weird upkeep is getting a bit much -> helper functions? subclassing? separate passes?
 class TypedSemanticsVisitor(Visitor):
-    warnings: list
-    errors: list
-    returns_awaiting: list  # queue to support nested function definitions
+    # warnings: list
+    # errors: list
+    # returns_awaiting: list[bool]  # stack to support nested function definitions
+    # block_exited: list[bool]  # stack of currently active blocks: whether they are GUARANTEED to have exited already
+    # last_scope_exited: bool  # whether the last popped scope (≠ block) was guaranteed to have exited
+    # unused_code_warned: bool  # whether a warning has already been given about code after current block exit
 
     def __init__(self):
         self.warnings = list()
         self.errors = list()
         self.returns_awaiting = list()
+        self.block_exited = list()
+        self.last_scope_exited = False
+        self.unused_code_warned = False
 
+    # preferably don't use, visit_children version does a bunch of extra upkeep
     def visit_outside_statement(self, node):
         try:
             return self.visit(node)
@@ -136,8 +144,15 @@ class TypedSemanticsVisitor(Visitor):
             pass
 
     def visit_children_outside_statement(self, node):
+        tmp = self.unused_code_warned
+        self.unused_code_warned = False
+        self.block_exited.append(False)
         for child_nr in range(node.get_child_count()):
             self.visit_outside_statement(node.get_child(child_nr))
+        if type(node) == AST.Scope:
+            self.last_scope_exited = self.block_exited[len(self.block_exited) - 1]
+        self.block_exited.pop()
+        self.unused_code_warned = tmp
 
     def warn(self, warning):
         self.warnings.append(warning)
@@ -145,6 +160,12 @@ class TypedSemanticsVisitor(Visitor):
     def error(self, error):
         self.errors.append(error)
         raise error
+
+    def visit(self, node):
+        if len(self.block_exited) > 0 and self.block_exited[len(self.block_exited)-1] and not self.unused_code_warned:
+            self.unused_code_warned = True
+            self.warn(UnusedCodeWarning(node))
+        super().visit(node)
 
     def visitComposite(self, node: AST.Composite):
         self.visitChildren(node)
@@ -161,8 +182,6 @@ class TypedSemanticsVisitor(Visitor):
         self.visitChildren(node)
 
     def visitFunctionDefinition(self, node: AST.FunctionDefinition):
-        expected_return = node.get_type()
-        void_type = TypeClass(TypeComponents.VOID)
         if not node.get_type() == TypeClass([TypeComponents.VOID]):
             self.returns_awaiting.append(True)
             self.visit_children_outside_statement(node)
@@ -170,9 +189,27 @@ class TypedSemanticsVisitor(Visitor):
             self.returns_awaiting.pop()
             if missing_return:
                 self.error(MissingReturnError(node))
+            if not self.last_scope_exited:
+                self.warn(NoReturnWarning(node))
         else:
             self.visitChildren(node)
 
     def visitReturnStatement(self, node: AST.ReturnStatement):
         self.visitChildren(node)
+        if node.get_enclosing(AST.FunctionDefinition) is None:
+            self.error(IllegalStatementError(node, "no enclosing function definition"))
         self.returns_awaiting[len(self.returns_awaiting)-1] = False
+        self.block_exited[len(self.block_exited)-1] = True
+
+    def visitContinue(self, node: AST.Continue):
+        if node.get_enclosing(AST.ForStatement) is None and node.get_enclosing(AST.WhileStatement):
+            self.error(IllegalStatementError(node, "no enclosing loop construct"))
+        self.block_exited[len(self.block_exited)-1] = True
+
+    def visitBreak(self, node: AST.Break):
+        if node.get_enclosing(AST.ForStatement) is None \
+                and node.get_enclosing(AST.WhileStatement) is None \
+                and node.get_enclosing(AST.CaseBranch) is None \
+                and node.get_enclosing(AST.DefaultBranch) is None:
+            self.error(IllegalStatementError(node, "no enclosing switch branch or loop"))
+        self.block_exited[len(self.block_exited)-1] = True
