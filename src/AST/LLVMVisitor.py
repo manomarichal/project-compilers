@@ -248,6 +248,11 @@ class LLVMVisitor(Visitor):
         string = res + ' =' + op_str + type_of + ' ' + str(lhs) + ', ' + str(rhs)
         self.print_to_file(string, comment)
 
+    def gen_not(self, res, lhs, type_of):
+        comment = res + ' = ' + str(lhs) + ' xor 1'
+        string = res + ' = xor ' + type_of + ' ' + str(lhs) + ', 1'
+        self.print_to_file(string, comment)
+
     def gen_math_instr(self, res, lhs, rhs, type_of, op: AST.MathOp):
         op_str, op_com = get_math_instruction(op, type_of == 'float')
         self.gen_binary_instruction(res, lhs, rhs, type_of, op_str, op_com)
@@ -502,7 +507,11 @@ class LLVMVisitor(Visitor):
         self.gen_math_instr(reg, var_reg, -1, to_llvm_type(ast.get_child(0)), AST.Prod())
 
     def visitNot(self, ast: AST.Not):
-        pass
+        self.visitChildren(ast)
+        var_reg = self.get_value_of(ast.get_child(0))
+        reg = self.get_rname()
+        ast.set_register(reg)
+        self.gen_not(reg, var_reg, to_llvm_type(ast.get_child(0)))
 
     def visitPos(self, ast: AST.Neg):
         self.visitChildren(ast)
@@ -516,7 +525,7 @@ class LLVMVisitor(Visitor):
         var_reg = self.get_value_of(ast.get_child(0))
 
         if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
-            self.gen_trunc(reg, 'i32', 'i1', var_reg)
+            self.gen_comp_instr(reg, var_reg, 0, 'i32', AST.NotEqual())
         elif ast.get_conversion_type() == AST.conv_type.INT_TO_FLOAT:
             self.gen_sitofp(reg, 'i32', 'float', var_reg)
         elif ast.get_conversion_type() == AST.conv_type.BOOL_TO_INT:
@@ -524,7 +533,7 @@ class LLVMVisitor(Visitor):
         elif ast.get_conversion_type() == AST.conv_type.BOOL_TO_FLOAT:
             self.gen_uitofp(reg, 'i1', 'float', var_reg)
         elif ast.get_conversion_type() == AST.conv_type.FLOAT_TO_BOOL:
-            self.gen_fptoui(reg, 'float', 'i1', var_reg)
+            self.gen_comp_instr(reg, var_reg, 0.0, 'float', AST.NotEqual())
         elif ast.get_conversion_type() == AST.conv_type.FLOAT_TO_INT:
             self.gen_fptosi(reg, 'float', 'i32', var_reg)
         elif ast.get_conversion_type() == AST.conv_type.FLOAT_TO_CHAR:
@@ -536,7 +545,7 @@ class LLVMVisitor(Visitor):
         elif ast.get_conversion_type() == AST.conv_type.CHAR_TO_FLOAT:
             self.gen_sitofp(reg, 'i8', 'float', var_reg)
         elif ast.get_conversion_type() == AST.conv_type.CHAR_TO_BOOL:
-            self.gen_trunc(reg, 'i8', 'i1', var_reg)
+            self.gen_comp_instr(reg, var_reg, 0, 'i8', AST.NotEqual())
         elif ast.get_conversion_type() == AST.conv_type.CHAR_TO_INT:
             self.gen_zext(reg, 'i8', 'i32', var_reg)
 
