@@ -15,6 +15,7 @@ from enum import Enum
 class Component:
     _parent = None
     _register = None
+    _offset = None
     _ir_rep = None
     _type: TypeClass = None
     _source_loc = None
@@ -45,6 +46,12 @@ class Component:
 
     def set_register(self, register):
         self._register = register
+
+    def get_offset(self):
+        return self._offset
+
+    def set_offset(self, offset):
+        self._offset = offset
 
     def get_parent(self):
         return self._parent
@@ -523,6 +530,12 @@ class Variable(Leaf):
     def get_name(self):
         return self._name
 
+    def get_offset(self):
+        return self.get_st_entry().offset
+
+    def set_offset(self, offset):
+        self.get_st_entry().offset = offset
+        
     def get_register(self):
         return self.get_st_entry().register
 

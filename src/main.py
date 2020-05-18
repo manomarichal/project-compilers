@@ -21,7 +21,7 @@ from src.AST.DotVisitor import DotVisitor
 from src.AST.LLVMVisitor import LLVMVisitor
 from src.AST.TypeVisitor import TypeVisitor
 from src.AST.SemanticVisitor import UntypedSemanticVisitor, TypedSemanticsVisitor
-
+from src.AST.MIPSVisitor import MIPSVisitor
 from src.AST.DotVisitor import label_big as label_style
 
 # TODO strings bij prinf()
@@ -99,10 +99,14 @@ def main(argv: list):
         ast_pass(ConstantFoldingVisitor(), ast)
 
     ast_visualise(ast, fname, label_style)
-    tfile = open(fname + '.ll', 'w+')
-    llvm = LLVMVisitor(tfile)
-    llvm.visit(ast)
-    llvm.close()
+    tfile = open(fname + '.asm', 'w+')
+    # llvm = LLVMVisitor(tfile)
+    # llvm.visit(ast)
+    # llvm.close()
+
+    mips = MIPSVisitor(tfile)
+    mips.visit(ast)
+    mips.close()
 
 
 if __name__ == '__main__':
