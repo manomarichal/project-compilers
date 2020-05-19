@@ -190,11 +190,13 @@ class MIPSVisitor(Visitor):
     def reset_offset(self):
         self._offset = 0
 
-    def get_treg(self):
-        self._tcounter += 1
+    def get_treg(self, incr = True):
+        reg = self._tcounter
+        if incr is True:
+            self._tcounter += 1
         if self._tcounter > 8:
             print("max temp registers reached")
-        return '$t' + str(self._tcounter-1)
+        return '$t' + str(reg)
 
     def reset_treg(self):
         self._tcounter = 0
@@ -261,6 +263,11 @@ class MIPSVisitor(Visitor):
         string = 'bne ' + lhs + ', ' + rhs + ' ' + label
         self.print_to_file(string, comment)
 
+    def gen_beq(self, lhs, rhs, label):
+        comment = 'branch to ' + label + ' if ' + lhs + ' == ' + rhs
+        string = 'beq ' + lhs + ', ' + rhs + ' ' + label
+        self.print_to_file(string, comment)
+
     def gen_mflo(self, res):
         comment = 'move from'
         string = 'mflo ' + res
@@ -302,21 +309,39 @@ class MIPSVisitor(Visitor):
         else:
             self.gen_binary_instruction(res, lhs, rhs, op_str, op_com)
 
-    def gen_comp_instr(self, res, lhs, rhs, type_of, op: AST.CompOp):
-        self.gen_binary_instruction(res, lhs, rhs, 'slt ', ' / ')
-        if isinstance(op, AST.Less): return
-
-        label_help = self.get_lname()
+    def gen_comp_instr(self, res, lhs, rhs, op: AST.CompOp):
+        # TODO less than or equal is broke
+        label_false = self.get_lname()
+        label_true = self.get_lname()
         label_continue = self.get_lname()
+        
+        if isinstance(op, AST.Less): 
+            self.gen_binary_instruction(res, lhs, rhs, 'slt ', ' / ')
+            return
+        elif isinstance(op, AST.More):
+            self.gen_binary_instruction(res, lhs, rhs, 'slt ', ' / ')
+            self.gen_bne(res, '$zero', label_false)
+            self.gen_branch_uncon(label_true)
+        elif isinstance(op, AST.Equal):
+            self.gen_beq(lhs, rhs, label_true)
+            self.gen_branch_uncon(label_false)
+        elif isinstance(op, AST.MoreE):
+            self.gen_binary_instruction(res, lhs, rhs, 'slt ', ' / ')
+            self.gen_beq(res, '$zero', label_true)
+            self.gen_branch_uncon(label_false)
+        elif isinstance(op, AST.LessE):
+            self.gen_binary_instruction(res, lhs, rhs, 'slt ', ' / ')
+            self.gen_beq(res, '$zero', label_false)
+            self.gen_branch_uncon(label_true)
 
-        if isinstance(op, AST.More):
-            self.gen_bne(res, '$zero', label_help)
-            self.gen_load_im(res, 1)
-        self.gen_branch_uncon(label_continue)
-
-        self.print_label(label_help, 'not true')
+        self.print_label(label_false, 'not true')
         self.gen_load_im(res, 0)
         self.gen_branch_uncon(label_continue)
+
+        self.print_label(label_true, 'true')
+        self.gen_load_im(res, 1)
+        self.gen_branch_uncon(label_continue)
+
         self.print_label(label_continue, 'exit comparison')
 
     def gen_logic_instr(self, res, lhs, rhs, type_of, op: AST.LogicOp):
@@ -399,7 +424,7 @@ class MIPSVisitor(Visitor):
 
     def visitLiteral(self, ast: AST.Literal):
         self.reset_treg()
-        reg = self.get_treg()
+        reg = self.get_treg(False)
         self.gen_load_im(reg, ast.get_value())
         offset = self.incr_sp()
         ast.set_offset(offset)
@@ -412,9 +437,7 @@ class MIPSVisitor(Visitor):
 
     def visitAssignOp(self, ast: AST.AssignOp):
         # TODO gvar
-
         self.visitChildren(ast)
-        # assignment could also be a definition
         if isinstance(ast.get_child(0), AST.Decl):
             var: AST.Variable = ast.get_child(0).get_child(0)
         else:
@@ -430,22 +453,21 @@ class MIPSVisitor(Visitor):
 
     def visitNeg(self, ast: AST.Neg):
         self.visitChildren(ast)
-        var_reg = self.load_in_reg(ast.get_child(0))
-        reg = self.get_rname()
-        ast.set_register(reg)
-        self.gen_math_instr(reg, var_reg, -1, to_mips_size(ast.get_child(0)), AST.Prod())
+        offset = self.incr_sp()
+        ast.set_offset(offset)
+
+        reg = self.get_treg()
+        self.gen_binary_instruction(reg, '$zero', self.load_in_reg(ast.get_child(0)), 'subu ', ' - ')
+        self.gen_sw(reg, offset)
+
+        self.reset_treg()
 
     def visitNot(self, ast: AST.Not):
-        self.visitChildren(ast)
-        var_reg = self.load_in_reg(ast.get_child(0))
-        reg = self.get_rname()
-        ast.set_register(reg)
-        self.gen_not(reg, var_reg, to_mips_size(ast.get_child(0)))
+        pass
 
     def visitPos(self, ast: AST.Neg):
         self.visitChildren(ast)
-        reg = self.load_in_reg(ast.get_child(0))
-        ast.set_register(reg)
+        ast.set_offset(ast.get_child(0).get_offset())
 
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
