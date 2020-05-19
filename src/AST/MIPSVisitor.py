@@ -33,11 +33,7 @@ def get_math_instruction(op:AST.MathOp, floating: bool):
 
 def get_comp_instruction(op:AST.CompOp, floating: bool):
 
-    if floating:
-        op_str = ' fcmp '
-    else:
-        op_str = ' icmp '
-
+    op_str = ''
     op_com = 'error in get_comp_instruction'
 
     if isinstance(op, AST.More):
@@ -86,10 +82,10 @@ def get_logic_instruction(op:AST.LogicOp):
 
     if isinstance(op, AST.And):
         op_str += ' and '
-        op_com = ' and '
+        op_com = 'and '
     elif isinstance(op, AST.Or):
         op_str += ' or '
-        op_com = ' or '
+        op_com = 'or '
 
     return op_str, op_com
 
@@ -260,6 +256,11 @@ class MIPSVisitor(Visitor):
         string = 'jr ' + reg
         self.print_to_file(string, comment)
 
+    def gen_bne(self, lhs, rhs, label):
+        comment = 'branch to ' + label + ' if ' + lhs + ' != ' + rhs
+        string = 'bne ' + lhs + ', ' + rhs + ' ' + label
+        self.print_to_file(string, comment)
+
     def gen_mflo(self, res):
         comment = 'move from'
         string = 'mflo ' + res
@@ -283,14 +284,9 @@ class MIPSVisitor(Visitor):
         self.gen_mfhi(res)
 
     def gen_binary_instruction(self, res, lhs, rhs, op_str, op_com):
-        if op_str == 'mult ' or op_str == 'div ':
-            self.gen_mult_or_div(res, lhs, rhs, op_str, op_com)
-        elif op_str == 'mod ':
-            self.gen_mod(res, lhs, rhs)
-        else:
-            comment = res + ' = ' + str(lhs) + op_com + str(rhs)
-            string = op_str + res + ', ' + str(lhs) + ', ' + str(rhs)
-            self.print_to_file(string, comment)
+        comment = res + ' = ' + str(lhs) + op_com + str(rhs)
+        string = op_str + res + ', ' + str(lhs) + ', ' + str(rhs)
+        self.print_to_file(string, comment)
 
     def gen_not(self, res, lhs, type_of):
         comment = res + ' = ' + str(lhs) + ' xor 1'
@@ -299,11 +295,29 @@ class MIPSVisitor(Visitor):
 
     def gen_math_instr(self, res, lhs, rhs, type_of, op: AST.MathOp):
         op_str, op_com = get_math_instruction(op, type_of == 'float')
-        self.gen_binary_instruction(res, lhs, rhs, op_str, op_com)
+        if op_str == 'mult ' or op_str == 'div ':
+            self.gen_mult_or_div(res, lhs, rhs, op_str, op_com)
+        elif op_str == 'mod ':
+            self.gen_mod(res, lhs, rhs)
+        else:
+            self.gen_binary_instruction(res, lhs, rhs, op_str, op_com)
 
     def gen_comp_instr(self, res, lhs, rhs, type_of, op: AST.CompOp):
-        op_str, op_com = get_comp_instruction(op, type_of == 'float')
-        self.gen_binary_instruction(res, lhs, rhs, type_of, op_str, op_com)
+        self.gen_binary_instruction(res, lhs, rhs, 'slt ', ' / ')
+        if isinstance(op, AST.Less): return
+
+        label_help = self.get_lname()
+        label_continue = self.get_lname()
+
+        if isinstance(op, AST.More):
+            self.gen_bne(res, '$zero', label_help)
+            self.gen_load_im(res, 1)
+        self.gen_branch_uncon(label_continue)
+
+        self.print_label(label_help, 'not true')
+        self.gen_load_im(res, 0)
+        self.gen_branch_uncon(label_continue)
+        self.print_label(label_continue, 'exit comparison')
 
     def gen_logic_instr(self, res, lhs, rhs, type_of, op: AST.LogicOp):
         op_str, op_com = get_logic_instruction(op)
@@ -324,9 +338,9 @@ class MIPSVisitor(Visitor):
         string = reg + ' = getelementptr ' + type_of + ', ' + type_of + '* ' + base_ptr + ', i32 ' + str(base) + ', i32 ' + str(offset)
         self.print_to_file(string, comment)
 
-    def gen_branch_uncon(self, label1): # unconditional branch
-        comment = 'branch to ' + label1
-        string = 'br label %' + label1
+    def gen_branch_uncon(self, label): # unconditional branch
+        comment = 'branch to ' + label
+        string = 'beq $zero, $zero, ' + label
         self.print_to_file(string, comment)
 
     def gen_branch_con(self, label1, label2, reg): # conditional branch
@@ -435,9 +449,7 @@ class MIPSVisitor(Visitor):
 
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
-        reg = self.get_rname()
-        ast.set_register(reg)
-        var_reg = self.load_in_reg(ast.get_child(0))
+        ast.set_offset(ast.get_child(0).get_offset())
 
     def visitBinaryOp(self, ast: AST.BinaryOp):
         self.visitChildren(ast)
