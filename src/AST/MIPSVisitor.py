@@ -22,7 +22,6 @@ def get_math_instruction(op:AST.MathOp, floating: bool):
         op_str += 'div '
     elif isinstance(op, AST.Mod):
         op_str += 'mod '
-
     return op_str
 
 def get_comp_instruction(op:AST.CompOp, floating: bool):
@@ -61,17 +60,15 @@ def get_comp_instruction(op:AST.CompOp, floating: bool):
 
 def get_logic_instruction(op:AST.LogicOp):
     op_str = ''
-
     if isinstance(op, AST.And):
-        op_str += ' and '
+        op_str += 'and '
     elif isinstance(op, AST.Or):
-        op_str += ' or '
+        op_str += 'or '
+    return op_str
 
 class MIPSVisitor(Visitor):
     file = None
-    _rcounter = 0 # counter to keep track of registers used
     _lcounter = 0 # counter to keep track of labels used
-    _scounter = 0 # counter to keep track of strings used
     _offset = 0
     _tcounter = 0
     cur_func = ''
@@ -100,7 +97,6 @@ class MIPSVisitor(Visitor):
         self.file.write(self.body_buf.getvalue() + '\n')
         self.file.close()
     
-    # TODO multiple types
     def incr_sp(self, value = 4):
         self._offset -= value
         return self._offset
@@ -179,6 +175,12 @@ class MIPSVisitor(Visitor):
     def gen_not(self, res, lhs, type_of):
         self.print_to_file(res + ' = xor ' + type_of + ' ' + str(lhs) + ', 1')
 
+    def gen_or(self, res, lhs, rhs):
+        self.print_to_file('or ' +  str(res) + ', ' + str(lhs) + ', ' + str(rhs))
+
+    def gen_and(self, res, lhs, rhs):
+        self.print_to_file('and ' +  str(res) + ', ' + str(lhs) + ', ' + str(rhs))
+
     def gen_math_instr(self, res, lhs, rhs, op: AST.MathOp):
         op_str = get_math_instruction(op, False)
         if op_str == 'mult ' or op_str == 'div ':
@@ -209,9 +211,12 @@ class MIPSVisitor(Visitor):
             self.gen_beq(res, '$zero', label_true)
             self.gen_branch_uncon(label_false)
         elif isinstance(op, AST.LessE):
-            self.gen_binary_instruction(res, lhs, rhs, 'slt ', ' / ')
+            self.gen_binary_instruction(res, lhs, rhs, 'slt ')
             self.gen_beq(res, '$zero', label_false)
             self.gen_branch_uncon(label_true)
+        elif isinstance(op, AST.NotEqual):
+            self.gen_bne(lhs, rhs, label_true)
+            self.gen_branch_uncon(label_false)
 
         self.print_label(label_false, 'not true')
         self.gen_load_im(res, 0)
@@ -224,9 +229,8 @@ class MIPSVisitor(Visitor):
         self.print_label(label_continue, 'exit comparison')
 
     def gen_logic_instr(self, res, lhs, rhs, op: AST.LogicOp):
-        pass
-        # op_str, op_com = get_logic_instruction(op)
-        # self.gen_binary_instruction(res, lhs, rhs, type_of, op_str, op_com)
+        op_str = get_logic_instruction(op)
+        self.gen_binary_instruction(res, lhs, rhs, op_str)
 
     def gen_syscall(self):
         self.print_to_file('syscall')
@@ -251,9 +255,7 @@ class MIPSVisitor(Visitor):
             a_counter += 1
 
     def gen_function_call(self, func_name):
-        comment = 'call function ' + func_name
-        string = 'jal ' + func_name
-        self.print_to_file(string)
+        self.print_to_file('jal ' + func_name)
 
     # VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
@@ -306,10 +308,6 @@ class MIPSVisitor(Visitor):
         self.visitChildren(ast)
         ast.set_offset(ast.get_child(0).get_offset())
 
-    def visitCastOp(self, ast: AST.CastOp):
-        self.visitChildren(ast)
-        ast.set_offset(ast.get_child(0).get_offset())
-
     def visitBinaryOp(self, ast: AST.BinaryOp):
         self.visitChildren(ast)
         reg = self.get_treg()
@@ -355,7 +353,7 @@ class MIPSVisitor(Visitor):
         self.visitChildren(ast)
         self.gen_load('$v0', ast.get_child(0).get_offset())
         self.gen_load('$ra', -8)
-        self.gen_jr('$ra')
+        # self.gen_jr('$ra')
 
     def visitFunctionCall(self, ast:AST.FunctionCall):
         self.visitChildren(ast)
@@ -444,3 +442,15 @@ class MIPSVisitor(Visitor):
 
     def visitContinue(self, ast: AST.Continue):
         self.gen_branch_uncon(self.begin_label_stack[-1])
+
+    def visitCastOp(self, ast: AST.CastOp):
+        self.visitChildren(ast)
+        offset = self.incr_sp()
+        reg = self.get_treg()
+        ast.set_offset(offset)
+        var_reg = self.load_in_reg(ast.get_child(0))
+
+        if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
+            self.gen_comp_instr(reg, var_reg, '$zero', AST.NotEqual())
+        self.gen_sw(reg, offset)
+        self.reset_treg()
