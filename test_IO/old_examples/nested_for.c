@@ -1,4 +1,7 @@
-int nested_for1()
+#include <stdio.h>
+
+
+int main()
 {
     int t = 0;
     for (int b=0;b<10;b = b +1)
@@ -24,12 +27,7 @@ int nested_for1()
             break;
         }
     }
-    return t;
-}
-
-int nested_for2()
-{
-    int t = 0;
+    int t2 = 0;
     for (int b=0;b<10;b = b +1)
     {
         if (b < 3)
@@ -42,7 +40,7 @@ int nested_for2()
             {
                 continue;
             }
-            t = t + 1;
+            t2 = t2 + 1;
             if (c == 6)
             {
                 break;
@@ -53,13 +51,17 @@ int nested_for2()
             break;
         }
     }
-    return t;
-}
-int main()
-{
-    int res = nested_for1();
-    int res2 = nested_for2();
-    int total = res + res2;
-    printf(total);    // expected 76
+
+    int t3 = 0;
+    while (t3 < 20)
+    {
+        t3 = t3 + 1;
+        if (t3 > 10)
+        {
+            break;
+        }
+    }
+    int total = t + t2 + t3;
+    printf("%d", total);    // expected 87
     return 0;
 }
