@@ -7,7 +7,7 @@ from io import StringIO
 def check_if_floating(ast: AST.Component):
     return ast.get_type().__repr__()[0:5] == 'float'
 
-def get_math_instruction(op:AST.MathOp, floating: bool):
+def get_math_instruction(op:AST.MathOp, floating: False):
     op_str = ''
     if isinstance(op, AST.Sum): op_str += 'add'
     elif isinstance(op, AST.Sub): op_str += 'subu'
@@ -17,15 +17,13 @@ def get_math_instruction(op:AST.MathOp, floating: bool):
     if floating: op_str += '.s'
     return op_str
 
-def gen_comp_instruction(op:AST.CompOp):
-    op_str = ''
-    if isinstance(op, AST.Equal): op_str += 'beq'
-    elif isinstance(op, AST.NotEqual): op_str += 'bne'
-    elif isinstance(op, AST.MoreE): op_str += 'bge'
-    elif isinstance(op, AST.More): op_str += 'bgt'
-    elif isinstance(op, AST.LessE): op_str += 'ble'
-    elif isinstance(op, AST.Less): op_str += 'blt'
-    return op_str
+def gen_comp_instruction_int(op:AST.CompOp):
+    if isinstance(op, AST.Equal): return 'beq'
+    elif isinstance(op, AST.NotEqual): return 'bne'
+    elif isinstance(op, AST.MoreE): return'bge'
+    elif isinstance(op, AST.More): return 'bgt'
+    elif isinstance(op, AST.LessE): return 'ble'
+    elif isinstance(op, AST.Less): return 'blt'
 
 def get_logic_instruction(op:AST.LogicOp):
     op_str = ''
@@ -51,6 +49,8 @@ class MIPSVisitor(Visitor):
         self.header_buf = StringIO()
         self.body_buf = StringIO()
         self.print_to_header(".data")
+        self.print_to_header("fpzero: .float 0.0")
+        self.print_to_header("fpone: .float 1.0")
         self.print_to_file(" .text")
         self.print_to_file(".globl main")
         self.file = file
@@ -170,6 +170,14 @@ class MIPSVisitor(Visitor):
     def gen_beq(self, lhs, rhs, label):
         self.print_to_file('beq ' + lhs + ', ' + rhs + ' ' + label)
 
+    def gen_int_to_float(self, ireg, freg):
+        self.print_to_file('mtc1 ' + ireg + ', ' + freg )
+        self.print_to_file('cvt.s.w ' + freg + ', ' + freg)
+
+    def gen_float_to_int(self, ireg, freg):
+        self.print_to_file('cvt.s.w ' + freg + ', ' + freg)
+        self.print_to_file('mfc1 ' + freg + ', ' + ireg )
+
     def gen_mflo(self, res):
         self.print_to_file('mflo ' + res)
 
@@ -211,21 +219,36 @@ class MIPSVisitor(Visitor):
         else:
             self.gen_binary_instruction(res, lhs, rhs, op_str)
 
-    def gen_comp_instr(self, res, lhs, rhs, op: AST.CompOp):
+    def gen_comp_instr_float(self, lhs, rhs, op: AST.CompOp, label_true):
+        if isinstance(op, AST.Less):
+            self.gen_binary_instruction(lhs, rhs, label_true, "c.lt.s")
+        elif isinstance(op, AST.LessE):
+            self.gen_binary_instruction(lhs, rhs, label_true, "c.le.s")
+        elif isinstance(op, AST.Equal):
+            self.gen_binary_instruction(lhs, rhs, label_true, "c.eq.s")
+
+    def gen_comp_instr(self, res, lhs, rhs, op: AST.CompOp, floating):
         # TODO less than or equal is broke
         label_false = self.get_lname()
         label_true = self.get_lname()
         label_continue = self.get_lname()
 
-        self.gen_binary_instruction(lhs, rhs, label_true, gen_comp_instruction(op))
-        self.gen_branch_uncon(label_false)
+        if not floating:
+            self.gen_binary_instruction(lhs, rhs, label_true, gen_comp_instruction_int(op))
+            self.gen_branch_uncon(label_false)
+        else:
+            self.gen_comp_instr_float(res, lhs, rhs, op)
+            self.gen_branch_float(label_true, True)
+            self.gen_branch_uncon(label_false)
 
         self.print_label(label_false, 'not true')
-        self.gen_load_im(res, 0)
+        if floating: self.gen_load(res, "$fpzero", True)
+        else: self.gen_load_im(res, 0)
         self.gen_branch_uncon(label_continue)
 
         self.print_label(label_true, 'true')
-        self.gen_load_im(res, 1)
+        if floating: self.gen_load(res, "$fpone", True)
+        else: self.gen_load_im(res, 1)
         self.gen_branch_uncon(label_continue)
 
         self.print_label(label_continue, 'exit comparison')
@@ -237,12 +260,16 @@ class MIPSVisitor(Visitor):
     def gen_syscall(self):
         self.print_to_file('syscall')
 
-    def gen_branch_uncon(self, label): # unconditional branch
+    def gen_branch_uncon(self, label, floating = False): # unconditional branch
         self.print_to_file('beq $zero, $zero, ' + label)
 
     def gen_branch_con(self, label1, label2, reg): # conditional branch
         self.gen_beq(reg, '$zero', label2)
         self.gen_branch_uncon(label1)
+
+    def gen_branch_float(self, label, type_of: bool):
+        if type_of: self.print_to_file('bc1t ' + label)
+        else: self.print_to_file('bc1f ' + label)
 
     def gen_function_def(self, name, args: {AST.Variable}, frame_size):
         self.reset_adress()
@@ -291,7 +318,7 @@ class MIPSVisitor(Visitor):
         else:
             var: AST.Variable = ast.get_child(0)
 
-        self.gen_sw(self.load_in_reg(ast.get_child(1)), self.get_adress_of(var), check_if_floating(ast.get_child(1)))
+        self.gen_sw(self.load_in_reg(ast.get_child(1)), self.get_adress_of(var), check_if_floating(ast))
         self.reset_reg()
 
     def visitPrintf(self, ast: AST.Printf):  #
@@ -326,13 +353,15 @@ class MIPSVisitor(Visitor):
         self.visitChildren(ast)
         reg = self.get_reg(check_if_floating(ast))
         lhs, rhs = self.load_in_reg(ast.get_child(0)), self.load_in_reg(ast.get_child(1))
+        floating = check_if_floating(ast)
 
-        if isinstance(ast, AST.LogicOp):
-            self.gen_logic_instr(reg, lhs, rhs, ast)
-        elif isinstance(ast, AST.MathOp):
-            self.gen_math_instr(reg, lhs, rhs, ast, check_if_floating(ast))
+        if isinstance(ast, AST.MathOp):
+            self.gen_math_instr(reg, lhs, rhs, ast, floating)
         elif isinstance(ast, AST.CompOp):
-            self.gen_comp_instr(reg, lhs, rhs, ast)
+            self.gen_comp_instr(reg, lhs, rhs, ast, floating)
+        elif isinstance(ast, AST.LogicOp):
+            self.gen_logic_instr(reg, lhs, rhs, ast)
+
 
         adress = self.gen_fp_adress()
         ast.set_adress(adress)
@@ -466,17 +495,21 @@ class MIPSVisitor(Visitor):
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
 
-        if ast.get_conversion_type() == AST.conv_type.BOOL_TO_INT:
+        if ast.get_conversion_type() in {AST.conv_type.BOOL_TO_INT, AST.conv_type.BOOL_TO_CHAR, AST.conv_type.CHAR_TO_INT, AST.conv_type.INT_TO_CHAR}:
             ast.set_adress(ast.get_child(0).get_adress())
             return
 
         adress = self.gen_fp_adress()
-        reg = self.get_reg()
+        reg = self.get_reg(check_if_floating(ast))
         ast.set_adress(adress)
         var_reg = self.load_in_reg(ast.get_child(0))
 
         if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
             self.gen_comp_instr(reg, var_reg, '$zero', AST.NotEqual())
+        elif ast.get_conversion_type() in {AST.conv_type.INT_TO_FLOAT, AST.conv_type.BOOL_TO_FLOAT, AST.conv_type.CHAR_TO_FLOAT}:
+            self.gen_int_to_float(var_reg, reg)
+        elif ast.get_conversion_type() in {AST.conv_type.FLOAT_TO_INT, AST.conv_type.FLOAT_TO_CHAR}:
+            self.gen_float_to_int(reg, var_reg)
 
-        self.gen_sw(reg, adress)
+        self.gen_sw(reg, adress, check_if_floating(ast))
         self.reset_reg()
