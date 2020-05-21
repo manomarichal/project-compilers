@@ -69,7 +69,7 @@ def get_logic_instruction(op:AST.LogicOp):
 class MIPSVisitor(Visitor):
     file = None
     _lcounter = 0 # counter to keep track of labels used
-    _offset = 0
+    _adress = 0
     _tcounter = 0
     cur_func = ''
     exit_label_stack = []
@@ -97,12 +97,12 @@ class MIPSVisitor(Visitor):
         self.file.write(self.body_buf.getvalue() + '\n')
         self.file.close()
     
-    def incr_sp(self, value = 4):
-        self._offset -= value
-        return self._offset
+    def gen_fp_adress(self, value = 4) -> str:
+        self._adress -= value
+        return str(self._adress) + "($fp)"
 
-    def reset_offset(self):
-        self._offset = 0
+    def reset_adress(self):
+        self._adress = 0
 
     def get_treg(self, incr = True):
         reg = self._tcounter
@@ -121,24 +121,37 @@ class MIPSVisitor(Visitor):
 
     def load_in_reg(self, ast: AST.Component):
         reg = self.get_treg()
-        self.gen_load(reg, ast.get_offset())
+        self.gen_load(reg, self.get_adress_of(ast))
         return reg
 
-
+    def get_adress_of(self, ast: AST.Component):
+        if isinstance(ast, AST.Indir):
+            reg = self.get_treg()
+            self.gen_load(reg, self.get_adress_of(ast.get_child(0)))
+            return '0(' + reg + ')'
+        else:
+            return ast.get_adress()
+        
     # GENERATOR FUNCTIONS
     def print_label(self, label, label_comment):
         self.body_buf.write('\n\n# ' + label_comment)
         self.body_buf.write('\n' + label + ':')
         return label
 
-    def gen_load(self, reg, offset):
-        self.print_to_file('lw ' + reg + ', ' + str(offset) + '($fp)')
+    def gen_load(self, reg, adress):
+        self.print_to_file('lw ' + reg + ', ' + adress)
 
     def gen_load_im(self, reg, value):
         self.print_to_file('li ' + reg + ', ' + str(value))
 
-    def gen_sw(self, value, offset):
-        self.print_to_file('sw ' + str(value) + ', ' + str(offset)  + '($fp)')
+    def gen_load_adress(self, reg, adress):
+        self.print_to_file('la ' + reg + ', ' + adress)
+
+    def gen_load_dereference(self, reg, pointer):
+        self.print_to_file('lw ' + reg + ', 0(' + str(pointer) + ')')
+
+    def gen_sw(self, value, adress):
+        self.print_to_file('sw ' + str(value) + ', ' + adress)
 
     def gen_move(self, from_reg, to_reg):
         self.print_to_file('move ' + from_reg + ', ' + to_reg)
@@ -243,15 +256,15 @@ class MIPSVisitor(Visitor):
         self.gen_branch_uncon(label1)
 
     def gen_function_def(self, name, args: {AST.Variable}, frame_size):
-        self.reset_offset()
+        self.reset_adress()
         self.print_label(name, "define function " + name)
-        self.gen_sw('$ra', self.incr_sp())
+        self.gen_sw('$ra', self.gen_fp_adress())
 
         a_counter = 0
         for arg in args:
-            offset = self.incr_sp()
-            arg.set_offset(offset)
-            self.gen_sw('$a' + str(a_counter), offset)
+            adress = self.gen_fp_adress()
+            arg.set_adress(adress)
+            self.gen_sw('$a' + str(a_counter), adress)
             a_counter += 1
 
     def gen_function_call(self, func_name):
@@ -265,14 +278,14 @@ class MIPSVisitor(Visitor):
         self.reset_treg()
         reg = self.get_treg(False)
         self.gen_load_im(reg, ast.get_value())
-        offset = self.incr_sp()
-        ast.set_offset(offset)
-        self.gen_sw(reg,offset)
+        adress = self.gen_fp_adress()
+        ast.set_adress(adress)
+        self.gen_sw(reg,adress)
 
     def visitDecl(self, ast: AST.Decl):
         # TODO gvar
         var: AST.Variable = ast.get_child(0)
-        var.set_offset(self.incr_sp())
+        var.set_adress(self.gen_fp_adress())
 
     def visitAssignOp(self, ast: AST.AssignOp):
         # TODO gvar
@@ -282,22 +295,23 @@ class MIPSVisitor(Visitor):
         else:
             var: AST.Variable = ast.get_child(0)
 
-        self.gen_sw(self.load_in_reg(ast.get_child(1)), var.get_offset())
+        self.gen_sw(self.load_in_reg(ast.get_child(1)), self.get_adress_of(var))
+        self.reset_treg()
 
     def visitPrintf(self, ast: AST.Printf):  #
         self.visitChildren(ast)
         self.gen_load_im('$v0', 1)
-        self.gen_load('$a0', ast.get_child(0).get_offset())
+        self.gen_load('$a0', self.get_adress_of(ast.get_child(0)))
         self.gen_syscall()
 
     def visitNeg(self, ast: AST.Neg):
         self.visitChildren(ast)
-        offset = self.incr_sp()
-        ast.set_offset(offset)
+        adress = self.gen_fp_adress()
+        ast.set_adress(adress)
 
         reg = self.get_treg()
         self.gen_binary_instruction(reg, '$zero', self.load_in_reg(ast.get_child(0)), 'subu ', ' - ')
-        self.gen_sw(reg, offset)
+        self.gen_sw(reg, adress)
 
         self.reset_treg()
 
@@ -306,7 +320,7 @@ class MIPSVisitor(Visitor):
 
     def visitPos(self, ast: AST.Neg):
         self.visitChildren(ast)
-        ast.set_offset(ast.get_child(0).get_offset())
+        ast.set_adress(self.get_adress_of(ast.get_child(0)))
 
     def visitBinaryOp(self, ast: AST.BinaryOp):
         self.visitChildren(ast)
@@ -320,15 +334,22 @@ class MIPSVisitor(Visitor):
         elif isinstance(ast, AST.CompOp):
             self.gen_comp_instr(reg, lhs, rhs, ast)
 
-        offset = self.incr_sp()
-        ast.set_offset(offset)
-        self.gen_sw(reg, offset)
+        adress = self.gen_fp_adress()
+        ast.set_adress(adress)
+        self.gen_sw(reg, adress)
         self.reset_treg()
 
     def visitAdress(self, ast: AST.Adress):
-        pass
+        self.visitChildren(ast)
+        adress = self.gen_fp_adress()
+        reg = self.get_treg()
+        ast.set_adress(adress)
+        self.gen_load_adress(reg, self.get_adress_of(ast.get_child(0)))
+        self.gen_sw(reg, adress)
+        self.reset_treg()
 
     def visitIndir(self, ast: AST.Indir):
+        self.visitChildren(ast)
         pass
 
     def visitFunctionDeclaration(self, ast: AST.FunctionDeclaration):
@@ -346,25 +367,25 @@ class MIPSVisitor(Visitor):
         self.cur_func = ast.get_name() # for array definitions
         self.gen_function_def(ast.get_name(), args, frame_size)
         self.visit(ast.get_child(0))
-        print(self.incr_sp())
+        print(self.gen_fp_adress())
         self.scope_counter -= 1
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
         self.visitChildren(ast)
-        self.gen_load('$v0', ast.get_child(0).get_offset())
-        self.gen_load('$ra', -8)
+        self.gen_load('$v0', self.get_adress_of(ast.get_child(0)))
+        self.gen_load('$ra', '-8($fp)')
         # self.gen_jr('$ra')
 
     def visitFunctionCall(self, ast:AST.FunctionCall):
         self.visitChildren(ast)
-        offset = self.incr_sp()
-        ast.set_offset(offset)
+        adress = self.gen_fp_adress()
+        ast.set_adress(adress)
         a_counter = 0
         for a in range(ast.get_child_count()):
-            self.gen_load('$a' + str(a_counter), ast.get_child(0).get_offset())
+            self.gen_load('$a' + str(a_counter), self.get_adress_of(ast.get_child(0)))
             a_counter += 1
         self.gen_function_call(ast.get_name())
-        self.gen_sw('$v0', offset)
+        self.gen_sw('$v0', adress)
 
     def visitForStatement(self, ast: AST.ForStatement):
         loop_check = self.get_lname()
@@ -445,12 +466,12 @@ class MIPSVisitor(Visitor):
 
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
-        offset = self.incr_sp()
+        adress = self.gen_fp_adress()
         reg = self.get_treg()
-        ast.set_offset(offset)
+        ast.set_adress(adress)
         var_reg = self.load_in_reg(ast.get_child(0))
 
         if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
             self.gen_comp_instr(reg, var_reg, '$zero', AST.NotEqual())
-        self.gen_sw(reg, offset)
+        self.gen_sw(reg, adress)
         self.reset_treg()

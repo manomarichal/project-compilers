@@ -99,12 +99,13 @@ def main(argv: list):
         ast_pass(ConstantFoldingVisitor(), ast)
 
     ast_visualise(ast, fname, label_style)
-    tfile = open(fname + '.asm', 'w+')
-    # llvm = LLVMVisitor(tfile)
-    # llvm.visit(ast)
-    # llvm.close()
+    llvm_file = open(fname + '.ll', 'w+')
+    mips_file = open(fname + '.asm', 'w+')
+    llvm = LLVMVisitor(llvm_file)
+    llvm.visit(ast)
+    llvm.close()
 
-    mips = MIPSVisitor(tfile)
+    mips = MIPSVisitor(mips_file)
     mips.visit(ast)
     mips.close()
 

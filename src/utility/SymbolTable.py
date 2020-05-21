@@ -17,7 +17,7 @@ class SymbolTable(dict):
 class SymEntry:
     def __init__(self, type_obj: TypeClass):
         self.register = None
-        self.offset = None
+        self.adress = None
         self.type_obj = type_obj
 
 
