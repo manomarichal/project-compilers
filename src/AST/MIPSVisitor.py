@@ -219,13 +219,14 @@ class MIPSVisitor(Visitor):
         else:
             self.gen_binary_instruction(res, lhs, rhs, op_str)
 
-    def gen_comp_instr_float(self, lhs, rhs, op: AST.CompOp, label_true):
-        if isinstance(op, AST.Less):
+    def gen_comp_instr_float(self, lhs, rhs, op: AST.CompOp, label_true) -> bool:
+        if isinstance(op, AST.Less) or isinstance(op, AST.More):
             self.gen_binary_instruction(lhs, rhs, label_true, "c.lt.s")
-        elif isinstance(op, AST.LessE):
+        elif isinstance(op, AST.LessE) or isinstance(op, AST.MoreE):
             self.gen_binary_instruction(lhs, rhs, label_true, "c.le.s")
-        elif isinstance(op, AST.Equal):
+        elif isinstance(op, AST.Equal) or isinstance(op, AST.NotEqual):
             self.gen_binary_instruction(lhs, rhs, label_true, "c.eq.s")
+        return isinstance(op, AST.Less) or isinstance(op, AST.LessE) or isinstance(op, AST.Equal)
 
     def gen_comp_instr(self, res, lhs, rhs, op: AST.CompOp, floating):
         # TODO less than or equal is broke
@@ -237,8 +238,8 @@ class MIPSVisitor(Visitor):
             self.gen_binary_instruction(lhs, rhs, label_true, gen_comp_instruction_int(op))
             self.gen_branch_uncon(label_false)
         else:
-            self.gen_comp_instr_float(res, lhs, rhs, op)
-            self.gen_branch_float(label_true, True)
+            flag_val = self.gen_comp_instr_float(res, lhs, rhs, op)
+            self.gen_branch_float(label_true, flag_val)
             self.gen_branch_uncon(label_false)
 
         self.print_label(label_false, 'not true')
