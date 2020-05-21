@@ -110,7 +110,7 @@ class MIPSVisitor(Visitor):
     def get_adress_of(self, ast: AST.Component):
         if isinstance(ast, AST.Indir):
             reg = self.get_reg()
-            self.gen_load(reg, self.get_adress_of(ast.get_child(0)), check_if_floating(ast))
+            self.gen_load(reg, self.get_adress_of(ast.get_child(0)))
             return '0(' + reg + ')'
         else:
             return ast.get_adress()
@@ -360,7 +360,6 @@ class MIPSVisitor(Visitor):
 
     def visitIndir(self, ast: AST.Indir):
         self.visitChildren(ast)
-        pass
 
     def visitFunctionDeclaration(self, ast: AST.FunctionDeclaration):
         pass
