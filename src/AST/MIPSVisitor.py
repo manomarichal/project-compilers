@@ -176,7 +176,7 @@ class MIPSVisitor(Visitor):
 
     def gen_float_to_int(self, ireg, freg):
         self.print_to_file('cvt.s.w ' + freg + ', ' + freg)
-        self.print_to_file('mfc1 ' + freg + ', ' + ireg )
+        self.print_to_file('mfc1 ' + ireg + ', ' + freg )
 
     def gen_mflo(self, res):
         self.print_to_file('mflo ' + res)
@@ -380,6 +380,7 @@ class MIPSVisitor(Visitor):
 
     def visitIndir(self, ast: AST.Indir):
         self.visitChildren(ast)
+        ast.set_adress(ast.get_child(0).get_adress())
 
     def visitFunctionDeclaration(self, ast: AST.FunctionDeclaration):
         pass
@@ -495,9 +496,10 @@ class MIPSVisitor(Visitor):
 
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
+        conv_type = ast.get_conversion_type()
 
-        if ast.get_conversion_type() in {AST.conv_type.BOOL_TO_INT, AST.conv_type.BOOL_TO_CHAR, AST.conv_type.CHAR_TO_INT, AST.conv_type.INT_TO_CHAR}:
-            ast.set_adress(ast.get_child(0).get_adress())
+        if conv_type in {AST.conv_type.BOOL_TO_INT, AST.conv_type.BOOL_TO_CHAR, AST.conv_type.CHAR_TO_INT, AST.conv_type.INT_TO_CHAR}:
+            ast.set_adress(self.get_adress_of(ast.get_child(0)))
             return
 
         adress = self.gen_fp_adress()
@@ -505,11 +507,11 @@ class MIPSVisitor(Visitor):
         ast.set_adress(adress)
         var_reg = self.load_in_reg(ast.get_child(0))
 
-        if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
-            self.gen_comp_instr(reg, var_reg, '$zero', AST.NotEqual())
-        elif ast.get_conversion_type() in {AST.conv_type.INT_TO_FLOAT, AST.conv_type.BOOL_TO_FLOAT, AST.conv_type.CHAR_TO_FLOAT}:
+        if conv_type == AST.conv_type.INT_TO_BOOL:
+            self.gen_comp_instr(reg, var_reg, '$zero', AST.NotEqual(), False)
+        elif conv_type in {AST.conv_type.INT_TO_FLOAT, AST.conv_type.BOOL_TO_FLOAT, AST.conv_type.CHAR_TO_FLOAT}:
             self.gen_int_to_float(var_reg, reg)
-        elif ast.get_conversion_type() in {AST.conv_type.FLOAT_TO_INT, AST.conv_type.FLOAT_TO_CHAR}:
+        elif conv_type in {AST.conv_type.FLOAT_TO_INT, AST.conv_type.FLOAT_TO_CHAR}:
             self.gen_float_to_int(reg, var_reg)
 
         self.gen_sw(reg, adress, check_if_floating(ast))
