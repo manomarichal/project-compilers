@@ -9,19 +9,22 @@ def check_if_floating(ast: AST.Component):
 
 def get_math_instruction(op:AST.MathOp, floating: bool):
     op_str = ''
+    if isinstance(op, AST.Sum): op_str += 'add'
+    elif isinstance(op, AST.Sub): op_str += 'subu'
+    elif isinstance(op, AST.Prod): op_str += 'mul'
+    elif isinstance(op, AST.Div): op_str += 'div'
+    elif isinstance(op, AST.Mod): op_str += 'mod'
+    if floating: op_str += '.s'
+    return op_str
 
-    if isinstance(op, AST.Sum):
-        op_str += 'add'
-    elif isinstance(op, AST.Sub):
-        op_str += 'subu'
-    elif isinstance(op, AST.Prod):
-        op_str += 'mul'
-    elif isinstance(op, AST.Div):
-        op_str += 'div'
-    elif isinstance(op, AST.Mod):
-        op_str += 'mod'
-    if floating is True:
-        op_str += '.s'
+def gen_comp_instruction(op:AST.CompOp):
+    op_str = ''
+    if isinstance(op, AST.Equal): op_str += 'beq'
+    elif isinstance(op, AST.NotEqual): op_str += 'bne'
+    elif isinstance(op, AST.MoreE): op_str += 'bge'
+    elif isinstance(op, AST.More): op_str += 'bgt'
+    elif isinstance(op, AST.LessE): op_str += 'ble'
+    elif isinstance(op, AST.Less): op_str += 'blt'
     return op_str
 
 def get_logic_instruction(op:AST.LogicOp):
@@ -184,6 +187,12 @@ class MIPSVisitor(Visitor):
     def gen_binary_instruction(self, res, lhs, rhs, op_str):
         self.print_to_file(op_str + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
 
+    def gen_neg(self, lhs, rhs, floating = False):
+        if not floating:
+            self.print_to_file('neg ' + lhs + ', ' + rhs)
+        else:
+            self.print_to_file('neg.s ' + lhs + ', ' + rhs)
+
     def gen_not(self, res, lhs, type_of):
         self.print_to_file(res + ' = xor ' + type_of + ' ' + str(lhs) + ', 1')
 
@@ -207,28 +216,9 @@ class MIPSVisitor(Visitor):
         label_false = self.get_lname()
         label_true = self.get_lname()
         label_continue = self.get_lname()
-        
-        if isinstance(op, AST.Less): 
-            self.gen_binary_instruction(res, lhs, rhs, 'slt ')
-            return
-        elif isinstance(op, AST.More):
-            self.gen_binary_instruction(res, lhs, rhs, 'slt ')
-            self.gen_bne(res, '$zero', label_false)
-            self.gen_branch_uncon(label_true)
-        elif isinstance(op, AST.Equal):
-            self.gen_beq(lhs, rhs, label_true)
-            self.gen_branch_uncon(label_false)
-        elif isinstance(op, AST.MoreE):
-            self.gen_binary_instruction(res, lhs, rhs, 'slt ')
-            self.gen_beq(res, '$zero', label_true)
-            self.gen_branch_uncon(label_false)
-        elif isinstance(op, AST.LessE):
-            self.gen_binary_instruction(res, lhs, rhs, 'slt ')
-            self.gen_beq(res, '$zero', label_false)
-            self.gen_branch_uncon(label_true)
-        elif isinstance(op, AST.NotEqual):
-            self.gen_bne(lhs, rhs, label_true)
-            self.gen_branch_uncon(label_false)
+
+        self.gen_binary_instruction(lhs, rhs, label_true, gen_comp_instruction(op))
+        self.gen_branch_uncon(label_false)
 
         self.print_label(label_false, 'not true')
         self.gen_load_im(res, 0)
@@ -320,8 +310,8 @@ class MIPSVisitor(Visitor):
         ast.set_adress(adress)
 
         reg = self.get_reg()
-        self.gen_binary_instruction(reg, '$zero', self.load_in_reg(ast.get_child(0)), 'subu ')
-        self.gen_sw(reg, adress)
+        self.gen_neg(reg, reg, check_if_floating(ast))
+        self.gen_sw(reg, adress, check_if_floating(ast))
 
         self.reset_reg()
 
@@ -475,6 +465,11 @@ class MIPSVisitor(Visitor):
 
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
+
+        if ast.get_conversion_type() == AST.conv_type.BOOL_TO_INT:
+            ast.set_adress(ast.get_child(0).get_adress())
+            return
+
         adress = self.gen_fp_adress()
         reg = self.get_reg()
         ast.set_adress(adress)
@@ -482,5 +477,6 @@ class MIPSVisitor(Visitor):
 
         if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
             self.gen_comp_instr(reg, var_reg, '$zero', AST.NotEqual())
+
         self.gen_sw(reg, adress)
         self.reset_reg()
