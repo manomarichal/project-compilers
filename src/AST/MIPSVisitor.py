@@ -4,66 +4,32 @@ from termcolor import colored, cprint
 from src.utility.TypeClass import TypeClass
 from io import StringIO
 
-def get_math_instruction(op:AST.MathOp, floating: bool):
+def check_if_floating(ast: AST.Component):
+    return ast.get_type().__repr__()[0:5] == 'float'
 
-    # if floating:
-    #     op_str = ' f'
-    # else:
-    #     op_str = ''
+def get_math_instruction(op:AST.MathOp, floating: bool):
     op_str = ''
 
     if isinstance(op, AST.Sum):
-        op_str += 'addu '
+        op_str += 'add'
     elif isinstance(op, AST.Sub):
-        op_str += 'subu '
+        op_str += 'subu'
     elif isinstance(op, AST.Prod):
-        op_str += 'mult '
+        op_str += 'mul'
     elif isinstance(op, AST.Div):
-        op_str += 'div '
+        op_str += 'div'
     elif isinstance(op, AST.Mod):
-        op_str += 'mod '
-    return op_str
-
-def get_comp_instruction(op:AST.CompOp, floating: bool):
-    op_str = ''
-    if isinstance(op, AST.More):
-        if floating:
-            op_str += 'ogt '
-        else:
-            op_str += 'sgt '
-    elif isinstance(op, AST.MoreE):
-        if floating:
-            op_str += 'oge '
-        else:
-            op_str += 'sge '
-    elif isinstance(op, AST.Less):
-        if floating:
-            op_str += 'olt '
-        else:
-            op_str += 'slt '
-    elif isinstance(op, AST.LessE):
-        if floating:
-            op_str += 'ole '
-        else:
-            op_str += 'sle '
-    elif isinstance(op, AST.Equal):
-        if floating:
-            op_str += 'oeq '
-        else:
-            op_str += 'eq '
-    elif isinstance(op, AST.NotEqual):
-        if floating:
-            op_str += 'one '
-        else:
-            op_str += 'ne '
+        op_str += 'mod'
+    if floating is True:
+        op_str += '.s'
     return op_str
 
 def get_logic_instruction(op:AST.LogicOp):
     op_str = ''
     if isinstance(op, AST.And):
-        op_str += 'and '
+        op_str += 'and'
     elif isinstance(op, AST.Or):
-        op_str += 'or '
+        op_str += 'or'
     return op_str
 
 class MIPSVisitor(Visitor):
@@ -71,6 +37,8 @@ class MIPSVisitor(Visitor):
     _lcounter = 0 # counter to keep track of labels used
     _adress = 0
     _tcounter = 0
+    _fcounter = 0
+    _fpcounter = 0
     cur_func = ''
     exit_label_stack = []
     begin_label_stack = []
@@ -79,8 +47,9 @@ class MIPSVisitor(Visitor):
     def __init__(self, file):
         self.header_buf = StringIO()
         self.body_buf = StringIO()
-        self.print_to_header(" .text")
-        self.print_to_header(".globl main")
+        self.print_to_header(".data")
+        self.print_to_file(" .text")
+        self.print_to_file(".globl main")
         self.file = file
 
     # HELPER FUNCTIONS
@@ -90,7 +59,7 @@ class MIPSVisitor(Visitor):
         self.body_buf.write(ws_str + string)
 
     def print_to_header(self, string):
-        self.header_buf.write('\n' + string)
+        self.header_buf.write(string + '\n')
 
     def close(self):
         self.file.write(self.header_buf.getvalue() + '\n')
@@ -104,30 +73,44 @@ class MIPSVisitor(Visitor):
     def reset_adress(self):
         self._adress = 0
 
-    def get_treg(self, incr = True):
-        reg = self._tcounter
-        if incr is True:
-            self._tcounter += 1
-        if self._tcounter > 8:
+    def get_reg(self, floating = False, incr = True):
+        if self._tcounter > 8 or self._fcounter > 8:
             print("max temp registers reached")
-        return '$t' + str(reg)
 
-    def reset_treg(self):
+        if floating:
+            reg = self._fcounter
+            if incr is True:
+                self._fcounter += 1
+            return '$f' + str(reg)
+        else:
+            reg = self._tcounter
+            if incr is True:
+                self._tcounter += 1
+            return '$t' + str(reg)
+
+    def get_fp_name(self):
+        name = "fp" + str(self._fpcounter)
+        self._fpcounter += 1
+        return name
+
+    def reset_reg(self):
         self._tcounter = 0
+        self._fcounter = 0
 
     def get_lname(self) -> str:
         self._lcounter += 1
         return 'l' + str(self._lcounter)
 
     def load_in_reg(self, ast: AST.Component):
-        reg = self.get_treg()
-        self.gen_load(reg, self.get_adress_of(ast))
+        floating = check_if_floating(ast)
+        reg = self.get_reg(floating)
+        self.gen_load(reg, self.get_adress_of(ast), floating)
         return reg
 
     def get_adress_of(self, ast: AST.Component):
         if isinstance(ast, AST.Indir):
-            reg = self.get_treg()
-            self.gen_load(reg, self.get_adress_of(ast.get_child(0)))
+            reg = self.get_reg()
+            self.gen_load(reg, self.get_adress_of(ast.get_child(0)), check_if_floating(ast))
             return '0(' + reg + ')'
         else:
             return ast.get_adress()
@@ -138,8 +121,17 @@ class MIPSVisitor(Visitor):
         self.body_buf.write('\n' + label + ':')
         return label
 
-    def gen_load(self, reg, adress):
-        self.print_to_file('lw ' + reg + ', ' + adress)
+    def gen_load(self, reg, adress, floating = False):
+        if not floating:
+            self.print_to_file('lw ' + reg + ', ' + adress)
+        else:
+            self.print_to_file('lwc1 ' + reg + ', ' + adress)
+
+    def gen_global_var(self, name, value, floating = False):
+        if floating:
+            self.print_to_header(name + ': .float ' + str(value))
+        else:
+            self.print_to_header(name + ': .int ' + str(value))
 
     def gen_load_im(self, reg, value):
         self.print_to_file('li ' + reg + ', ' + str(value))
@@ -150,11 +142,18 @@ class MIPSVisitor(Visitor):
     def gen_load_dereference(self, reg, pointer):
         self.print_to_file('lw ' + reg + ', 0(' + str(pointer) + ')')
 
-    def gen_sw(self, value, adress):
-        self.print_to_file('sw ' + str(value) + ', ' + adress)
+    def gen_sw(self, value, adress, floating = False):
+        if not floating:
+            self.print_to_file('sw ' + str(value) + ', ' + adress)
+        else:
+            self.print_to_file('swc1 ' + str(value) + ', ' + adress)
 
-    def gen_move(self, from_reg, to_reg):
+    def gen_move(self, from_reg, to_reg, floating = False):
         self.print_to_file('move ' + from_reg + ', ' + to_reg)
+        if not floating:
+            self.print_to_file('move ' + from_reg + ', ' + to_reg)
+        else:
+            self.print_to_file('move.s ' + from_reg + ', ' + to_reg)
 
     def gen_jal(self, func_name):
         self.print_to_file('jal ' + func_name)
@@ -175,15 +174,15 @@ class MIPSVisitor(Visitor):
         self.print_to_file('mfhi ' + res)
 
     def gen_mult_or_div(self, res, lhs, rhs, op_str):
-        self.print_to_file(op_str + str(lhs) + ', ' + str(rhs))
+        self.print_to_file(op_str + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
         self.gen_mflo(res)
 
     def gen_mod(self, res, lhs, rhs):
-        self.print_to_file('div ' + str(lhs) + ', ' + str(rhs))
+        self.print_to_file('div ' + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
         self.gen_mfhi(res)
 
     def gen_binary_instruction(self, res, lhs, rhs, op_str):
-        self.print_to_file(op_str + res + ', ' + str(lhs) + ', ' + str(rhs))
+        self.print_to_file(op_str + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
 
     def gen_not(self, res, lhs, type_of):
         self.print_to_file(res + ' = xor ' + type_of + ' ' + str(lhs) + ', 1')
@@ -194,11 +193,11 @@ class MIPSVisitor(Visitor):
     def gen_and(self, res, lhs, rhs):
         self.print_to_file('and ' +  str(res) + ', ' + str(lhs) + ', ' + str(rhs))
 
-    def gen_math_instr(self, res, lhs, rhs, op: AST.MathOp):
-        op_str = get_math_instruction(op, False)
-        if op_str == 'mult ' or op_str == 'div ':
+    def gen_math_instr(self, res, lhs, rhs, op: AST.MathOp, floating = False):
+        op_str = get_math_instruction(op, floating)
+        if op_str == 'mul' or op_str == 'div':
             self.gen_mult_or_div(res, lhs, rhs, op_str)
-        elif op_str == 'mod ':
+        elif op_str == 'mod':
             self.gen_mod(res, lhs, rhs)
         else:
             self.gen_binary_instruction(res, lhs, rhs, op_str)
@@ -275,12 +274,19 @@ class MIPSVisitor(Visitor):
         self.visitChildren(ast)
 
     def visitLiteral(self, ast: AST.Literal):
-        self.reset_treg()
-        reg = self.get_treg(False)
-        self.gen_load_im(reg, ast.get_value())
+        self.reset_reg()
+        reg = self.get_reg(check_if_floating(ast))
+
+        if check_if_floating(ast):
+            name = self.get_fp_name()
+            self.gen_global_var(name, ast.get_value(), True)
+            self.gen_load(reg, name, True)
+        else:
+            self.gen_load_im(reg, ast.get_value())
+
         adress = self.gen_fp_adress()
         ast.set_adress(adress)
-        self.gen_sw(reg,adress)
+        self.gen_sw(reg,adress, check_if_floating(ast))
 
     def visitDecl(self, ast: AST.Decl):
         # TODO gvar
@@ -295,13 +301,17 @@ class MIPSVisitor(Visitor):
         else:
             var: AST.Variable = ast.get_child(0)
 
-        self.gen_sw(self.load_in_reg(ast.get_child(1)), self.get_adress_of(var))
-        self.reset_treg()
+        self.gen_sw(self.load_in_reg(ast.get_child(1)), self.get_adress_of(var), check_if_floating(ast.get_child(1)))
+        self.reset_reg()
 
     def visitPrintf(self, ast: AST.Printf):  #
         self.visitChildren(ast)
-        self.gen_load_im('$v0', 1)
-        self.gen_load('$a0', self.get_adress_of(ast.get_child(0)))
+        if check_if_floating(ast.get_child(0)):
+            self.gen_load_im('$v0', 2)
+            self.gen_load('$f12', self.get_adress_of(ast.get_child(0)), True)
+        else:
+            self.gen_load_im('$v0', 1)
+            self.gen_load('$a0', self.get_adress_of(ast.get_child(0)))
         self.gen_syscall()
 
     def visitNeg(self, ast: AST.Neg):
@@ -309,11 +319,11 @@ class MIPSVisitor(Visitor):
         adress = self.gen_fp_adress()
         ast.set_adress(adress)
 
-        reg = self.get_treg()
-        self.gen_binary_instruction(reg, '$zero', self.load_in_reg(ast.get_child(0)), 'subu ', ' - ')
+        reg = self.get_reg()
+        self.gen_binary_instruction(reg, '$zero', self.load_in_reg(ast.get_child(0)), 'subu ')
         self.gen_sw(reg, adress)
 
-        self.reset_treg()
+        self.reset_reg()
 
     def visitNot(self, ast: AST.Not):
         pass
@@ -324,29 +334,29 @@ class MIPSVisitor(Visitor):
 
     def visitBinaryOp(self, ast: AST.BinaryOp):
         self.visitChildren(ast)
-        reg = self.get_treg()
+        reg = self.get_reg(check_if_floating(ast))
         lhs, rhs = self.load_in_reg(ast.get_child(0)), self.load_in_reg(ast.get_child(1))
 
         if isinstance(ast, AST.LogicOp):
             self.gen_logic_instr(reg, lhs, rhs, ast)
         elif isinstance(ast, AST.MathOp):
-            self.gen_math_instr(reg, lhs, rhs, ast)
+            self.gen_math_instr(reg, lhs, rhs, ast, check_if_floating(ast))
         elif isinstance(ast, AST.CompOp):
             self.gen_comp_instr(reg, lhs, rhs, ast)
 
         adress = self.gen_fp_adress()
         ast.set_adress(adress)
-        self.gen_sw(reg, adress)
-        self.reset_treg()
+        self.gen_sw(reg, adress, check_if_floating(ast))
+        self.reset_reg()
 
     def visitAdress(self, ast: AST.Adress):
         self.visitChildren(ast)
         adress = self.gen_fp_adress()
-        reg = self.get_treg()
+        reg = self.get_reg()
         ast.set_adress(adress)
         self.gen_load_adress(reg, self.get_adress_of(ast.get_child(0)))
         self.gen_sw(reg, adress)
-        self.reset_treg()
+        self.reset_reg()
 
     def visitIndir(self, ast: AST.Indir):
         self.visitChildren(ast)
@@ -426,12 +436,12 @@ class MIPSVisitor(Visitor):
         else:
             self.gen_branch_con(label_true, label_end, self.load_in_reg(ast.get_child(0)))
 
-        self.print_label(label_true, 'if ' + ast.get_child(0).get_register() + ' is true')
+        self.print_label(label_true, 'if true')
         self.visit(ast.get_child(1))
         self.gen_branch_uncon(label_end)
 
         if ast.get_child_count() == 3:
-            self.print_label(label_false, 'if ' + ast.get_child(0).get_register() + ' is false')
+            self.print_label(label_false, 'if false')
             self.visit(ast.get_child(2))
             self.gen_branch_uncon(label_end)
 
@@ -467,11 +477,11 @@ class MIPSVisitor(Visitor):
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
         adress = self.gen_fp_adress()
-        reg = self.get_treg()
+        reg = self.get_reg()
         ast.set_adress(adress)
         var_reg = self.load_in_reg(ast.get_child(0))
 
         if ast.get_conversion_type() == AST.conv_type.INT_TO_BOOL:
             self.gen_comp_instr(reg, var_reg, '$zero', AST.NotEqual())
         self.gen_sw(reg, adress)
-        self.reset_treg()
+        self.reset_reg()

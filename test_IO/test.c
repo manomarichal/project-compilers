@@ -1,19 +1,9 @@
 #include <stdio.h>
-
-
 int main()
 {
-int a = 1;
-int b = 5;
-int * p1 = &a;
-int * * p2 = &p1;
-int * * * p3 = &p2;
-***p3 = b;
-
-printf("%d", a);
-printf("%d", b);
-printf("%d", ***p3);
-
-return a;
+    int a = 10;
+    float c = 4.2;
+    float k = 4.2 + 5.8 + 1.8;
+    printf("%d", k);
+    printf("%d", a);
 }
-// expected output: 555
