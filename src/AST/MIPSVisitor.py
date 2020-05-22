@@ -135,6 +135,7 @@ class MIPSVisitor(Visitor):
             self.gen_math_instr(reg, reg, reg2, AST.Prod())
             self.gen_load_adress(reg2, self.get_adress_of(ast.get_child(0)))
             self.gen_math_instr(reg, reg, reg2, AST.Sum())
+            self._tcounter -= 1
             return '0(' + reg + ')'
         else:
             return ast.get_adress()
@@ -233,9 +234,7 @@ class MIPSVisitor(Visitor):
 
     def gen_math_instr(self, res, lhs, rhs, op: AST.MathOp, floating = False):
         op_str = get_math_instruction(op, floating)
-        if op_str == 'mul' or op_str == 'div':
-            self.gen_mult_or_div(res, lhs, rhs, op_str)
-        elif op_str == 'mod':
+        if op_str == 'mod':
             self.gen_mod(res, lhs, rhs)
         else:
             self.gen_binary_instruction(res, lhs, rhs, op_str)
@@ -523,6 +522,9 @@ class MIPSVisitor(Visitor):
 
     def visitContinue(self, ast: AST.Continue):
         self.gen_branch_uncon(self.begin_label_stack[-1])
+
+    def visitIncrPre(self, ast: AST.IncrPre):
+        pass
 
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
