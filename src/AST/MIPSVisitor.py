@@ -43,30 +43,33 @@ class MIPSVisitor(Visitor):
     cur_func = ''
     exit_label_stack = []
     begin_label_stack = []
+    buffer_stack = []
     scope_counter = 0
 
     def __init__(self, file):
         self.header_buf = StringIO()
-        self.body_buf = StringIO()
+        self.function_buffers = []
         self.print_to_header(".data")
         self.print_to_header("fpzero: .float 0.0")
         self.print_to_header("fpone: .float 1.0")
-        self.print_to_file(" .text")
-        self.print_to_file(".globl main")
         self.file = file
 
+
     # HELPER FUNCTIONS
-    def print_to_file(self, string, ws_str ='\n', modifier = 0):
+    def print_to_buffer(self, string, ws_str ='\n', modifier = 0):
         for a in range(self.scope_counter + modifier):
             ws_str += '\t'
-        self.body_buf.write(ws_str + string)
+        self.buffer_stack[-1].write(ws_str + string)
 
     def print_to_header(self, string):
         self.header_buf.write(string + '\n')
 
     def close(self):
+        self.print_to_header(" .text")
+        self.print_to_header(".globl main")
         self.file.write(self.header_buf.getvalue() + '\n')
-        self.file.write(self.body_buf.getvalue() + '\n')
+        for buffer in self.function_buffers:
+            self.file.write(buffer.getvalue())
         self.file.close()
     
     def gen_fp_adress(self, value = 4) -> str:
@@ -120,15 +123,15 @@ class MIPSVisitor(Visitor):
         
     # GENERATOR FUNCTIONS
     def print_label(self, label, label_comment):
-        self.body_buf.write('\n\n# ' + label_comment)
-        self.body_buf.write('\n' + label + ':')
+        self.buffer_stack[-1].write('\n\n# ' + label_comment)
+        self.buffer_stack[-1].write('\n' + label + ':')
         return label
 
     def gen_load(self, reg, adress, floating = False):
         if not floating:
-            self.print_to_file('lw ' + reg + ', ' + adress)
+            self.print_to_buffer('lw ' + reg + ', ' + adress)
         else:
-            self.print_to_file('lwc1 ' + reg + ', ' + adress)
+            self.print_to_buffer('lwc1 ' + reg + ', ' + adress)
 
     def gen_global_var(self, name, value, floating = False):
         if floating:
@@ -137,78 +140,78 @@ class MIPSVisitor(Visitor):
             self.print_to_header(name + ': .int ' + str(value))
 
     def gen_load_im(self, reg, value):
-        self.print_to_file('li ' + reg + ', ' + str(value))
+        self.print_to_buffer('li ' + reg + ', ' + str(value))
 
     def gen_load_adress(self, reg, adress):
-        self.print_to_file('la ' + reg + ', ' + adress)
+        self.print_to_buffer('la ' + reg + ', ' + adress)
 
     def gen_load_dereference(self, reg, pointer):
-        self.print_to_file('lw ' + reg + ', 0(' + str(pointer) + ')')
+        self.print_to_buffer('lw ' + reg + ', 0(' + str(pointer) + ')')
 
     def gen_sw(self, value, adress, floating = False):
         if not floating:
-            self.print_to_file('sw ' + str(value) + ', ' + adress)
+            self.print_to_buffer('sw ' + str(value) + ', ' + adress)
         else:
-            self.print_to_file('swc1 ' + str(value) + ', ' + adress)
+            self.print_to_buffer('swc1 ' + str(value) + ', ' + adress)
 
     def gen_move(self, from_reg, to_reg, floating = False):
-        self.print_to_file('move ' + from_reg + ', ' + to_reg)
+        self.print_to_buffer('move ' + from_reg + ', ' + to_reg)
         if not floating:
-            self.print_to_file('move ' + from_reg + ', ' + to_reg)
+            self.print_to_buffer('move ' + from_reg + ', ' + to_reg)
         else:
-            self.print_to_file('move.s ' + from_reg + ', ' + to_reg)
+            self.print_to_buffer('move.s ' + from_reg + ', ' + to_reg)
 
     def gen_jal(self, func_name):
-        self.print_to_file('jal ' + func_name)
+        self.print_to_buffer('jal ' + func_name)
 
     def gen_jr(self, reg):
-        self.print_to_file('jr ' + reg)
+        self.print_to_buffer('jr ' + reg)
 
     def gen_bne(self, lhs, rhs, label):
-        self.print_to_file('bne ' + lhs + ', ' + rhs + ' ' + label)
+        self.print_to_buffer('bne ' + lhs + ', ' + rhs + ' ' + label)
 
     def gen_beq(self, lhs, rhs, label):
-        self.print_to_file('beq ' + lhs + ', ' + rhs + ' ' + label)
+        self.print_to_buffer('beq ' + lhs + ', ' + rhs + ' ' + label)
 
     def gen_int_to_float(self, ireg, freg):
-        self.print_to_file('mtc1 ' + ireg + ', ' + freg )
-        self.print_to_file('cvt.s.w ' + freg + ', ' + freg)
+        self.print_to_buffer('mtc1 ' + ireg + ', ' + freg )
+        self.print_to_buffer('cvt.s.w ' + freg + ', ' + freg)
 
     def gen_float_to_int(self, ireg, freg):
-        self.print_to_file('cvt.s.w ' + freg + ', ' + freg)
-        self.print_to_file('mfc1 ' + ireg + ', ' + freg )
+        self.print_to_buffer('cvt.s.w ' + freg + ', ' + freg)
+        self.print_to_buffer('mfc1 ' + ireg + ', ' + freg )
 
     def gen_mflo(self, res):
-        self.print_to_file('mflo ' + res)
+        self.print_to_buffer('mflo ' + res)
 
     def gen_mfhi(self, res):
-        self.print_to_file('mfhi ' + res)
+        self.print_to_buffer('mfhi ' + res)
 
     def gen_mult_or_div(self, res, lhs, rhs, op_str):
-        self.print_to_file(op_str + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
+        self.print_to_buffer(op_str + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
         self.gen_mflo(res)
 
     def gen_mod(self, res, lhs, rhs):
-        self.print_to_file('div ' + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
+        self.print_to_buffer('div ' + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
         self.gen_mfhi(res)
 
     def gen_binary_instruction(self, res, lhs, rhs, op_str):
-        self.print_to_file(op_str + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
+        self.print_to_buffer(op_str + ' ' + res + ', ' + str(lhs) + ', ' + str(rhs))
 
     def gen_neg(self, lhs, rhs, floating = False):
         if not floating:
-            self.print_to_file('neg ' + lhs + ', ' + rhs)
+            self.print_to_buffer('neg ' + lhs + ', ' + rhs)
         else:
-            self.print_to_file('neg.s ' + lhs + ', ' + rhs)
+            self.print_to_buffer('neg.s ' + lhs + ', ' + rhs)
 
     def gen_not(self, res, lhs, type_of):
-        self.print_to_file(res + ' = xor ' + type_of + ' ' + str(lhs) + ', 1')
+        self.print_to_buffer(res + ' = xor ' + type_of + ' ' + str(lhs) + ', 1')
 
     def gen_or(self, res, lhs, rhs):
-        self.print_to_file('or ' +  str(res) + ', ' + str(lhs) + ', ' + str(rhs))
+        self.print_to_buffer('or ' +  str(res) + ', ' + str(lhs) + ', ' + str(rhs))
 
     def gen_and(self, res, lhs, rhs):
-        self.print_to_file('and ' +  str(res) + ', ' + str(lhs) + ', ' + str(rhs))
+        self.print_to_buffer('and ' +  str(res) + ', ' + str(lhs) + ', ' + str(rhs))
 
     def gen_math_instr(self, res, lhs, rhs, op: AST.MathOp, floating = False):
         op_str = get_math_instruction(op, floating)
@@ -259,18 +262,18 @@ class MIPSVisitor(Visitor):
         self.gen_binary_instruction(res, lhs, rhs, op_str)
 
     def gen_syscall(self):
-        self.print_to_file('syscall')
+        self.print_to_buffer('syscall')
 
     def gen_branch_uncon(self, label, floating = False): # unconditional branch
-        self.print_to_file('beq $zero, $zero, ' + label)
+        self.print_to_buffer('beq $zero, $zero, ' + label)
 
     def gen_branch_con(self, label1, label2, reg): # conditional branch
         self.gen_beq(reg, '$zero', label2)
         self.gen_branch_uncon(label1)
 
     def gen_branch_float(self, label, type_of: bool):
-        if type_of: self.print_to_file('bc1t ' + label)
-        else: self.print_to_file('bc1f ' + label)
+        if type_of: self.print_to_buffer('bc1t ' + label)
+        else: self.print_to_buffer('bc1f ' + label)
 
     def gen_function_def(self, name, args: {AST.Variable}, frame_size):
         self.reset_adress()
@@ -285,7 +288,7 @@ class MIPSVisitor(Visitor):
             a_counter += 1
 
     def gen_function_call(self, func_name):
-        self.print_to_file('jal ' + func_name)
+        self.print_to_buffer('jal ' + func_name)
 
     # VISITOR FUNCTIONS
     def visitComposite(self, ast: AST.Composite):
@@ -387,6 +390,9 @@ class MIPSVisitor(Visitor):
 
     # TODO default returns
     def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
+        buffer = StringIO()
+        self.buffer_stack.append(buffer)
+
         self.scope_counter += 1
         args = []
         frame_size = 4 * (len(args) + 1)
@@ -399,6 +405,8 @@ class MIPSVisitor(Visitor):
         self.visit(ast.get_child(0))
         print(self.gen_fp_adress())
         self.scope_counter -= 1
+
+        self.function_buffers.append(self.buffer_stack.pop())
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
         self.visitChildren(ast)
