@@ -434,7 +434,7 @@ class MIPSVisitor(Visitor):
         ast.set_adress(adress)
         a_counter = 0
         for a in range(ast.get_child_count()):
-            self.gen_load('$a' + str(a_counter), self.get_adress_of(ast.get_child(0)))
+            self.gen_load('$a' + str(a_counter), self.get_adress_of(ast.get_child(a)))
             a_counter += 1
         self.gen_function_call(ast.get_name())
         self.gen_sw('$v0', adress)
