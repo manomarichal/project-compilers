@@ -3,14 +3,25 @@
 // expected 80
 
 int main(){
-    int t1 = 10;
-    int t2 = 20;
-    int t3 = 30;
-	int * a[3];
-	a[0] = &t1;
-	a[1] = &t2;
-	a[2] = &t3;
-	a[0] = a[2];
-	printf("%d", *a[0] + *a[1] + *a[2]);
+    int a = 1;
+    float b = 1;
+    printf("%d", ++a);
+    printf("%d", ++b);
+
+    int c = 1;
+    float d = 1;
+    printf("%d", c++);
+    printf("%d", d++);
+
+    int e = 1;
+    float f = 1;
+    printf("%d", --e);
+    printf("%d", --f);
+
+    int g = 1;
+    float h = 1;
+    printf("%d", g--);
+    printf("%d", h--);
+
 	return 1;
 }

@@ -649,3 +649,6 @@ class FunctionArgument(Composite):
 
 class ReturnStatement(Composite):
     pass
+
+class Addi(MathOp):
+    pass

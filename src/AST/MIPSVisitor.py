@@ -15,10 +15,11 @@ def check_if_floating(ast: AST.Component):
 def get_math_instruction(op:AST.MathOp, floating: False):
     op_str = ''
     if isinstance(op, AST.Sum): op_str += 'add'
-    elif isinstance(op, AST.Sub): op_str += 'subu'
+    elif isinstance(op, AST.Sub): op_str += 'sub'
     elif isinstance(op, AST.Prod): op_str += 'mul'
     elif isinstance(op, AST.Div): op_str += 'div'
     elif isinstance(op, AST.Mod): op_str += 'mod'
+    elif isinstance(op, AST.Addi): op_str += 'addi'
     if floating: op_str += '.s'
     return op_str
 
@@ -58,6 +59,7 @@ class MIPSVisitor(Visitor):
         self.print_to_header(".data")
         self.print_to_header("fpzero: .float 0.0")
         self.print_to_header("fpone: .float 1.0")
+        self.print_to_header("fpminone: .float -1.0")
         self.file = file
 
 
@@ -523,9 +525,6 @@ class MIPSVisitor(Visitor):
     def visitContinue(self, ast: AST.Continue):
         self.gen_branch_uncon(self.begin_label_stack[-1])
 
-    def visitIncrPre(self, ast: AST.IncrPre):
-        pass
-
     def visitCastOp(self, ast: AST.CastOp):
         self.visitChildren(ast)
         conv_type = ast.get_conversion_type()
@@ -548,3 +547,74 @@ class MIPSVisitor(Visitor):
 
         self.gen_sw(reg, adress, check_if_floating(ast))
         self.reset_reg()
+
+
+    # unary operator
+    def get_fp_constant(self, value):
+        if value == 0: return "fpzero"
+        elif value == 1: return "fpone"
+        elif value == -1: return "fpminone"
+
+    def gen_addi(self, reg, lhs, rhs, floating: bool):
+        if floating:
+            imm_reg = self.get_reg(floating)
+            self.gen_load(imm_reg, self.get_fp_constant(rhs), floating)
+            self.gen_binary_instruction(reg, lhs, imm_reg, "add.s")
+        else: self.print_to_buffer('addi' + ' ' + reg + ', ' + str(lhs) + ', ' + str(rhs))
+
+    def visitIncrPre(self, ast: AST.IncrPre):
+        adress = self.gen_stack_adress()
+        floating = check_if_floating(ast.get_child(0))
+        reg = self.get_reg(floating)
+        var_reg = self.get_reg(floating)
+
+        self.gen_load(var_reg, self.get_adress_of(ast.get_child(0)), floating)
+        self.gen_addi(reg, var_reg, 1, floating)
+        self.gen_sw(reg, self.get_adress_of(ast.get_child(0)), floating)
+        self.gen_sw(reg, adress, floating)
+        self.reset_reg()
+
+        ast.set_adress(adress)
+
+    def visitIncrPost(self, ast: AST.IncrPost):
+        adress = self.gen_stack_adress()
+        floating = check_if_floating(ast.get_child(0))
+        reg = self.get_reg(floating)
+        var_reg = self.get_reg(floating)
+
+        self.gen_load(reg, self.get_adress_of(ast.get_child(0)), floating)
+        self.gen_addi(var_reg, var_reg, 1, floating)
+        self.gen_sw(var_reg, self.get_adress_of(ast.get_child(0)), floating)
+        self.gen_sw(reg, adress, floating)
+        self.reset_reg()
+
+        ast.set_adress(adress)
+
+    def visitDecrPre(self, ast: AST.DecrPre):
+        adress = self.gen_stack_adress()
+        floating = check_if_floating(ast.get_child(0))
+        reg = self.get_reg(floating)
+        var_reg = self.get_reg(floating)
+
+        self.gen_load(var_reg, self.get_adress_of(ast.get_child(0)), floating)
+        self.gen_addi(reg, var_reg, -1, floating)
+        self.gen_sw(reg, self.get_adress_of(ast.get_child(0)), floating)
+        self.gen_sw(reg, adress, floating)
+        self.reset_reg()
+
+        ast.set_adress(adress)
+
+    def visitDecrPost(self, ast: AST.DecrPost):
+        adress = self.gen_stack_adress()
+        floating = check_if_floating(ast.get_child(0))
+        reg = self.get_reg(floating)
+        var_reg = self.get_reg(floating)
+
+        self.gen_load(reg, self.get_adress_of(ast.get_child(0)), floating)
+        self.gen_addi(var_reg, var_reg, -1, floating)
+        self.gen_sw(var_reg, self.get_adress_of(ast.get_child(0)), floating)
+        self.gen_sw(reg, adress, floating)
+        self.reset_reg()
+
+        ast.set_adress(adress)
+
