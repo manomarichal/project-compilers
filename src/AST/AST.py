@@ -47,7 +47,7 @@ class Component:
     def set_register(self, register):
         self._register = register
 
-    def get_adress(self):
+    def get_adress(self)->str:
         return self._adress
 
     def set_adress(self, adress):

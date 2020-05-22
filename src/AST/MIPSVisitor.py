@@ -1,8 +1,13 @@
 from src.AST import AST
 from src.AST.Visitor import Visitor
-from termcolor import colored, cprint
-from src.utility.TypeClass import TypeClass
 from io import StringIO
+
+def check_if_array(ast: AST.Component):
+    return ast.get_type().__repr__()[0] == '['
+
+def find_array_size(ast: AST.Variable):
+    base = ast.get_type().__repr__().split('x')
+    return int(base[1][0:len(base[1])-1])
 
 def check_if_floating(ast: AST.Component):
     return ast.get_type().__repr__()[0:5] == 'float'
@@ -122,6 +127,8 @@ class MIPSVisitor(Visitor):
             reg = self.get_reg()
             self.gen_load(reg, self.get_adress_of(ast.get_child(0)))
             return '0(' + reg + ')'
+        elif isinstance(ast, AST.Index):
+            return str(int(self.get_adress_of(ast.get_child(0)).split('(')[0]) + (4*ast.get_child(1).get_value())) + '($sp)'
         else:
             return ast.get_adress()
         
@@ -279,7 +286,6 @@ class MIPSVisitor(Visitor):
         if type_of: self.print_to_buffer('bc1t ' + label)
         else: self.print_to_buffer('bc1f ' + label)
 
-
     def gen_function_call(self, func_name):
         self.print_to_buffer('jal ' + func_name)
 
@@ -305,7 +311,8 @@ class MIPSVisitor(Visitor):
     def visitDecl(self, ast: AST.Decl):
         # TODO gvar
         var: AST.Variable = ast.get_child(0)
-        var.set_adress(self.gen_stack_adress())
+        if check_if_array(ast): var.set_adress(self.gen_stack_adress(find_array_size(var) * 4))
+        else: var.set_adress(self.gen_stack_adress())
 
     def visitAssignOp(self, ast: AST.AssignOp):
         # TODO gvar
@@ -359,7 +366,6 @@ class MIPSVisitor(Visitor):
         elif isinstance(ast, AST.LogicOp):
             self.gen_logic_instr(reg, lhs, rhs, ast)
 
-
         adress = self.gen_stack_adress()
         ast.set_adress(adress)
         self.gen_sw(reg, adress, check_if_floating(ast))
@@ -374,14 +380,9 @@ class MIPSVisitor(Visitor):
         self.gen_sw(reg, adress)
         self.reset_reg()
 
-    def visitIndir(self, ast: AST.Indir):
-        self.visitChildren(ast)
-        ast.set_adress(ast.get_child(0).get_adress())
-
     def visitFunctionDeclaration(self, ast: AST.FunctionDeclaration):
         pass
 
-    # TODO default returns
     def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
         buffer = StringIO()
         label_return = self.get_lname()
