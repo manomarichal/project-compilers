@@ -40,7 +40,8 @@ class MIPSVisitor(Visitor):
     _tcounter = 0
     _fcounter = 0
     _fpcounter = 0
-    cur_func = ''
+    function_label_stack = []
+    frame_size_stack = []
     exit_label_stack = []
     begin_label_stack = []
     buffer_stack = []
@@ -56,9 +57,7 @@ class MIPSVisitor(Visitor):
 
 
     # HELPER FUNCTIONS
-    def print_to_buffer(self, string, ws_str ='\n', modifier = 0):
-        for a in range(self.scope_counter + modifier):
-            ws_str += '\t'
+    def print_to_buffer(self, string, ws_str ='\n\t', modifier = 0):
         self.buffer_stack[-1].write(ws_str + string)
 
     def print_to_header(self, string):
@@ -67,14 +66,19 @@ class MIPSVisitor(Visitor):
     def close(self):
         self.print_to_header(" .text")
         self.print_to_header(".globl main")
-        self.file.write(self.header_buf.getvalue() + '\n')
+        self.print_to_header("\njal main")
+        self.print_to_header('beq $zero, $zero, exit')
+        self.file.write(self.header_buf.getvalue())
         for buffer in self.function_buffers:
             self.file.write(buffer.getvalue())
+        self.file.write("\n\nexit:")
         self.file.close()
     
-    def gen_fp_adress(self, value = 4) -> str:
-        self._adress -= value
-        return str(self._adress) + "($fp)"
+    def gen_stack_adress(self, value = 4) -> str:
+        adress = str(self._adress) + "($sp)"
+        self._adress += value
+        self.frame_size_stack[-1] += value
+        return adress
 
     def reset_adress(self):
         self._adress = 0
@@ -275,17 +279,6 @@ class MIPSVisitor(Visitor):
         if type_of: self.print_to_buffer('bc1t ' + label)
         else: self.print_to_buffer('bc1f ' + label)
 
-    def gen_function_def(self, name, args: {AST.Variable}, frame_size):
-        self.reset_adress()
-        self.print_label(name, "define function " + name)
-        self.gen_sw('$ra', self.gen_fp_adress())
-
-        a_counter = 0
-        for arg in args:
-            adress = self.gen_fp_adress()
-            arg.set_adress(adress)
-            self.gen_sw('$a' + str(a_counter), adress)
-            a_counter += 1
 
     def gen_function_call(self, func_name):
         self.print_to_buffer('jal ' + func_name)
@@ -305,14 +298,14 @@ class MIPSVisitor(Visitor):
         else:
             self.gen_load_im(reg, ast.get_value())
 
-        adress = self.gen_fp_adress()
+        adress = self.gen_stack_adress()
         ast.set_adress(adress)
         self.gen_sw(reg,adress, check_if_floating(ast))
 
     def visitDecl(self, ast: AST.Decl):
         # TODO gvar
         var: AST.Variable = ast.get_child(0)
-        var.set_adress(self.gen_fp_adress())
+        var.set_adress(self.gen_stack_adress())
 
     def visitAssignOp(self, ast: AST.AssignOp):
         # TODO gvar
@@ -337,7 +330,7 @@ class MIPSVisitor(Visitor):
 
     def visitNeg(self, ast: AST.Neg):
         self.visitChildren(ast)
-        adress = self.gen_fp_adress()
+        adress = self.gen_stack_adress()
         ast.set_adress(adress)
 
         reg = self.get_reg()
@@ -367,14 +360,14 @@ class MIPSVisitor(Visitor):
             self.gen_logic_instr(reg, lhs, rhs, ast)
 
 
-        adress = self.gen_fp_adress()
+        adress = self.gen_stack_adress()
         ast.set_adress(adress)
         self.gen_sw(reg, adress, check_if_floating(ast))
         self.reset_reg()
 
     def visitAdress(self, ast: AST.Adress):
         self.visitChildren(ast)
-        adress = self.gen_fp_adress()
+        adress = self.gen_stack_adress()
         reg = self.get_reg()
         ast.set_adress(adress)
         self.gen_load_adress(reg, self.get_adress_of(ast.get_child(0)))
@@ -391,32 +384,53 @@ class MIPSVisitor(Visitor):
     # TODO default returns
     def visitFunctionDefinition(self, ast: AST.FunctionDefinition):
         buffer = StringIO()
+        label_return = self.get_lname()
+
+        self.reset_adress()
+        self.frame_size_stack.append(0)
         self.buffer_stack.append(buffer)
-
+        self.function_label_stack.append(label_return)
+        self.gen_sw("$ra", self.gen_stack_adress())
         self.scope_counter += 1
-        args = []
-        frame_size = 4 * (len(args) + 1)
-        for a in range(1, ast.get_child_count()):
-            self.visit(ast.get_child(a).get_child(0))
-            args.append(ast.get_child(a).get_child(0))
 
-        self.cur_func = ast.get_name() # for array definitions
-        self.gen_function_def(ast.get_name(), args, frame_size)
+        for a in range(1, ast.get_child_count()):
+            arg = ast.get_child(a).get_child(0)
+            self.visit(arg)
+            adress = self.gen_stack_adress()
+            arg.set_adress(adress)
+            self.gen_sw('$a' + str(a-1), adress)
+
         self.visit(ast.get_child(0))
-        print(self.gen_fp_adress())
         self.scope_counter -= 1
 
-        self.function_buffers.append(self.buffer_stack.pop())
+        # returning
+        frame_size = self.frame_size_stack.pop()
+        self.print_label(label_return, "return from function " + ast.get_name())
+        self.gen_load('$ra', '0($sp)')
+        self.print_to_buffer("addi $sp, $sp, " + str(frame_size))
+        self.gen_jr('$ra')
+
+        # printing the function correctly
+        new_buffer = StringIO()
+        old_buffer = self.buffer_stack.pop()
+
+        self.buffer_stack.append(new_buffer)
+        self.print_label(ast.get_name(), "define function " + ast.get_name())
+
+        new_buffer = self.buffer_stack.pop()
+        new_buffer.write("\n\taddi $sp, $sp, " + str(frame_size*-1))
+        new_buffer.write(old_buffer.getvalue())
+
+        self.function_buffers.append(new_buffer)
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
         self.visitChildren(ast)
         self.gen_load('$v0', self.get_adress_of(ast.get_child(0)))
-        self.gen_load('$ra', '-8($fp)')
-        # self.gen_jr('$ra')
+        self.gen_branch_uncon(self.function_label_stack[-1])
 
     def visitFunctionCall(self, ast:AST.FunctionCall):
         self.visitChildren(ast)
-        adress = self.gen_fp_adress()
+        adress = self.gen_stack_adress()
         ast.set_adress(adress)
         a_counter = 0
         for a in range(ast.get_child_count()):
@@ -510,7 +524,7 @@ class MIPSVisitor(Visitor):
             ast.set_adress(self.get_adress_of(ast.get_child(0)))
             return
 
-        adress = self.gen_fp_adress()
+        adress = self.gen_stack_adress()
         reg = self.get_reg(check_if_floating(ast))
         ast.set_adress(adress)
         var_reg = self.load_in_reg(ast.get_child(0))
