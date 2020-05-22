@@ -23,5 +23,5 @@ int main(){
     printf("%d", g--);
     printf("%f", h--);
 
-	return 1;
+	return 0;
 }
