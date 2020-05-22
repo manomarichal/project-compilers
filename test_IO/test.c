@@ -1,9 +1,16 @@
 #include <stdio.h>
 
-// This should print: 10, 10, 11, 11
+// Should print the numbers 10 20 30
+
 int main(){
-	int a[5];
-	a[2] = 10;
-	printf("", a[2]);
+	int a[3];
+	a[0] = 10;
+	a[1] = 20;
+	a[2] = 30;
+	int i = 1;
+	while(i < 4){
+		printf("%d; ", a[i-1]);
+		i = i+1;
+	}
 	return 1;
 }

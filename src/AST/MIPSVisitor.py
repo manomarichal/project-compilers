@@ -128,7 +128,14 @@ class MIPSVisitor(Visitor):
             self.gen_load(reg, self.get_adress_of(ast.get_child(0)))
             return '0(' + reg + ')'
         elif isinstance(ast, AST.Index):
-            return str(int(self.get_adress_of(ast.get_child(0)).split('(')[0]) + (4*ast.get_child(1).get_value())) + '($sp)'
+            reg = self.get_reg()
+            reg2 = self.get_reg()
+            self.gen_load_im(reg, 4)
+            self.gen_load(reg2, ast.get_child(1).get_adress())
+            self.gen_math_instr(reg, reg, reg2, AST.Prod())
+            self.gen_load_adress(reg2, self.get_adress_of(ast.get_child(0)))
+            self.gen_math_instr(reg, reg, reg2, AST.Sum())
+            return '0(' + reg + ')'
         else:
             return ast.get_adress()
         
