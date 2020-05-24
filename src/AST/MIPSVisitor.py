@@ -362,7 +362,16 @@ class MIPSVisitor(Visitor):
         self.reset_reg()
 
     def visitNot(self, ast: AST.Not):
-        pass
+        self.visitChildren(ast)
+        adress = self.gen_stack_adress()
+        ast.set_adress(adress)
+
+        reg = self.get_reg()
+        self.gen_load_im(reg, 1)
+        self.gen_comp_instr(reg, reg, self.load_in_reg(ast.get_child(0)), AST.NotEqual(), False)
+        self.gen_sw(reg, adress, False)
+
+        self.reset_reg()
 
     def visitPos(self, ast: AST.Neg):
         self.visitChildren(ast)

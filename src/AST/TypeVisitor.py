@@ -145,6 +145,14 @@ class TypeVisitor (Visitor):
         node.set_type(bool_type)
         return bool_type
 
+    def visitNot(self, node: Not):
+        self.visitChildren(node)
+        bool_type = TypeClass([TypeComponents.BOOL])
+        for child_nr in range(node.get_child_count()):
+            self.assume_mono_conversion(node, child_nr, bool_type)
+        node.set_type(bool_type)
+        return bool_type
+
     def visitCompOp(self, node: CompOp):
         self.visitChildren(node)
         bool_type = TypeClass([TypeComponents.BOOL])
