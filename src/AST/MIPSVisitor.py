@@ -312,7 +312,7 @@ class MIPSVisitor(Visitor):
 
         if check_if_floating(ast):
             name = self.get_fp_name()
-            self.gen_global_var(ast, self.get_fp_name(), ast.get_value())
+            self.gen_global_var(ast, name, ast.get_value())
             self.gen_load(reg, name, True)
         else:
             self.gen_load_im(reg, ast.get_value())
