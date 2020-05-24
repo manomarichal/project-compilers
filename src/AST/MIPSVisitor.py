@@ -154,11 +154,14 @@ class MIPSVisitor(Visitor):
         else:
             self.print_to_buffer('lwc1 ' + reg + ', ' + adress)
 
-    def gen_global_var(self, name, value, floating = False):
+    def gen_global_var(self, name, value = None, floating = False):
+        if value is None and floating: value = 0.0
+        elif value is None and not floating: value = 0
+
         if floating:
             self.print_to_header(name + ': .float ' + str(value))
         else:
-            self.print_to_header(name + ': .int ' + str(value))
+            self.print_to_header(name + ': .word ' + str(value))
 
     def gen_load_im(self, reg, value):
         self.print_to_buffer('li ' + reg + ', ' + str(value))
@@ -199,7 +202,7 @@ class MIPSVisitor(Visitor):
         self.print_to_buffer('cvt.s.w ' + freg + ', ' + freg)
 
     def gen_float_to_int(self, ireg, freg):
-        self.print_to_buffer('cvt.s.w ' + freg + ', ' + freg)
+        self.print_to_buffer('cvt.w.s ' + freg + ', ' + freg)
         self.print_to_buffer('mfc1 ' + ireg + ', ' + freg )
 
     def gen_mflo(self, res):
@@ -317,9 +320,11 @@ class MIPSVisitor(Visitor):
         self.gen_sw(reg,adress, check_if_floating(ast))
 
     def visitDecl(self, ast: AST.Decl):
-        # TODO gvar
         var: AST.Variable = ast.get_child(0)
-        if check_if_array(ast): var.set_adress(self.gen_stack_adress(find_array_size(var) * 4))
+        if self.scope_counter == 0:
+            self.gen_global_var(var.get_name(), floating=check_if_floating(var))
+            var.set_adress(var.get_name())
+        elif check_if_array(ast): var.set_adress(self.gen_stack_adress(find_array_size(var) * 4))
         else: var.set_adress(self.gen_stack_adress())
 
     def visitAssignOp(self, ast: AST.AssignOp):
