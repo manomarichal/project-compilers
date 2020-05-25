@@ -44,6 +44,8 @@ class MIPSVisitor(Visitor):
     _lcounter = 0 # counter to keep track of labels used
     _adress = 0
     _tcounter = 0
+    _t_help_counter = 0
+    _f_help_counter = 0
     _scounter = 0
     _fcounter = 1
     _fpcounter = 0
@@ -92,7 +94,7 @@ class MIPSVisitor(Visitor):
         self._adress = 0
 
     def get_reg(self, floating = False, incr = True):
-        if self._tcounter > 8 or self._fcounter > 8:
+        if self._tcounter > 8 or self._fcounter > 8 or self._tcounter < 0:
             print("max temp registers reached")
 
         if floating:
@@ -116,6 +118,24 @@ class MIPSVisitor(Visitor):
         self._scounter += 1
         return name
 
+    def decrease_reg(self, value, floating):
+        if floating:
+            self._fcounter -= value
+        else:
+            self._tcounter -= value
+
+    def store_rcounter(self, floating):
+        if floating:
+            self._f_help_counter = self._fcounter
+        else:
+            self._t_help_counter = self._tcounter
+
+    def restore_tcounter(self, floating):
+        if floating:
+            self._fcounter = self._f_help_counter
+        else:
+            self._tcounter = self._t_help_counter
+
     def reset_reg(self):
         self._tcounter = 0
         self._fcounter = 1
@@ -126,7 +146,7 @@ class MIPSVisitor(Visitor):
 
     def load_in_reg(self, ast: AST.Component):
         floating = check_if_floating(ast)
-        reg = self.get_reg(floating)
+        reg = self.get_reg(floating=floating)
         self.gen_load(reg, self.get_adress_of(ast), floating)
         return reg
 
@@ -136,6 +156,7 @@ class MIPSVisitor(Visitor):
             self.gen_load(reg, self.get_adress_of(ast.get_child(0)))
             return '0(' + reg + ')'
         elif isinstance(ast, AST.Index):
+            self.visitChildren(ast)
             reg = self.get_reg()
             reg2 = self.get_reg()
             self.gen_load_im(reg, 4)
@@ -143,7 +164,7 @@ class MIPSVisitor(Visitor):
             self.gen_math_instr(reg, reg, reg2, AST.Prod())
             self.gen_load_adress(reg2, self.get_adress_of(ast.get_child(0)))
             self.gen_math_instr(reg, reg, reg2, AST.Sum())
-            self._tcounter -= 1
+            self.decrease_reg(1, floating=False)
             return '0(' + reg + ')'
         else:
             return ast.get_adress()
@@ -316,7 +337,6 @@ class MIPSVisitor(Visitor):
         self.visitChildren(ast)
 
     def visitLiteral(self, ast: AST.Literal):
-        self.reset_reg()
         reg = self.get_reg(check_if_floating(ast))
 
         if check_if_floating(ast):
@@ -329,6 +349,7 @@ class MIPSVisitor(Visitor):
         adress = self.gen_stack_adress()
         ast.set_adress(adress)
         self.gen_sw(reg,adress, check_if_floating(ast))
+        self.decrease_reg(1, check_if_floating(ast))
 
     def visitDecl(self, ast: AST.Decl):
         var: AST.Variable = ast.get_child(0)
@@ -356,6 +377,7 @@ class MIPSVisitor(Visitor):
         parts = meta.split("%")
 
         for i in range(len(parts)):
+            if parts[i] == '': continue
             string = ''
             if i != 0:
                 char = parts[i][0]
@@ -378,6 +400,8 @@ class MIPSVisitor(Visitor):
             self.gen_load_adress("$a0", name)
             self.gen_load_im("$v0", 4)
             self.gen_syscall()
+
+            self.reset_reg()
 
     def visitScanf(self, ast: AST.Scanf):
         self.visitChildren(ast)
@@ -403,9 +427,11 @@ class MIPSVisitor(Visitor):
                     self.gen_load_im("$v0", 12)
                     self.gen_syscall()
                     self.gen_sw('$v0', '0(' + self.load_in_reg(ast.get_child(i-1)) + ')')
+        self.reset_reg()
 
     def visitNeg(self, ast: AST.Neg):
         self.visitChildren(ast)
+        self.store_rcounter(check_if_floating(ast))
         adress = self.gen_stack_adress()
         ast.set_adress(adress)
 
@@ -413,10 +439,11 @@ class MIPSVisitor(Visitor):
         self.gen_neg(reg, reg, check_if_floating(ast))
         self.gen_sw(reg, adress, check_if_floating(ast))
 
-        self.reset_reg()
+        self.restore_tcounter(check_if_floating(ast))
 
     def visitNot(self, ast: AST.Not):
         self.visitChildren(ast)
+        self.store_rcounter(check_if_floating(ast))
         adress = self.gen_stack_adress()
         ast.set_adress(adress)
 
@@ -425,7 +452,7 @@ class MIPSVisitor(Visitor):
         self.gen_comp_instr(reg, reg, self.load_in_reg(ast.get_child(0)), AST.NotEqual(), False)
         self.gen_sw(reg, adress, False)
 
-        self.reset_reg()
+        self.restore_tcounter(floating=check_if_floating(ast))
 
     def visitPos(self, ast: AST.Neg):
         self.visitChildren(ast)
@@ -451,12 +478,16 @@ class MIPSVisitor(Visitor):
 
     def visitAdress(self, ast: AST.Adress):
         self.visitChildren(ast)
+        self.store_rcounter(check_if_floating(ast))
+
         adress = self.gen_stack_adress()
         reg = self.get_reg()
         ast.set_adress(adress)
         self.gen_load_adress(reg, self.get_adress_of(ast.get_child(0)))
         self.gen_sw(reg, adress)
-        self.reset_reg()
+
+        self.restore_tcounter(floating=check_if_floating(ast))
+
 
     def visitFunctionDeclaration(self, ast: AST.FunctionDeclaration):
         pass
@@ -509,6 +540,8 @@ class MIPSVisitor(Visitor):
 
     def visitFunctionCall(self, ast:AST.FunctionCall):
         self.visitChildren(ast)
+        self.store_rcounter(check_if_floating(ast))
+
         adress = self.gen_stack_adress()
         ast.set_adress(adress)
         a_counter = 0
@@ -517,6 +550,7 @@ class MIPSVisitor(Visitor):
             a_counter += 1
         self.gen_function_call(ast.get_name())
         self.gen_sw('$v0', adress)
+        self.restore_tcounter(floating=check_if_floating(ast))
 
     def visitForStatement(self, ast: AST.ForStatement):
         loop_check = self.get_lname()
@@ -633,6 +667,9 @@ class MIPSVisitor(Visitor):
         else: self.print_to_buffer('addi' + ' ' + reg + ', ' + str(lhs) + ', ' + str(rhs))
 
     def visitIncrPre(self, ast: AST.IncrPre):
+        self.visitChildren(ast)
+        self.store_rcounter(check_if_floating(ast))
+
         adress = self.gen_stack_adress()
         floating = check_if_floating(ast.get_child(0))
         reg = self.get_reg(floating)
@@ -645,22 +682,30 @@ class MIPSVisitor(Visitor):
         self.reset_reg()
 
         ast.set_adress(adress)
+        self.restore_tcounter(floating=floating)
 
     def visitIncrPost(self, ast: AST.IncrPost):
+        self.visitChildren(ast)
+        self.store_rcounter(check_if_floating(ast))
+
         adress = self.gen_stack_adress()
         floating = check_if_floating(ast.get_child(0))
         reg = self.get_reg(floating)
         var_reg = self.get_reg(floating)
 
         self.gen_load(reg, self.get_adress_of(ast.get_child(0)), floating)
-        self.gen_addi(var_reg, var_reg, 1, floating)
+        self.gen_addi(var_reg, reg, 1, floating)
         self.gen_sw(var_reg, self.get_adress_of(ast.get_child(0)), floating)
         self.gen_sw(reg, adress, floating)
         self.reset_reg()
 
         ast.set_adress(adress)
+        self.restore_tcounter(floating=floating)
 
     def visitDecrPre(self, ast: AST.DecrPre):
+        self.visitChildren(ast)
+        self.store_rcounter(check_if_floating(ast))
+
         adress = self.gen_stack_adress()
         floating = check_if_floating(ast.get_child(0))
         reg = self.get_reg(floating)
@@ -673,18 +718,22 @@ class MIPSVisitor(Visitor):
         self.reset_reg()
 
         ast.set_adress(adress)
+        self.restore_tcounter(floating=floating)
 
     def visitDecrPost(self, ast: AST.DecrPost):
+        self.visitChildren(ast)
+        self.store_rcounter(check_if_floating(ast))
+
         adress = self.gen_stack_adress()
         floating = check_if_floating(ast.get_child(0))
         reg = self.get_reg(floating)
         var_reg = self.get_reg(floating)
 
         self.gen_load(reg, self.get_adress_of(ast.get_child(0)), floating)
-        self.gen_addi(var_reg, var_reg, -1, floating)
+        self.gen_addi(var_reg, reg, -1, floating)
         self.gen_sw(var_reg, self.get_adress_of(ast.get_child(0)), floating)
         self.gen_sw(reg, adress, floating)
-        self.reset_reg()
 
         ast.set_adress(adress)
+        self.restore_tcounter(floating=floating)
 
