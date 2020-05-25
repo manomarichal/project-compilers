@@ -44,7 +44,8 @@ class MIPSVisitor(Visitor):
     _lcounter = 0 # counter to keep track of labels used
     _adress = 0
     _tcounter = 0
-    _fcounter = 0
+    _scounter = 0
+    _fcounter = 1
     _fpcounter = 0
     function_label_stack = []
     frame_size_stack = []
@@ -57,9 +58,9 @@ class MIPSVisitor(Visitor):
         self.header_buf = StringIO()
         self.function_buffers = []
         self.print_to_header(".data")
-        self.print_to_header("fpzero: .float 0.0")
-        self.print_to_header("fpone: .float 1.0")
-        self.print_to_header("fpminone: .float -1.0")
+        self.print_to_header("\tfpzero: .float 0.0")
+        self.print_to_header("\tfpone: .float 1.0")
+        self.print_to_header("\tfpminone: .float -1.0")
         self.file = file
 
 
@@ -71,7 +72,7 @@ class MIPSVisitor(Visitor):
         self.header_buf.write(string + '\n')
 
     def close(self):
-        self.print_to_header(" .text")
+        self.print_to_header(".text")
         self.print_to_header(".globl main")
         self.print_to_header("\njal main")
         self.print_to_header('beq $zero, $zero, exit')
@@ -110,9 +111,14 @@ class MIPSVisitor(Visitor):
         self._fpcounter += 1
         return name
 
+    def get_string_name(self):
+        name = "s" + str(self._scounter)
+        self._scounter += 1
+        return name
+
     def reset_reg(self):
         self._tcounter = 0
-        self._fcounter = 0
+        self._fcounter = 1
 
     def get_lname(self) -> str:
         self._lcounter += 1
@@ -154,16 +160,19 @@ class MIPSVisitor(Visitor):
         else:
             self.print_to_buffer('lwc1 ' + reg + ', ' + adress)
 
+    def gen_global_string(self, name, value):
+        self.print_to_header("\t" + name + ": .asciiz " + str(value) )
+
     def gen_global_var(self,ast: AST.Variable, name, value = None):
         if check_if_array(ast):
-            self.print_to_header(name + ": .space " + str(find_array_size(ast)*4))
+            self.print_to_header("\t" + name + ": .space " + str(find_array_size(ast)*4))
         else:
             if value is None and check_if_floating(ast): value = 0.0
             elif value is None and not check_if_floating(ast): value = 0
             if check_if_floating(ast):
-                self.print_to_header(name+ ': .float ' + str(value))
+                self.print_to_header("\t" + name+ ': .float ' + str(value))
             else:
-                self.print_to_header(name + ': .word ' + str(value))
+                self.print_to_header("\t" + name + ': .word ' + str(value))
 
     def gen_load_im(self, reg, value):
         self.print_to_buffer('li ' + reg + ', ' + str(value))
@@ -340,15 +349,60 @@ class MIPSVisitor(Visitor):
         self.gen_sw(self.load_in_reg(ast.get_child(1)), self.get_adress_of(var), check_if_floating(ast))
         self.reset_reg()
 
-    def visitPrintf(self, ast: AST.Printf):  #
+    def visitPrintf(self, ast: AST.Printf):
         self.visitChildren(ast)
-        if check_if_floating(ast.get_child(0)):
-            self.gen_load_im('$v0', 2)
-            self.gen_load('$f12', self.get_adress_of(ast.get_child(0)), True)
-        else:
-            self.gen_load_im('$v0', 1)
-            self.gen_load('$a0', self.get_adress_of(ast.get_child(0)))
-        self.gen_syscall()
+
+        meta = ast.get_meta()[1:len(ast.get_meta())-1]
+        parts = meta.split("%")
+
+        for i in range(len(parts)):
+            string = ''
+            if i != 0:
+                char = parts[i][0]
+                string = "\"" + parts[i][1:] + "\""
+                if char == 'd':
+                    self.gen_load_im("$v0", 1)
+                    self.gen_load('$a0', self.get_adress_of(ast.get_child(i-1)))
+                elif char == 'f':
+                    self.gen_load_im("$v0", 2)
+                    self.gen_load('$f12', self.get_adress_of(ast.get_child(i-1)), True)
+                elif char == 'c':
+                    self.gen_load_im("$v0", 11)
+                    self.gen_load('$a0', self.get_adress_of(ast.get_child(i-1)))
+                self.gen_syscall()
+            else:
+                string = "\"" + parts[i] + "\""
+
+            name = self.get_string_name()
+            self.gen_global_string(name, string)
+            self.gen_load_adress("$a0", name)
+            self.gen_load_im("$v0", 4)
+            self.gen_syscall()
+
+    def visitScanf(self, ast: AST.Scanf):
+        self.visitChildren(ast)
+
+        meta = ast.get_meta()[1:len(ast.get_meta()) - 1]
+        parts = meta.split("%")
+
+        for i in range(len(parts)):
+            if i != 0:
+                char = parts[i][0]
+                string = "\"" + parts[i][1:] + "\""
+                if char == 'd':
+                    self.gen_load_im("$v0", 5)
+                    self.gen_syscall()
+                    self.gen_sw('$v0', '0(' + self.load_in_reg(ast.get_child(i-1)) + ')')
+                elif char == 'f':
+                    self.gen_load_im("$v0", 6)
+                    self.gen_syscall()
+                    reg = self.get_reg()
+                    self.gen_load(reg, self.get_adress_of(ast.get_child(i-1)))
+                    self.gen_sw('$f0', '0(' + reg + ')', True)
+                elif char == 'c':
+                    self.gen_load_im("$v0", 12)
+                    self.gen_syscall()
+                    self.gen_sw('$v0', '0(' + self.load_in_reg(ast.get_child(i-1)) + ')')
 
     def visitNeg(self, ast: AST.Neg):
         self.visitChildren(ast)
