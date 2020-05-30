@@ -373,16 +373,17 @@ class MIPSVisitor(Visitor):
 
     def visitPrintf(self, ast: AST.Printf):
         self.visitChildren(ast)
-
+        meta = ast.get_meta()
+        meta = meta.replace("\\0A", "\\n")
         if ast.get_child_count() == 0:
             name = self.get_string_name()
-            self.gen_global_string(name, ast.get_meta())
+            self.gen_global_string(name, meta)
             self.gen_load_adress("$a0", name)
             self.gen_load_im("$v0", 4)
             self.gen_syscall()
             return
 
-        meta = ast.get_meta()[1:len(ast.get_meta())-1]
+        meta = meta[1:len(ast.get_meta())-1]
         parts = meta.split("%")
 
         for i in range(len(parts)):
