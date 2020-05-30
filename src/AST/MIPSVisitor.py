@@ -375,6 +375,7 @@ class MIPSVisitor(Visitor):
         self.visitChildren(ast)
         meta = ast.get_meta()
         meta = meta.replace("\\0A", "\\n")
+        meta = meta.replace("\\09", "\\t")
         if ast.get_child_count() == 0:
             name = self.get_string_name()
             self.gen_global_string(name, meta)
