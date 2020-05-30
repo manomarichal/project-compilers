@@ -1,7 +1,5 @@
 #include <stdio.h>
 
-// expected 80
-
 int main(){
     int t1 = 10;
     int t2 = 20;
@@ -14,3 +12,6 @@ int main(){
 	printf("%d", *a[0] + *a[1] + *a[2]);
 	return 1;
 }
+
+// expected 80
+

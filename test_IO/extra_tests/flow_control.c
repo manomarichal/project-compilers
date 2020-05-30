@@ -62,6 +62,8 @@ int main()
         }
     }
     int total = t + t2 + t3;
-    printf("%d", total);    // expected 87
+    printf("%d", total);
     return 0;
 }
+
+// expected 87

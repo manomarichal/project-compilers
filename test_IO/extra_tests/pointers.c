@@ -10,10 +10,11 @@ int * * p2 = &p1;
 int * * * p3 = &p2;
 ***p3 = b;
 
-printf("%d", a);
-printf("%d", b);
-printf("%d", ***p3);
+printf("%d; ", a);
+printf("%d; ", b);
+printf("%d; ", ***p3);
 
 return a;
 }
-// expected output: 555
+
+// expected 5; 5; 5;

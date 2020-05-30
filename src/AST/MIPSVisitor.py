@@ -279,17 +279,16 @@ class MIPSVisitor(Visitor):
         else:
             self.gen_binary_instruction(res, lhs, rhs, op_str)
 
-    def gen_comp_instr_float(self, lhs, rhs, op: AST.CompOp, label_true) -> bool:
-        if isinstance(op, AST.Less) or isinstance(op, AST.More):
-            self.gen_binary_instruction(lhs, rhs, label_true, "c.lt.s")
-        elif isinstance(op, AST.LessE) or isinstance(op, AST.MoreE):
-            self.gen_binary_instruction(lhs, rhs, label_true, "c.le.s")
+    def gen_comp_instr_float(self, lhs, rhs, op: AST.CompOp) -> bool:
+        if isinstance(op, AST.Less) or isinstance(op, AST.MoreE):
+            self.print_to_buffer("c.lt.s " + lhs + " " + rhs)
+        elif isinstance(op, AST.LessE) or isinstance(op, AST.More):
+            self.print_to_buffer("c.le.s " + lhs + " " + rhs)
         elif isinstance(op, AST.Equal) or isinstance(op, AST.NotEqual):
-            self.gen_binary_instruction(lhs, rhs, label_true, "c.eq.s")
+            self.print_to_buffer("c.eq.s " + lhs + " " + rhs)
         return isinstance(op, AST.Less) or isinstance(op, AST.LessE) or isinstance(op, AST.Equal)
 
     def gen_comp_instr(self, res, lhs, rhs, op: AST.CompOp, floating):
-        # TODO less than or equal is broke
         label_false = self.get_lname()
         label_true = self.get_lname()
         label_continue = self.get_lname()
@@ -298,18 +297,16 @@ class MIPSVisitor(Visitor):
             self.gen_binary_instruction(lhs, rhs, label_true, gen_comp_instruction_int(op))
             self.gen_branch_uncon(label_false)
         else:
-            flag_val = self.gen_comp_instr_float(res, lhs, rhs, op)
+            flag_val = self.gen_comp_instr_float(lhs, rhs, op)
             self.gen_branch_float(label_true, flag_val)
             self.gen_branch_uncon(label_false)
 
         self.print_label(label_false, 'not true')
-        if floating: self.gen_load(res, "fpzero", True)
-        else: self.gen_load_im(res, 0)
+        self.gen_load_im(res, 0)
         self.gen_branch_uncon(label_continue)
 
         self.print_label(label_true, 'true')
-        if floating: self.gen_load(res, "fpone", True)
-        else: self.gen_load_im(res, 1)
+        self.gen_load_im(res, 1)
         self.gen_branch_uncon(label_continue)
 
         self.print_label(label_continue, 'exit comparison')
@@ -474,7 +471,7 @@ class MIPSVisitor(Visitor):
         self.visitChildren(ast)
         reg = self.get_reg(check_if_floating(ast))
         lhs, rhs = self.load_in_reg(ast.get_child(0)), self.load_in_reg(ast.get_child(1))
-        floating = check_if_floating(ast)
+        floating = check_if_floating(ast.get_child(0))
 
         if isinstance(ast, AST.MathOp):
             self.gen_math_instr(reg, lhs, rhs, ast, floating)
@@ -662,9 +659,8 @@ class MIPSVisitor(Visitor):
         elif conv_type in {AST.conv_type.FLOAT_TO_INT, AST.conv_type.FLOAT_TO_CHAR}:
             self.gen_float_to_int(reg, var_reg)
         elif conv_type == AST.conv_type.FLOAT_TO_BOOL:
-            freg = self.get_reg(True)
-            self.gen_comp_instr(freg, var_reg, '$zero', AST.NotEqual(), floating=True)
-            self.gen_float_to_int(reg, freg)
+            self.gen_float_to_int(reg, var_reg)
+            self.gen_comp_instr(reg, reg, '$zero', AST.NotEqual(), False)
 
         self.gen_sw(reg, adress, check_if_floating(ast))
         self.reset_reg()

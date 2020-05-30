@@ -22,3 +22,5 @@ int main()
     printf("%d", i);
     printf("%d", j);
 }
+
+//expected 0101011011
