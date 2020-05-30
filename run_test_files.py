@@ -2,9 +2,10 @@ import os
 
 os.system('python3 clean.py')
 files = os.listdir('./test_IO/CompilersBenchmark/CorrectCode')
+files.remove('.DS_Store')
+files.sort()
 print(os.path.abspath("./"))
 for file in files:
-    if file == '.DS_Store': continue
     os.system("clear")
     file_path = "./test_IO/CompilersBenchmark/CorrectCode/" + file
     print("##########################\nfile: " + file)
