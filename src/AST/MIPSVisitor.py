@@ -86,7 +86,7 @@ class MIPSVisitor(Visitor):
             self.file.write(buffer.getvalue())
         self.file.write("\n\nexit:")
         self.file.close()
-    
+
     def gen_stack_adress(self, value = 4) -> str:
         adress = str(self._adress) + "($sp)"
         self._adress += value
@@ -171,7 +171,7 @@ class MIPSVisitor(Visitor):
             return '0(' + reg + ')'
         else:
             return ast.get_adress()
-        
+
     # GENERATOR FUNCTIONS
     def print_label(self, label, label_comment):
         self.buffer_stack[-1].write('\n\n# ' + label_comment)
