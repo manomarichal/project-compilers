@@ -1,14 +1,23 @@
-
 #include <stdio.h>
 
-// This should print 1 and 0 alternating
+void f();
+
+void g();
+
+void f(){
+	printf("Hello ");
+	return;
+}
+
+void g(){
+	printf("World\n");
+	f();
+	printf("World\n");
+}
+
 int main(){
-        printf("%d; ", 1 && 2);
-        printf("%d; ", 0 && 2);
-        printf("%d; ", 1 || 2);
-        printf("%d; ", 0 || 0);
-        printf("%d; ", (0.5 || 0.0) && (0.0 || 1.0));
-        printf("%d; ", !(1 && 2));
-        printf("%d; ", !(1.0 && 0.4));
-        return 1;
+    // Should print "hello world" twice
+	f();
+	g();
+	return 1;
 }

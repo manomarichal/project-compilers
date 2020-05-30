@@ -2,6 +2,9 @@ from src.AST import AST
 from src.AST.Visitor import Visitor
 from io import StringIO
 
+def check_if_void(ast: AST.Component):
+    return ast.get_type().__repr__() == 'void'
+
 def check_if_array(ast: AST.Component):
     return ast.get_type().__repr__()[0] == '['
 
@@ -337,8 +340,11 @@ class MIPSVisitor(Visitor):
         self.visitChildren(ast)
 
     def visitLiteral(self, ast: AST.Literal):
-        reg = self.get_reg(check_if_floating(ast))
+        adress = self.gen_stack_adress()
+        ast.set_adress(adress)
+        if check_if_void(ast): return
 
+        reg = self.get_reg(check_if_floating(ast))
         if check_if_floating(ast):
             name = self.get_fp_name()
             self.gen_global_var(ast, name, ast.get_value())
@@ -346,8 +352,6 @@ class MIPSVisitor(Visitor):
         else:
             self.gen_load_im(reg, ast.get_value())
 
-        adress = self.gen_stack_adress()
-        ast.set_adress(adress)
         self.gen_sw(reg,adress, check_if_floating(ast))
         self.decrease_reg(1, check_if_floating(ast))
 
@@ -372,6 +376,14 @@ class MIPSVisitor(Visitor):
 
     def visitPrintf(self, ast: AST.Printf):
         self.visitChildren(ast)
+
+        if ast.get_child_count() == 0:
+            name = self.get_string_name()
+            self.gen_global_string(name, ast.get_meta())
+            self.gen_load_adress("$a0", name)
+            self.gen_load_im("$v0", 4)
+            self.gen_syscall()
+            return
 
         meta = ast.get_meta()[1:len(ast.get_meta())-1]
         parts = meta.split("%")
@@ -535,7 +547,8 @@ class MIPSVisitor(Visitor):
 
     def visitReturnStatement(self, ast:AST.ReturnStatement):
         self.visitChildren(ast)
-        self.gen_load('$v0', self.get_adress_of(ast.get_child(0)))
+        if not check_if_void(ast):
+            self.gen_load('$v0', self.get_adress_of(ast.get_child(0)))
         self.gen_branch_uncon(self.function_label_stack[-1])
 
     def visitFunctionCall(self, ast:AST.FunctionCall):
