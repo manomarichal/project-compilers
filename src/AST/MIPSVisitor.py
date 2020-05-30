@@ -300,12 +300,12 @@ class MIPSVisitor(Visitor):
             self.gen_branch_uncon(label_false)
 
         self.print_label(label_false, 'not true')
-        if floating: self.gen_load(res, "$fpzero", True)
+        if floating: self.gen_load(res, "fpzero", True)
         else: self.gen_load_im(res, 0)
         self.gen_branch_uncon(label_continue)
 
         self.print_label(label_true, 'true')
-        if floating: self.gen_load(res, "$fpone", True)
+        if floating: self.gen_load(res, "fpone", True)
         else: self.gen_load_im(res, 1)
         self.gen_branch_uncon(label_continue)
 
@@ -648,6 +648,10 @@ class MIPSVisitor(Visitor):
             self.gen_int_to_float(var_reg, reg)
         elif conv_type in {AST.conv_type.FLOAT_TO_INT, AST.conv_type.FLOAT_TO_CHAR}:
             self.gen_float_to_int(reg, var_reg)
+        elif conv_type == AST.conv_type.FLOAT_TO_BOOL:
+            freg = self.get_reg(True)
+            self.gen_comp_instr(freg, var_reg, '$zero', AST.NotEqual(), floating=True)
+            self.gen_float_to_int(reg, freg)
 
         self.gen_sw(reg, adress, check_if_floating(ast))
         self.reset_reg()
