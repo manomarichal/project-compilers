@@ -1,10 +1,9 @@
-# Project Compilers 2020
-## Mano Marichal & Joren Van Borm
+# Project Compilers 2020 (Mano Marichal & Joren Van Borm)
 
 **Werkt met Python 3.6+**
 
-### Overview
-We hebben bijna alle mandatory dingen afgewerkt. Onderaan de readme kan je een overzicht zien van wat we allemaal gemaakt hebben.
+## Overview
+Onderaan staat voor alle delen van de taak wat we wel of niet hebben gedaan.
 
 - main.py: compileerd een enkele file & genereerd een dot en png file van de AST. Verdere uitleg onder **Installing and running - Compiling a file**
 - run_benchmarks.py: genereert voor alle c files in **./test_IO/CompilersBenchmark** de llvm ir, mips, dotfiles en de ast als png
@@ -13,7 +12,7 @@ We hebben bijna alle mandatory dingen afgewerkt. Onderaan de readme kan je een o
 
 De tests die we hebben gedaan hebben we vergeleken met gcc om te checken of ze klopten.
 
-### Installing and running:
+#### Installing and running:
 (assuming a linux-based system)
 
 #### Clone git repository   
@@ -63,8 +62,8 @@ Some of these test files will print to stderr when warnings (or errors) are enco
 The `-cf` flag can be added after `<filename>` to enable constant folding.
 The `-n` flag can similarly be added to suppress warnings.
     
-### PART 1 (C -> LLVM):
-#### Project 1)
+## PART 1 (C -> LLVM):
+### Project 1)
 - 1 Expression Parser
     - 1.1 Grammar:
       -  [x] (mandatory) Binary operations + , - , * , and /
@@ -81,7 +80,7 @@ The `-n` flag can similarly be added to suppress warnings.
 Notes:
 - We supporten het declaren van meerder variables in hetzelfde statement niet, eg. `int a, b, c;`
 
-#### Project 2)
+### Project 2)
 - 2.1 Variables:
     - 2.1.1 Grammar:
         - (mandatory) Types
@@ -111,7 +110,7 @@ Notes:
         - [x] Assignment to a const variable
         - [x] Symbol table (scoped)
 
-#### Project 3)
+### Project 3)
 - 1 Variables
     - 1.1 Grammar
         - [x] (mandatory) Comments
@@ -132,7 +131,7 @@ Notes:
       - [x] (optional) Binary operator %
       - [ ] (optional) Include comments in compiled LLVM
 
-#### Project 4)
+### Project 4)
 - 4.1 Grammar
     - [x] (mandatory) if
     - [x] (mandatory) else
@@ -158,7 +157,7 @@ Notes:
     - [ ] (optional) case
     - [ ] (optional) default
     - [x] (mandatory) scopes
-#### Project 5)
+### Project 5)
 - 5.1 Grammar
     - [x] (mandatory) return
     - [x] (mandatory) void
@@ -182,7 +181,7 @@ Notes:
     - [x] (mandatory) local variables
     - [x] (mandatory) global variables
     - [x] (mandatory) functions
-#### Project 6)
+### Project 6)
 - 6.1 Grammar
     - [x] (mandatory) arrays
     - [x] (mandatory) import
@@ -197,7 +196,7 @@ Notes:
 - We hebben support voor strings in de AST & Visualization, maar niet in LLVM. (wel char arrays)
 - Onze printf en scanf supporten het printen en lezen van char arrays niet.
 
-#### Remarks + extras
+### Remarks + extras
 - We supporten nested pointers & arrays (toch tot op zekere hoogte)
 - Er is een warning indien een non-void functie mogelijk niet returned, en juist geen warning indien een void functie zeker niet returned
 - Er is geen support voor compound assignment (+=, *= etc)
@@ -205,12 +204,13 @@ Notes:
 - Er zijn enkele problemen met o.a. scoping, arrays & semantic errors die verde zullen toegelicht worden in de video.
 - De enige niet uitgevoerde verplichte opdracht is de optimisation van onberijkbare code
 
-### PART 2 (C -> MIPS)
-#### Overview of the features 
+## PART 2 (C -> MIPS)
+**Overview of the features**
+
 - [x] = implemented in MIPS
 - [ ] = not implemented in MIPS 
 
-#### Mandatory features:
+### Mandatory features:
 - [x] binary operations + , - , * , and /
 - [x] binary operations > , < , and ==
 - [x] unary operators + and -
@@ -231,20 +231,20 @@ Notes:
 - [x] scanf
 - [x] arrays
 
-#### Optional features:
-- [x] Binary operator %
-- [x] Comparison operators >= , <= , and !=
-- [x] Logical operators && , || , and !
-- [x] Identifier Operations ++ and --
-- [x] Implicit Conversions (+ warnings for non-promotions)
-- [ ] Include comments in compiled LLVM
+### Optional features:
+- [x] binary operator %
+- [x] comparison operators >= , <= , and !=
+- [x] logical operators && , || , and !
+- [x] identifier Operations ++ and --
+- [x] implicit Conversions (+ warnings for non-promotions)
+- [ ] include comments in compiled LLVM
 - [ ] switch
 - [ ] case
 - [ ] default
 - [ ] arrays with variable size
 - [ ] multi-dimensional arrays
 
-#### Notes: 
+### Notes: 
 - Arrays kunnen niet via een pointer worden aangesproken
 - We supporten het inlezen en uitlezen van char arrays als strings niet
 - We supporten geen functies met meer dan 4 argumenten
