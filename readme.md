@@ -4,11 +4,11 @@
 **Werkt met Python 3.6+**
 
 ### Overview
-We hebben bijna mandatory dingen afgewerkt. Onderaan de readme kan je een overzicht zien van wat we allemaal gemaakt hebben.
-Voor elk feature hebben we een testfile, in test_IO/working_examples 
+We hebben bijna alle mandatory dingen afgewerkt. Onderaan de readme kan je een overzicht zien van wat we allemaal gemaakt hebben.
 
 - main.py: compileerd een enkele file & genereerd een dot en png file van de AST. Verdere uitleg onder **Installing and running - Compiling a file**
-- run.py: genereert voor alle c files in **./test_IO/CompilersBenchmark** de llvm ir, dotfiles en de ast als png
+- run_benchmarks.py: genereert voor alle c files in **./test_IO/CompilersBenchmark** de llvm ir, mips, dotfiles en de ast als png
+- run_test_files.py: genereert voor alle c files in **./test_IO/extra_tests** de llvm ir, mips, dotfiles en de ast als png
 - clean.py: verwijdert alle gegenereerde files uit **./test_IO/**
 
 De tests die we hebben gedaan hebben we vergeleken met gcc om te checken of ze klopten.
@@ -63,7 +63,7 @@ Some of these test files will print to stderr when warnings (or errors) are enco
 The `-cf` flag can be added after `<filename>` to enable constant folding.
 The `-n` flag can similarly be added to suppress warnings.
     
-### Status:
+### PART 1 (C -> LLVM):
 #### Project 1)
 - 1 Expression Parser
     - 1.1 Grammar:
@@ -197,11 +197,57 @@ Notes:
 - We hebben support voor strings in de AST & Visualization, maar niet in LLVM. (wel char arrays)
 - Onze printf en scanf supporten het printen en lezen van char arrays niet.
 
-### Remarks + extras
+#### Remarks + extras
 - We supporten nested pointers & arrays (toch tot op zekere hoogte)
 - Er is een warning indien een non-void functie mogelijk niet returned, en juist geen warning indien een void functie zeker niet returned
 - Er is geen support voor compound assignment (+=, *= etc)
 - Er is geen support voor multi-declaraions (int a, b=3, c;)
 - Er zijn enkele problemen met o.a. scoping, arrays & semantic errors die verde zullen toegelicht worden in de video.
 - De enige niet uitgevoerde verplichte opdracht is de optimisation van onberijkbare code
+
+### PART 2 (C -> MIPS)
+#### Overview of the features 
+- [x] = implemented in MIPS
+- [ ] = not implemented in MIPS 
+
+#### Mandatory features:
+- [x] binary operations + , - , * , and /
+- [x] binary operations > , < , and ==
+- [x] unary operators + and -
+- [x] char
+- [x] int
+- [x] float
+- [x] pointers
+- [x] pointer operations * and &
+- [x] if
+- [x] else
+- [x] while
+- [x] for
+- [x] break
+- [x] continue
+- [x] global variables
+- [x] functions
+- [x] printf
+- [x] scanf
+- [x] arrays
+
+#### Optional features:
+- [x] Binary operator %
+- [x] Comparison operators >= , <= , and !=
+- [x] Logical operators && , || , and !
+- [x] Identifier Operations ++ and --
+- [x] Implicit Conversions (+ warnings for non-promotions)
+- [ ] Include comments in compiled LLVM
+- [ ] switch
+- [ ] case
+- [ ] default
+- [ ] arrays with variable size
+- [ ] multi-dimensional arrays
+
+#### Notes: 
+- Arrays kunnen niet via een pointer worden aangesproken
+- We supporten het inlezen en uitlezen van char arrays als strings niet
+- We supporten geen functies met meer dan 4 argumenten
+- Er is geen support voor multi-declaraions (int a, b=3, c;)
+- Er is geen support voor compound assignment (+=, *= etc)
 
