@@ -661,8 +661,9 @@ class MIPSVisitor(Visitor):
         elif conv_type in {AST.conv_type.FLOAT_TO_INT, AST.conv_type.FLOAT_TO_CHAR}:
             self.gen_float_to_int(reg, var_reg)
         elif conv_type == AST.conv_type.FLOAT_TO_BOOL:
-            self.gen_float_to_int(reg, var_reg)
-            self.gen_comp_instr(reg, reg, '$zero', AST.NotEqual(), False)
+            freg = self.get_reg(floating=True)
+            self.gen_load(freg, self.get_fp_constant(0), True)
+            self.gen_comp_instr(reg, var_reg, freg, AST.NotEqual(), True)
 
         self.gen_sw(reg, adress, check_if_floating(ast))
         self.reset_reg()
