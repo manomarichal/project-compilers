@@ -4,19 +4,17 @@ os.system('python3 clean.py')
 files = os.listdir('./test_IO/extra_tests')
 files.sort()
 for file in files:
-    os.system("clear")
     file_path = "./test_IO/extra_tests/" + file
-    print("##########################\nfile: " + file)
-    os.system("cat " + file_path)
-    print("\n##########################\ncompiling " + file)
-    os.system("python3 ./src/main.py " + file_path)
-    asm_file_path =  file_path[0:len(file_path)-2] + ".asm"
-    print("\n##########################\nrunning " + asm_file_path)
-    os.system("java -jar Mars4_5.jar " + asm_file_path)
-    print("##########################")
-    input("Press enter to continue")
+    print("compiling " + file)
+    os.system("python3 ./src/main.py " + file_path + ' -n')
 
-
+files = os.listdir('./test_IO/CompilersBenchmark/CorrectCode')
+files.remove('.DS_Store')
+files.sort()
+for file in files:
+    file_path = "./test_IO/CompilersBenchmark/CorrectCode/" + file
+    print("compiling " + file)
+    os.system("python3 ./src/main.py " + file_path + ' -n')
 
 
 # os.system('find ./test_IO/working_examples -iname \'*.c\' -exec echo compiling {} \; -exec python ./src/main.py {} -n \;')

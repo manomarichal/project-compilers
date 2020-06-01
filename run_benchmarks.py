@@ -4,7 +4,6 @@ os.system('python3 clean.py')
 files = os.listdir('./test_IO/CompilersBenchmark/CorrectCode')
 files.remove('.DS_Store')
 files.sort()
-print(os.path.abspath("./"))
 for file in files:
     os.system("clear")
     file_path = "./test_IO/CompilersBenchmark/CorrectCode/" + file
@@ -16,7 +15,7 @@ for file in files:
     print("\n##########################\nrunning " + asm_file_path)
     os.system("java -jar Mars4_5.jar " + asm_file_path)
     print("##########################")
-    input("")
+    input("Press enter to continue")
 
 
 
