@@ -1,36 +1,24 @@
 #include <stdio.h>
-int main()
-{
-    int a = !10;
-    int b = !0;
-    float c = !0.1;
-    float d = !0.0;
-    printf("%d; ", a);
-    printf("%d; ", b);
-    printf("%f; ", c);
-    printf("%f; ", d);
 
-    a = 2 && 0;
-    b = 2 && 1;
-    c = 0.1 && 0.0;
-    d = 0.1 && 1.0;
-    printf("\n%d; ", a);
-    printf("%d; ", b);
-    printf("%f; ", c);
-    printf("%f; ", d);
+int a[2];
+float b[2];
+int c;
+float d;
 
-    a = 0 || 0;
-    b = 2 || 0;
-    c = 0.0 || 0.0;
-    d = 0.1 || 0.0;
-    printf("\n%d; ", a);
-    printf("%d; ", b);
-    printf("%f; ", c);
-    printf("%f; ", d);
-
+int main(){
+	a[0] = 1;
+	a[1] = 2;
+	b[0] = 1;
+	b[1] = 2;
+	c = 1;
+	d = 2;
+	printf("%d; ", a[0]);
+	printf("%d; ", a[1]);
+	printf("%f; ", b[0]);
+	printf("%f; ", b[1]);
+	printf("%d; ", c);
+	printf("%f; ", d);
+	return 1;
 }
 
-//expected
-//0; 1; 0.0; 1.0;
-//0; 1; 0.0; 1.0;
-//0; 1; 0.0; 1.0;
+// expected 1; 2; 1.0; 2.0; 1; 2.0;

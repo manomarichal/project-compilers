@@ -337,6 +337,8 @@ class MIPSVisitor(Visitor):
         self.visitChildren(ast)
 
     def visitLiteral(self, ast: AST.Literal):
+        if self.scope_counter == 0: return
+
         adress = self.gen_stack_adress()
         ast.set_adress(adress)
         if check_if_void(ast): return
@@ -355,14 +357,19 @@ class MIPSVisitor(Visitor):
     def visitDecl(self, ast: AST.Decl):
         var: AST.Variable = ast.get_child(0)
         if self.scope_counter == 0:
-            self.gen_global_var(var, var.get_name())
             var.set_adress(var.get_name())
+            if ast.get_child_count() != 2:
+                self.gen_global_var(var, var.get_name())
+            else:
+                self.gen_global_var(var, var.get_name(), ast.get_child(1).get_value)
+
         elif check_if_array(ast): var.set_adress(self.gen_stack_adress(find_array_size(var) * 4))
         else: var.set_adress(self.gen_stack_adress())
 
     def visitAssignOp(self, ast: AST.AssignOp):
         # TODO gvar
         self.visitChildren(ast)
+        if self.scope_counter == 0: return
         if isinstance(ast.get_child(0), AST.Decl):
             var: AST.Variable = ast.get_child(0).get_child(0)
         else:
