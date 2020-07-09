@@ -1,3 +1,4 @@
+*/.DS_Store
 
 # manually create your own venv based on requirements.txt
 venv/*
